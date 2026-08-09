@@ -1,5 +1,11 @@
 # Tank Sizing Tool (Atmospheric & Low-Pressure Storage Tanks)
 
+**Script:** [`tank_sizing.py`](./tank_sizing.py) · **Sample output:** [`sample_report_output.txt`](./sample_report_output.txt)
+
+```bash
+python tank_sizing.py --help
+```
+
 ## Overview
 
 This repository contains a comprehensive **Tank Sizing Tool** developed for the preliminary design and sizing of **atmospheric** and **low-pressure storage tanks** used in oil & gas, LNG, petrochemical, refinery, chemical, and utility facilities.
