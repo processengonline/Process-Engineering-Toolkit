@@ -27,10 +27,11 @@ Reference study guides covering core process design and engineering topics. Each
 
 ```
 <guide-name>/
-└── <Guide-Name>-Study-Guide.md
+├── README.md                       # study guide (Markdown, source of truth)
+└── <Guide-Name>-Study-Guide.pdf    # generated PDF export
 ```
 
 ## Notes
 
-- Guides are maintained as Markdown only (source of truth). PDF exports are generated for distribution/release purposes rather than tracked in version control.
+- Each guide's `README.md` is the Markdown source of truth; the accompanying PDF is a generated export for distribution, tracked in version control alongside it.
 - Each guide references the relevant industry standards (API, ASME, ISA, etc.) at the point of use rather than in a separate bibliography.
