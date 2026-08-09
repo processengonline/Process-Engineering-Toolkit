@@ -1,5 +1,11 @@
 # PSV Sizing Calculator (API 520 / API 521 / API 526)
 
+**Script:** [`psv_sizing.py`](./psv_sizing.py) · **Sample output:** [`sample_report_output.txt`](./sample_report_output.txt)
+
+```bash
+python psv_sizing.py --help
+```
+
 ## Overview
 
 This repository contains a Python-based **Pressure Safety Valve (PSV) Sizing Calculator** developed to automate preliminary relief valve sizing calculations in accordance with **API 520**, **API 521**, and **API 526**.
