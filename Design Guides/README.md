@@ -28,7 +28,7 @@ Reference study guides covering core process design and engineering topics. Each
 ```
 <guide-name>/
 ├── README.md                       # study guide (Markdown, source of truth)
-└── <Guide-Name>-Study-Guide.pdf    # generated PDF export
+└── <Guide-Name>-Study-Guide.md   
 ```
 
 ## Notes
