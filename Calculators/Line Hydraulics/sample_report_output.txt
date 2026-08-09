@@ -1,0 +1,288 @@
+================================================================================
+LINE HYDRAULICS CALCULATOR - SAMPLE TEST REPORT
+Script under test: line_hydraulics.py
+Test date: 2026-08-09
+Python: 3.12.3
+================================================================================
+
+SUMMARY
+-------
+8 test cases executed: 5 successful calculation runs (single-phase turbulent,
+single-phase laminar, single-phase with minor losses + elevation, two-phase
+homogeneous/Lockhart-Martinelli, and JSON file input) plus 3 error/validation
+cases. All numeric results were independently hand-verified against the
+underlying Darcy-Weisbach, Swamee-Jain, homogeneous mixture, and
+Lockhart-Martinelli equations (see Verification Notes below). No discrepancies
+found in the calculation logic. One minor robustness observation is noted at
+the end (zero-diameter input).
+
+
+--------------------------------------------------------------------------------
+TEST 1 - Single-phase, turbulent flow (water in steel pipe)
+--------------------------------------------------------------------------------
+Scenario: 0.05 m3/s water through a 0.1 m ID, 50 m pipe, commercial steel
+roughness — a standard turbulent case (Re well above 2300).
+
+Command:
+  python3 line_hydraulics.py --flow 0.05 --diameter 0.1 --length 50 \
+      --rho 1000 --mu 1e-3 --roughness 1.5e-5
+
+Output:
+  Line hydraulics results:
+   - velocity_m_s: 6.3662
+   - Reynolds_number: 636620
+   - friction_factor: 0.0146866
+   - dp_friction_Pa: 148807
+   - dp_minor_Pa: 0
+   - dp_elevation_Pa: 0
+   - dp_total_Pa: 148807
+
+Result: PASS
+Notes:
+  - v = Q/A = 0.05 / (pi*0.05^2) = 6.366 m/s -> matches.
+  - Re = rho*v*D/mu = 636,620 -> turbulent, correctly routed to Swamee-Jain.
+  - dp_friction hand-recomputed via f*(L/D)*(rho*v^2/2): matches script output.
+
+
+--------------------------------------------------------------------------------
+TEST 2 - Single-phase, laminar flow (viscous fluid)
+--------------------------------------------------------------------------------
+Scenario: Small flow of a viscous fluid (mu = 0.05 Pa.s) through a narrow
+pipe, chosen so Re < 2300 and the laminar branch (f = 64/Re) is exercised.
+
+Command:
+  python3 line_hydraulics.py --flow 0.0001 --diameter 0.02 --length 10 \
+      --rho 900 --mu 0.05 --roughness 1e-5
+
+Output:
+  Line hydraulics results:
+   - velocity_m_s: 0.31831
+   - Reynolds_number: 114.592
+   - friction_factor: 0.558505
+   - dp_friction_Pa: 12732.4
+   - dp_minor_Pa: 0
+   - dp_elevation_Pa: 0
+   - dp_total_Pa: 12732.4
+
+Result: PASS
+Notes:
+  - Re = 114.6 (< 2300) -> laminar branch correctly selected.
+  - f = 64/Re = 64/114.592 = 0.5585, matches script exactly.
+  - dp_friction hand-recomputed: 0.5585*(10/0.02)*(900*0.31831^2/2) = 12,733 Pa,
+    matches script (12,732.4 Pa) within rounding.
+
+
+--------------------------------------------------------------------------------
+TEST 3 - Single-phase with minor losses and elevation gain
+--------------------------------------------------------------------------------
+Scenario: Same base pipe as Test 1, adding fittings (sum K = 5.5) and a 10 m
+elevation rise, to exercise the minor-loss and elevation-head terms.
+
+Command:
+  python3 line_hydraulics.py --flow 0.05 --diameter 0.1 --length 50 \
+      --rho 1000 --mu 1e-3 --roughness 1.5e-5 --fittings-K 5.5 \
+      --elevation-diff 10
+
+Output:
+  Line hydraulics results:
+   - velocity_m_s: 6.3662
+   - Reynolds_number: 636620
+   - friction_factor: 0.0146866
+   - dp_friction_Pa: 148807
+   - dp_minor_Pa: 111453
+   - dp_elevation_Pa: 98066.5
+   - dp_total_Pa: 358327
+
+Result: PASS
+Notes:
+  - dp_minor = K*(rho*v^2/2) = 5.5*(1000*6.3662^2/2) = 111,452 Pa -> matches.
+  - dp_elevation = rho*g*dz = 1000*9.80665*10 = 98,066.5 Pa -> matches exactly.
+  - dp_total = 148,807 + 111,453 + 98,066.5 = 358,326.5 -> matches script
+    (358,327, rounding).
+
+
+--------------------------------------------------------------------------------
+TEST 4 - Two-phase homogeneous + Lockhart-Martinelli estimate
+--------------------------------------------------------------------------------
+Scenario: Low-quality (x = 0.05) gas-liquid mixture (liquid rho=800 kg/m3,
+gas rho=20 kg/m3) through a 0.1 m, 100 m pipe, to exercise the two-phase
+homogeneous density/viscosity blend and the separated-flow LM multiplier.
+
+Command:
+  python3 line_hydraulics.py --flow 0.02 --diameter 0.1 --length 100 \
+      --rho 800 --mu 3e-4 --two-phase --rho-g 20 --mu-g 1.2e-5 --quality 0.05
+
+Output:
+  Line hydraulics results:
+   - velocity_m_s: 2.54648
+   - rho_mix_kg_m3: 271.186
+   - mu_mix_Pa_s: 0.0002856
+   - Re_mix: 241796
+   - friction_factor_mix: 0.0163382
+   - dp_friction_single_Pa: 14365.5
+   - lockhart_martinelli_phi2: 14.8161
+   - dp_two_phase_Pa: 212840
+   - dp_minor_Pa: 0
+   - dp_total_Pa: 212840
+
+Result: PASS
+Notes (all independently recomputed by hand and matched to script output):
+  - rho_mix from 1/rho_mix = x/rho_g + (1-x)/rho_l -> 271.19 kg/m3.
+  - mu_mix = (1-x)*mu_l + x*mu_g -> 2.856e-4 Pa.s.
+  - dp_friction_single via Darcy-Weisbach on mixture properties -> 14,366 Pa.
+  - Martinelli parameter chi = ((1-x)/x)^0.9 * sqrt(rho_g/rho_l) = 2.237;
+    phi2 = 1 + 20/sqrt(chi) + 1/chi = 14.82 -> matches script (14.8161).
+  - dp_two_phase = dp_friction_single * phi2 = 14,365.5*14.8161 = 212,843 Pa,
+    matches script (212,840, rounding).
+
+
+--------------------------------------------------------------------------------
+TEST 5 - Single-phase via JSON input file (--inputs flag), negative elevation
+--------------------------------------------------------------------------------
+Scenario: Water-like fluid through an 80 mm pipe with a 5 m elevation DROP
+(gage_elevation_diff_m = -5), defined via a JSON input file, to check the
+file-input path and negative-elevation handling.
+
+Input file (pipe_inputs.json):
+{
+  "flow_m3_s": 0.03,
+  "diameter_m": 0.08,
+  "length_m": 200,
+  "rho": 995,
+  "mu": 0.0008,
+  "roughness": 4.5e-5,
+  "fittings_K": 2.0,
+  "gage_elevation_diff_m": -5
+}
+
+Command:
+  python3 line_hydraulics.py --inputs pipe_inputs.json
+
+Output:
+  Line hydraulics results:
+   - velocity_m_s: 5.96831
+   - Reynolds_number: 593847
+   - friction_factor: 0.0180214
+   - dp_friction_Pa: 798407
+   - dp_minor_Pa: 35442.6
+   - dp_elevation_Pa: -48788.1
+   - dp_total_Pa: 785062
+
+Result: PASS
+Notes:
+  - dp_elevation correctly negative (elevation drop reduces required pump
+    head / adds to driving pressure): rho*g*(-5) = -48,787.9 Pa -> matches.
+  - dp_total = 798,407 + 35,442.6 - 48,788.1 = 785,061.5 -> matches script.
+  - Confirms JSON parsing and CLI/file overlay logic both work correctly,
+    including correct sign handling for elevation.
+
+
+--------------------------------------------------------------------------------
+TEST 6 - Error handling: missing required field (rho)
+--------------------------------------------------------------------------------
+Scenario: Required density input omitted.
+
+Command:
+  python3 line_hydraulics.py --flow 0.05 --diameter 0.1 --length 50 --mu 1e-3
+
+Output (stderr):
+  Input error: Missing required input: 'rho'
+  (followed by argparse usage/help text)
+
+Exit code: 2
+
+Result: PASS (correctly rejected with a clear, actionable error message
+before any calculation is attempted)
+
+
+--------------------------------------------------------------------------------
+TEST 7 - Error handling: --two-phase set without quality/rho_g/mu_g
+--------------------------------------------------------------------------------
+Scenario: Two-phase flag enabled but the required two-phase properties
+(quality, gas density, gas viscosity) are not supplied.
+
+Command:
+  python3 line_hydraulics.py --flow 0.02 --diameter 0.1 --length 100 \
+      --rho 800 --mu 3e-4 --two-phase
+
+Output (stderr):
+  Calculation error: Two-phase calculation requires quality, rho_g and mu_g
+
+Exit code: 3
+
+Result: PASS (correctly rejected)
+
+
+--------------------------------------------------------------------------------
+TEST 8 - Edge case: zero diameter
+--------------------------------------------------------------------------------
+Scenario: diameter_m = 0, which makes cross-sectional area zero and should
+be an invalid physical input.
+
+Command:
+  python3 line_hydraulics.py --flow 0.05 --diameter 0 --length 50 \
+      --rho 1000 --mu 1e-3
+
+Output (stderr):
+  Calculation error: float division by zero
+
+Exit code: 3
+
+Result: PASS (with an observation)
+Notes:
+  - The script does not crash with an unhandled traceback; the generic
+    except clause in main() catches the ZeroDivisionError from
+    velocity_from_flow() and reports it as a "Calculation error" with a
+    clean exit code (3), same as other validation failures.
+  - See Observation 1 below for a suggested improvement.
+
+
+================================================================================
+VERIFICATION NOTES - independent hand-checks
+================================================================================
+Test 1 (turbulent, single-phase):
+  v = Q/A = 0.05/(pi*0.05^2) = 6.3662 m/s
+  Re = rho*v*D/mu = 1000*6.3662*0.1/1e-3 = 636,620
+  (matches script exactly)
+
+Test 4 (two-phase):
+  1/rho_mix = 0.05/20 + 0.95/800 = 0.0036875 -> rho_mix = 271.186 kg/m3
+  mu_mix = 0.95*3e-4 + 0.05*1.2e-5 = 2.856e-4 Pa.s
+  chi = (0.95/0.05)^0.9 * sqrt(20/800) = 14.15 * 0.1581 = 2.237
+  phi2 = 1 + 20/sqrt(2.237) + 1/2.237 = 1 + 13.37 + 0.447 = 14.82
+  (all match script to displayed precision)
+
+These independent recalculations, done outside the module under test, agree
+with the script's output in every case, giving confidence that
+friction_factor_swamee_jain(), darcy_weisbach_pressure_drop(),
+homogeneous_two_phase_properties(), and lockhart_martinelli_multiplier() are
+implementing their intended formulas correctly.
+
+
+================================================================================
+OBSERVATIONS / MINOR NOTES (not necessarily bugs — informational)
+================================================================================
+1. Zero or negative diameter/flow are not explicitly pre-validated; they
+   surface as a generic "float division by zero" (or similar) Calculation
+   error rather than a more specific message like "diameter_m must be > 0".
+   The script still exits cleanly (code 3) with no traceback, so this is a
+   usability nicety rather than a functional defect.
+2. The Lockhart-Martinelli implementation is explicitly documented in the
+   docstring as "a rough screening estimate" using a fixed Chisholm C = 20
+   (turbulent-turbulent assumption) regardless of actual phase Reynolds
+   numbers computed elsewhere in the function (Re_l, Re_g are computed but
+   not used to select C). This matches the module's own stated intent
+   ("simplified... rough estimate") and is not a bug, but worth flagging if
+   more rigorous two-phase design work is anticipated.
+3. As with the PSV sizing tool, the module's docstring correctly scopes
+   itself as a screening tool only, and recommends detailed multiphase
+   models or vendor software for critical designs — consistent with the
+   test results here.
+4. PyYAML was not installed in the test environment, so only the JSON input
+   path (Test 5) was exercised; the YAML path raises a clear RuntimeError
+   with an install hint if PyYAML is missing (correct defensive behavior,
+   not separately exercised here).
+
+================================================================================
+END OF REPORT
+================================================================================
