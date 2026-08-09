@@ -335,13 +335,13 @@ Header/compressor design capacity = 42.0 × 1.25 = 52.5 scfm
 
 **Basic example** — the same illustrative V-100 → P-101 → V-200 system used throughout this guide, drawn as a simplified P&ID:
 
-![Basic P&ID example](./diagrams/pid-example-basic.svg)
+![Basic P&ID example](./pid-example-basic.svg)
 
 Reading this diagram: the **blue boxes** are the vessels (V-100, V-200); the **amber circles** are field instruments (PT-3001, LT-3005) using the ISA-5.1 bubble symbol; the **coral box** is PSV-101 relieving to the flare header — the graphical representation of a relief study like the one in the companion Flare Network Design guide; the **teal circle** is pump P-101; the **purple items** are the control loop — FCV-1042 (the valve, in the pipe) and FIC-1042 (the controller, shown above it) linked by a **dashed line**, which is the standard P&ID convention for an instrument signal, as distinct from the **solid line** used for process piping (see the legend at the bottom of the drawing). The line number `6"-P-1042-A1A-H` on the discharge line is the same entry that would appear in the companion Line List Preparation guide.
 
 **Detailed example** — the same system expanded with elements a real P&ID would include that the basic version leaves out, to illustrate more of this guide's Section 5 concepts at once:
 
-![Detailed P&ID example](./diagrams/pid-example-detailed.svg)
+![Detailed P&ID example](./pid-example-detailed.svg)
 
 What this version adds, and the concept each one illustrates:
 
