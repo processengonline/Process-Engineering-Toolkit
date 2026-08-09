@@ -8,7 +8,7 @@ This repo is organized into three pillars:
 |---|---|---|
 | **Calculators** | Python scripts for equipment sizing and hydraulic calculations | [`/Calculators`](./Calculators/README-calculators.md) |
 | **Design Guides** | Reference study guides on core process design topics | [`/Design Guides`](./Design%20Guides/README-design-guides.md) |
-| **Troubleshooting** | 50 real-world operational case studies with root-cause analysis | [`/Troubleshooting`](./Troubleshooting/README-troubleshooting.md) |
+| **Troubleshooting** | Operational case studies with root-cause analysis | [`/Troubleshooting`](./Troubleshooting/README-troubleshooting.md) |
 
 ---
 
@@ -18,7 +18,7 @@ This repo is organized into three pillars:
 process-engineering-toolkit/
 ├── Calculators/        8 sizing tools (PSV, tank, pump, line, separator, etc.)
 ├── Design Guides/      16 topic guides (surge analysis, flare network, MDS, etc.)
-└── Troubleshooting/    50 case studies (rotating equipment, separation, dehydration, etc.)
+└── Troubleshooting/    Case studies (rotating equipment, separation, dehydration, etc.)
 ```
 
 ## Quickstart — Running a Calculator
