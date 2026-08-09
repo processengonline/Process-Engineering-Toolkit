@@ -1,5 +1,10 @@
 # Separator Sizing Tool (2-Phase & 3-Phase)
 
+**Script:** [`separator_sizing.py`](./separator_sizing.py) · **Sample output:** [`sample_report_output.txt`](./sample_report_output.txt)
+
+```bash
+python separator_sizing.py --help
+```
 ## Overview
 
 This repository contains a Python-based separator sizing tool for preliminary design and verification of **horizontal 2-phase and 3-phase separators** used in oil & gas processing facilities.
