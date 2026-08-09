@@ -6,9 +6,9 @@ This repo is organized into three pillars:
 
 | Pillar | What it contains | Link |
 |---|---|---|
-| **Calculators** | Python scripts for equipment sizing and hydraulic calculations | [`/Calculators`](./Calculators/README-calculators.md) |
-| **Design Guides** | Reference study guides on core process design topics | [`/Design Guides`](./Design%20Guides/README-design-guides.md) |
-| **Troubleshooting** | Operational case studies with root-cause analysis | [`/Troubleshooting`](./Troubleshooting/README-troubleshooting.md) |
+| **Calculators** | Python scripts for equipment sizing and hydraulic calculations | [`/Calculators`](./Calculators/README.md) |
+| **Design Guides** | Reference study guides on core process design topics | [`/Design Guides`](./Design%20Guides/README.md) |
+| **Troubleshooting** | Operational case studies with root-cause analysis | [`/Troubleshooting`](./Troubleshooting/README.md) |
 
 ---
 
@@ -26,19 +26,19 @@ process-engineering-toolkit/
 Each calculator is a standalone Python script with its own README and a sample report output.
 
 ```bash
-cd Calculators/breather-valve-sizing
-python breather_valve_sizing.py --help
+cd "Calculators/Breather Valve Sizing"
+python breather_valve.py --help
 ```
 
-See [`Calculators/README-calculators.md`](./Calculators/README-calculators.md) for the full list of tools and required inputs.
+See [`Calculators/README.md`](./Calculators/README.md) for the full list of tools and required inputs.
 
 ## Using the Design Guides
 
-Each guide is a self-contained Markdown study document covering theory, standard practice, and worked examples for one process design topic. Browse the index at [`Design Guides/README-design-guides.md`](./Design%20Guides/README-design-guides.md).
+Each guide is a self-contained Markdown study document covering theory, standard practice, and worked examples for one process design topic. Browse the index at [`Design Guides/README.md`](./Design%20Guides/README.md).
 
 ## Using the Troubleshooting Library
 
-Each case study documents a real symptom, diagnostic path, root cause, and corrective action for a specific piece of equipment or process unit. Browse the full index — searchable by equipment type — at [`Troubleshooting/README-troubleshooting.md`](./Troubleshooting/README-troubleshooting.md).
+Each case study documents a real symptom, diagnostic path, root cause, and corrective action for a specific piece of equipment or process unit. Browse the full index — searchable by equipment type — at [`Troubleshooting/README.md`](./Troubleshooting/README.md).
 
 ## Contributing
 
