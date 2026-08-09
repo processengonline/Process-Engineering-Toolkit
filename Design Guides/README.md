@@ -2,6 +2,15 @@
 
 Reference study guides covering core process design and engineering topics. Each guide is a self-contained Markdown document with theory, standard industry practice, and worked examples.
 
+---
+layout: default
+title: Design Guides
+---
+markdown: kramdown
+
+plugins:
+  - jekyll-optional-front-matter
+
 ## Index
 
 | Guide | Folder | Scope |
