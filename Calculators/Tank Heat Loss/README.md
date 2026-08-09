@@ -1,5 +1,11 @@
 # Tank Heat Loss Calculation Tool
 
+**Script:** [`tank_heat_loss.py`](./tank_heat_loss.py) · **Sample output:** [`sample_report_output.txt`](./sample_report_output.txt)
+
+```bash
+python tank_heat_loss.py --help
+```
+
 ## Overview
 
 This repository contains a comprehensive **Tank Heat Loss Calculation Tool** developed for estimating steady-state heat losses from **atmospheric** and **low-pressure storage tanks** used in oil & gas, LNG, petrochemical, refinery, chemical, and utility facilities.
