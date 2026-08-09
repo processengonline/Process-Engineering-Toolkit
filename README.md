@@ -6,9 +6,9 @@ This repo is organized into three pillars:
 
 | Pillar | What it contains | Link |
 |---|---|---|
-| **Calculators** | Python scripts for equipment sizing and hydraulic calculations | [`/calculators`](./calculators) |
-| **Design Guides** | Reference study guides on core process design topics | [`/design-guides`](./design-guides) |
-| **Troubleshooting** | 50 real-world operational case studies with root-cause analysis | [`/troubleshooting`](./troubleshooting) |
+| **Calculators** | Python scripts for equipment sizing and hydraulic calculations | [`/Calculators`](./Calculators) |
+| **Design Guides** | Reference study guides on core process design topics | [`/Design Guides`](./Design%20Guides) |
+| **Troubleshooting** | 50 real-world operational case studies with root-cause analysis | [`/Troubleshooting`](./Troubleshooting) |
 
 ---
 
@@ -16,9 +16,9 @@ This repo is organized into three pillars:
 
 ```
 process-engineering-toolkit/
-├── calculators/        8 sizing tools (PSV, tank, pump, line, separator, etc.)
-├── design-guides/       16 topic guides (surge analysis, flare network, MDS, etc.)
-└── troubleshooting/      50 case studies (rotating equipment, separation, dehydration, etc.)
+├── Calculators/        8 sizing tools (PSV, tank, pump, line, separator, etc.)
+├── Design Guides/      16 topic guides (surge analysis, flare network, MDS, etc.)
+└── Troubleshooting/    50 case studies (rotating equipment, separation, dehydration, etc.)
 ```
 
 ## Quickstart — Running a Calculator
@@ -26,19 +26,19 @@ process-engineering-toolkit/
 Each calculator is a standalone Python script with its own README and a sample report output.
 
 ```bash
-cd calculators/tank-sizing
+cd Calculators/tank-sizing
 python tank_sizing.py --help
 ```
 
-See [`calculators/README.md`](./calculators/README.md) for the full list of tools and required inputs.
+See [`Calculators/README.md`](./Calculators/README.md) for the full list of tools and required inputs.
 
 ## Using the Design Guides
 
-Each guide is a self-contained Markdown study document covering theory, standard practice, and worked examples for one process design topic. Browse the index at [`design-guides/README.md`](./design-guides/README.md).
+Each guide is a self-contained Markdown study document covering theory, standard practice, and worked examples for one process design topic. Browse the index at [`Design Guides/README.md`](./Design%20Guides/README.md).
 
 ## Using the Troubleshooting Library
 
-Each case study documents a real symptom, diagnostic path, root cause, and corrective action for a specific piece of equipment or process unit. Browse the full index — searchable by equipment type or symptom — at [`troubleshooting/README.md`](./troubleshooting/README.md).
+Each case study documents a real symptom, diagnostic path, root cause, and corrective action for a specific piece of equipment or process unit. Browse the full index — searchable by equipment type — at [`Troubleshooting/README.md`](./Troubleshooting/README.md).
 
 ## Contributing
 
