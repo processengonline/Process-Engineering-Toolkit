@@ -1,5 +1,11 @@
 # Pipeline Hydraulic Calculator (Single-Phase & Two-Phase Flow)
 
+**Script:** [`line_hydraulics.py`](./line_hydraulics.py) · **Sample output:** [`sample_report_output.txt`](./sample_report_output.txt)
+
+```bash
+python line_hydraulics.py --help
+```
+
 ## Overview
 
 This repository contains a Python-based **Pipeline Hydraulic Calculator** developed for preliminary hydraulic analysis and pressure drop calculations in process piping systems. The tool automates calculations commonly performed during FEED, Detailed Engineering, debottlenecking studies, and plant troubleshooting.
