@@ -16,8 +16,8 @@ This repo is organized into three pillars:
 
 ```
 process-engineering-toolkit/
-├── Calculators/        8 sizing tools (PSV, tank, pump, line, separator, etc.)
-├── Design Guides/      16 topic guides (surge analysis, flare network, MDS, etc.)
+├── Calculators/        Sizing tools (PSV, tank, pump, line, separator, etc.)
+├── Design Guides/      Topic guides (surge analysis, flare network, MDS, etc.)
 └── Troubleshooting/    Case studies (rotating equipment, separation, dehydration, etc.)
 ```
 
