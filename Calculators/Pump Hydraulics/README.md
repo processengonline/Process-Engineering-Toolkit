@@ -1,5 +1,11 @@
 # Pump Hydraulics Calculation
 
+**Script:** [`pump_hydraulics.py`](./pump_hydraulics.py) · **Sample output:** [`sample_report_output.txt`](./sample_report_output.txt)
+
+```bash
+python pump_hydraulics.py --help
+```
+
 ## Overview
 
 This repository contains a comprehensive **Pump Hydraulics Calculation Tool** developed for the hydraulic design, analysis, and selection of centrifugal pumps used in **oil & gas**, **LNG**, **petrochemical**, **refining**, **chemical**, and **water treatment** facilities.
