@@ -1,5 +1,9 @@
 # Control Valve Sizing Tool (ISA 75.01 / IEC 60534)
+**Script:** [`control_valve_sizing.py`](./control_valve_sizing.py) · **Sample output:** [`sample_report_output.txt`](./sample_report_output.txt)
 
+```bash
+python control_valve_sizing.py --help
+```
 ## Overview
 
 This repository contains a comprehensive **Control Valve Sizing Tool** developed for the preliminary sizing, selection, and performance evaluation of control valves used in oil & gas, LNG, petrochemical, refining, and chemical processing facilities.
