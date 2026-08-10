@@ -228,18 +228,5 @@ This repository is intended for educational, portfolio, and preliminary engineer
 
 ---
 
-# Author
-
-**Shubham**
-
-**Process Engineer
-
-Specializing in:
-
-- Process Simulation (Aspen HYSYS & Honeywell UniSim)
-- Oil & Gas Processing
-- LNG & GTL Facilities
-- Process Equipment Design
-- EPC Detailed Engineering
-- Plant Troubleshooting
-- Digital Engineering & Python Automation
+**Shubham Chatterjee** · Process Engineer
+[processengonline.github.io](https://processengonline.github.io/) · [GitHub](https://github.com/processengonline)
