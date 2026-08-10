@@ -483,19 +483,5 @@ This tool is intended for educational, portfolio, and preliminary engineering pu
 
 ---
 
-# Author
-
-**Shubham**
-
-**Process Engineer**
-
-Specializations:
-
-- Pump Hydraulics & Equipment Design
-- Process Hydraulics
-- Aspen HYSYS & Honeywell UniSim
-- LNG, GTL & Gas Processing
-- EPC Detailed Engineering
-- Process Optimization
-- Python-Based Engineering Automation
-```
+**Shubham Chatterjee** · Process Engineer
+[processengonline.github.io](https://processengonline.github.io/) · [GitHub](https://github.com/processengonline)
