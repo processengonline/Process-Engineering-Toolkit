@@ -7,7 +7,7 @@ This repo is organized into three pillars:
 | Pillar | What it contains | Link |
 |---|---|---|
 | **Calculators** | Python scripts for equipment sizing and hydraulic calculations | [`/Calculators`](./Calculators/README.md) |
-| **Design Guides** | Reference study guides on core process design topics | [`/Design Guides`](./Design%20Guides/README.md) |
+| **Design Guides** | Reference study guides on core process design topics | [`/Design Guides`](./Design%20Guides/README.html) |
 | **Troubleshooting** | Operational case studies with root-cause analysis | [`/Troubleshooting`](./Troubleshooting/README.md) |
 
 ---
