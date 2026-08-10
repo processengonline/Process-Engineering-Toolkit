@@ -30,15 +30,15 @@ cd "Calculators/Breather Valve Sizing"
 python breather_valve.py --help
 ```
 
-See [`Calculators/README.md`](./Calculators/README.md) for the full list of tools and required inputs.
+See [`/Calculators`](./Calculators) for the full list of tools and required inputs.
 
 ## Using the Design Guides
 
-Each guide is a self-contained Markdown study document covering theory, standard practice, and worked examples for one process design topic. Browse the index at [`Design Guides/README.md`](./Design%20Guides/README.md).
+Each guide is a self-contained Markdown study document covering theory, standard practice, and worked examples for one process design topic. Browse the index at [`/Design Guides`](./Design%20Guides).
 
 ## Using the Troubleshooting Library
 
-Each case study documents a real symptom, diagnostic path, root cause, and corrective action for a specific piece of equipment or process unit. Browse the full index — searchable by equipment type — at [`Troubleshooting/README.md`](./Troubleshooting/README.md).
+Each case study documents a real symptom, diagnostic path, root cause, and corrective action for a specific piece of equipment or process unit. Browse the full index — searchable by equipment type — at [`/Troubleshooting`](./Troubleshooting).
 
 ## Contributing
 
