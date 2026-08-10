@@ -96,3 +96,8 @@ A foam tendency test was run on the amine sample, confirming an elevated foam te
 ---
 
 *This guide is derived from a representative field troubleshooting scenario. Values and thresholds shown are illustrative and should be validated against your own unit's design basis before applying.*
+
+---
+
+**Shubham Chatterjee** · Process Engineer
+[processengonline.github.io](https://processengonline.github.io/) · [GitHub](https://github.com/processengonline)
