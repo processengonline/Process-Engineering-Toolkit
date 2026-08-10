@@ -123,3 +123,8 @@ Use this checklist for future gas separator/filter declining-flow and rising-dP 
 ---
 
 *This guide is derived from a real field troubleshooting case. Values and thresholds shown are specific to the reported case and should be validated against your own unit's design basis before applying. Note: the specific simulation software used in the original case was not documented; the Hydrate utility in Aspen HYSYS/UniSim and Multiflash are cited as representative tools capable of this type of analysis.*
+
+---
+
+**Shubham Chatterjee** · Process Engineer
+[processengonline.github.io](https://processengonline.github.io/) · [GitHub](https://github.com/processengonline)
