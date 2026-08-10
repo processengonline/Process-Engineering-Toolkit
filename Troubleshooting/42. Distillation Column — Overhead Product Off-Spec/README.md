@@ -118,3 +118,8 @@ Use this checklist for future distillation column gradual off-spec product event
 ---
 
 *This guide is derived from a real field troubleshooting case. Values and thresholds shown are specific to the reported case and should be validated against your own unit's design basis before applying. Note: the specific fluid package used in the original case was not documented; PR and SRK are cited as the standard candidates for this service.*
+
+---
+
+**Shubham Chatterjee** · Process Engineer
+[processengonline.github.io](https://processengonline.github.io/) · [GitHub](https://github.com/processengonline)
