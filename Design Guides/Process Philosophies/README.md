@@ -446,3 +446,8 @@ Two compounding root causes were identified:
 ---
 
 *This guide is a practical study reference combining standard process philosophy development methodology with worked sample calculations and lessons learned from real project experience. All numeric examples are illustrative — always validate against project-specific reliability data, risk criteria, utility demand, and current regulatory/code requirements. This guide should be read alongside the companion Flare Network Design, Depressurization Calculation, Compressor Settle-Out Calculations, Line List Preparation, Instrumentation Process Datasheet Preparation, Mechanical Datasheet Preparation, P&ID/PEFS Development, Steady-State Simulation, and Dynamic Simulation study guides, since process philosophy documents are the top-level governing basis every one of those disciplines' detailed work ultimately implements.*
+
+---
+
+**Shubham Chatterjee** · Process Engineer
+[processengonline.github.io](https://processengonline.github.io/) · [GitHub](https://github.com/processengonline)
