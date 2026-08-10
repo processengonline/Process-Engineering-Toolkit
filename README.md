@@ -34,7 +34,7 @@ See [`Calculators/README.md`](./Calculators/README.md) for the full list of tool
 
 ## Using the Design Guides
 
-Each guide is a self-contained Markdown study document covering theory, standard practice, and worked examples for one process design topic. Browse the index at [`Design Guides/README.md`](./Design%20Guides/README.md).
+Each guide is a self-contained Markdown study document covering theory, standard practice, and worked examples for one process design topic. Browse the index at [`Design Guides/README.md`](./Design%20Guides).
 
 ## Using the Troubleshooting Library
 
