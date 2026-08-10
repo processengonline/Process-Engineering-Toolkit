@@ -524,3 +524,8 @@ Two compounding root causes were identified:
 ---
 
 *This guide is a practical study reference combining standard separator design methodology with worked sample calculations and lessons learned from real project experience. All numeric examples are illustrative — always validate against project-specific fluid properties, the current edition of API 12J, and vendor-confirmed internals performance. This guide should be read alongside the companion Steady-State Simulation, Compressor Settle-Out Calculations, Flare Network Design, and Flow Assurance study guides, since the separators developed here directly feed the compressor suction, flare, and downstream equipment those guides depend on.*
+
+---
+
+**Shubham Chatterjee** · Process Engineer
+[processengonline.github.io](https://processengonline.github.io/) · [GitHub](https://github.com/processengonline)
