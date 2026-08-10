@@ -534,3 +534,8 @@ Two compounding root causes were identified:
 ---
 
 *This guide is a practical study reference combining standard instrument process datasheet preparation methodology with worked sample calculations and lessons learned from real project experience. All numeric examples are illustrative — always validate against project-specific process data, the current edition of the referenced standards, and vendor-confirmed performance data. This guide should be read alongside the companion Flare Network Design, Depressurization Calculation, Compressor Settle-Out Calculations, and Line List Preparation study guides, since the process conditions those studies establish are exactly what this datasheet is built to carry forward into instrument sizing and procurement.*
+
+---
+
+**Shubham Chatterjee** · Process Engineer
+[processengonline.github.io](https://processengonline.github.io/) · [GitHub](https://github.com/processengonline)
