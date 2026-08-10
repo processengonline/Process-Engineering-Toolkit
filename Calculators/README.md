@@ -41,3 +41,5 @@ These scripts are written in standard Python 3 with minimal dependencies. If a `
 ```bash
 pip install -r requirements.txt
 ```
+**Shubham Chatterjee** · Process Engineer
+[processengonline.github.io](https://processengonline.github.io/) · [GitHub](https://github.com/processengonline)
