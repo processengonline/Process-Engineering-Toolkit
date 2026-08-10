@@ -51,3 +51,8 @@ New calculators, guides, or case studies are welcome. Please:
 ## License
 
 See [LICENSE](./LICENSE) for details.
+
+---
+
+**Shubham Chatterjee** · Process Engineer
+[processengonline.github.io](https://processengonline.github.io/) · [GitHub](https://github.com/processengonline)
