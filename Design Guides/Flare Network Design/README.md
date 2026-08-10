@@ -508,3 +508,8 @@ Two compounding root causes were identified:
 ---
 
 *This guide is a practical study reference combining standard design theory with worked sample calculations and lessons learned from flare network design/review experience. All numeric examples are illustrative — always validate against project-specific design basis, vendor data, simulation results, and current regulatory requirements.*
+
+---
+
+**Shubham Chatterjee** · Process Engineer
+[processengonline.github.io](https://processengonline.github.io/) · [GitHub](https://github.com/processengonline)
