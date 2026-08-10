@@ -314,3 +314,8 @@ It showcases the integration of:
 # Disclaimer
 
 This tool is intended for educational, portfolio, and preliminary engineering purposes only. Final control valve sizing should always be verified using approved vendor sizing software, project specifications, applicable standards, and sound engineering judgment.
+
+---
+
+**Shubham Chatterjee** · Process Engineer
+[processengonline.github.io](https://processengonline.github.io/) · [GitHub](https://github.com/processengonline)
