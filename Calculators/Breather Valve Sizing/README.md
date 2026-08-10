@@ -428,18 +428,5 @@ This tool is intended for educational, portfolio, and preliminary engineering pu
 
 ---
 
-# Author
-
-**Shubham**
-
-**Process Engineer**
-
-Specializations:
-
-- Storage Tank Engineering
-- Pressure–Vacuum Relief System Design
-- Process Safety Engineering
-- Aspen HYSYS & Honeywell UniSim
-- LNG, GTL & Gas Processing
-- EPC Detailed Engineering
-- Python-Based Engineering Automation
+**Shubham Chatterjee** · Process Engineer
+[processengonline.github.io](https://processengonline.github.io/) · [GitHub](https://github.com/processengonline)
