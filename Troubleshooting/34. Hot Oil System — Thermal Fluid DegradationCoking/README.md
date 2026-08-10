@@ -99,3 +99,8 @@ With fluid degradation confirmed, the investigation turned to *why*. Reviewing f
 ---
 
 *This guide is derived from a representative field troubleshooting scenario. Values and thresholds shown are illustrative and should be validated against your own unit's design basis before applying.*
+
+---
+
+**Shubham Chatterjee** · Process Engineer
+[processengonline.github.io](https://processengonline.github.io/) · [GitHub](https://github.com/processengonline)
