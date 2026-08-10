@@ -7,7 +7,7 @@ This repo is organized into three pillars:
 | Pillar | What it contains | Link |
 |---|---|---|
 | **Calculators** | Python scripts for equipment sizing and hydraulic calculations | [`/Calculators`](./Calculators/README.md) |
-| **Design Guides** | Reference study guides on core process design topics | [`/Design Guides`](./Design%20Guides) |
+| **Design Guides** | Reference study guides on core process design topics | [`/Design Guides`](./Design%20Guides/README.md) |
 | **Troubleshooting** | Operational case studies with root-cause analysis | [`/Troubleshooting`](./Troubleshooting/README.md) |
 
 ---
@@ -34,7 +34,7 @@ See [`Calculators/README.md`](./Calculators/README.md) for the full list of tool
 
 ## Using the Design Guides
 
-Each guide is a self-contained Markdown study document covering theory, standard practice, and worked examples for one process design topic. Browse the index at [`Design Guides/README.md`](./Design%20Guides).
+Each guide is a self-contained Markdown study document covering theory, standard practice, and worked examples for one process design topic. Browse the index at [`Design Guides/README.md`](./Design%20Guides/README.md).
 
 ## Using the Troubleshooting Library
 
