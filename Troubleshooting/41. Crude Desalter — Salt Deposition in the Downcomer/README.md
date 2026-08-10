@@ -118,3 +118,8 @@ Use this checklist for future desalter recurring pressure drop / fouling events:
 ---
 
 *This guide is derived from a real field troubleshooting case. Values and thresholds shown are specific to the reported case and should be validated against your own unit's design basis before applying. Note: the specific simulation software used in the original case was not documented; OLI and Aspen Plus's electrolyte property package are cited as representative tools capable of this type of analysis.*
+
+---
+
+**Shubham Chatterjee** · Process Engineer
+[processengonline.github.io](https://processengonline.github.io/) · [GitHub](https://github.com/processengonline)
