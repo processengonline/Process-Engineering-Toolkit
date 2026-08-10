@@ -546,3 +546,8 @@ Two compounding root causes were identified:
 ---
 
 *This guide is a practical study reference combining standard mechanical datasheet preparation methodology with worked sample calculations and lessons learned from real project experience. All numeric examples are illustrative — always validate against the current edition of the referenced codes, project-specific material data, and vendor-confirmed performance data. This guide should be read alongside the companion Flare Network Design, Depressurization Calculation, Compressor Settle-Out Calculations, Line List Preparation, and Instrumentation Process Datasheet Preparation study guides, since the design conditions those studies establish are exactly what this datasheet is built to carry forward into the equipment's actual pressure-boundary design.*
+
+---
+
+**Shubham Chatterjee** · Process Engineer
+[processengonline.github.io](https://processengonline.github.io/) · [GitHub](https://github.com/processengonline)
