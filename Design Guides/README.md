@@ -36,3 +36,7 @@ Reference study guides covering core process design and engineering topics. Each
 
 - Each guide's `README.md` is the Markdown source of truth; the accompanying PDF is a generated export for distribution, tracked in version control alongside it.
 - Each guide references the relevant industry standards (API, ASME, ISA, etc.) at the point of use rather than in a separate bibliography.
+
+---
+**Shubham Chatterjee** · Process Engineer
+[processengonline.github.io](https://processengonline.github.io/) · [GitHub](https://github.com/processengonline)
