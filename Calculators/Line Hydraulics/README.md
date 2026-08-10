@@ -390,18 +390,5 @@ This calculator is intended for educational, portfolio, and preliminary engineer
 
 ---
 
-# Author
-
-**Shubham**
-
-**Process Engineer**
-
-Specializations:
-
-- Process Hydraulics
-- Pipeline Design
-- Aspen HYSYS & Honeywell UniSim
-- LNG, GTL & Gas Processing
-- EPC Detailed Engineering
-- Process Optimization
-- Python-Based Engineering Automation
+**Shubham Chatterjee** · Process Engineer
+[processengonline.github.io](https://processengonline.github.io/) · [GitHub](https://github.com/processengonline)
