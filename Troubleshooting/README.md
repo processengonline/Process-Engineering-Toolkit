@@ -88,3 +88,8 @@ Browse by category below, or use the master table for a flat, searchable list. E
 - Case numbering is sequential and permanent — a case's number should not be reused or reassigned even if reorganized by category.
 - Markdown is the source of truth; PDF exports are for distribution only.
 - New case studies should be appended with the next sequential number and added to both the master index and the relevant category list above.
+
+---
+
+**Shubham Chatterjee** · Process Engineer
+[processengonline.github.io](https://processengonline.github.io/) · [GitHub](https://github.com/processengonline)
