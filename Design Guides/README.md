@@ -1,4 +1,4 @@
-# [/Design Guides](./Design%20Guides)
+# Design Guides
 
 Reference study guides covering core process design and engineering topics. Each guide is a self-contained Markdown document with theory, standard industry practice, and worked examples.
 
