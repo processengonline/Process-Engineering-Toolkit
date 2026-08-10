@@ -461,3 +461,8 @@ Two compounding root causes were identified:
 ---
 
 *This guide is a practical study reference combining standard PEFS/P&ID development methodology with worked sample calculations and lessons learned from real project experience. All numeric examples are illustrative — always validate against project-specific process data and the current edition of the referenced standards. This guide should be read alongside the companion Flare Network Design, Depressurization Calculation, Compressor Settle-Out Calculations, Line List Preparation, Instrumentation Process Datasheet Preparation, and Mechanical Datasheet Preparation study guides, since the P&ID is the single drawing where every one of those disciplines' outputs must appear together, consistently.*
+
+---
+
+**Shubham Chatterjee** · Process Engineer
+[processengonline.github.io](https://processengonline.github.io/) · [GitHub](https://github.com/processengonline)
