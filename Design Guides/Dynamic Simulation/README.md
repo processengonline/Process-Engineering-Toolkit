@@ -425,3 +425,8 @@ Two compounding root causes were identified:
 ---
 
 *This guide is a practical study reference combining standard dynamic simulation methodology with worked sample calculations and lessons learned from real project experience. All numeric examples are illustrative — always validate against project-specific dynamic simulation output, vendor-confirmed equipment response data, and current regulatory/code requirements. This guide should be read alongside the companion Flare Network Design, Depressurization Calculation, Compressor Settle-Out Calculations, Flow Assurance, and Steady-State Simulation study guides, since dynamic simulation is where those studies' steady-state and static results are tested against real time-dependent behavior.*
+
+---
+
+**Shubham Chatterjee** · Process Engineer
+[processengonline.github.io](https://processengonline.github.io/) · [GitHub](https://github.com/processengonline)
