@@ -500,3 +500,8 @@ Two compounding root causes were identified:
 ---
 
 *This guide is a practical study reference combining standard PSV sizing and design methodology with worked sample calculations and lessons learned from real project experience. All numeric examples are illustrative — always validate against project-specific process data, vendor-certified discharge coefficients, and the current edition of API 520/521. This guide should be read alongside the companion Flare Network Design, Depressurization Calculation, Instrumentation Process Datasheet Preparation, Mechanical Datasheet Preparation, Process Philosophies, and Process Safety study guides, since PSV sizing sits at the intersection of relief scenario analysis, mechanical design, and flare system integration those guides each cover in their own detail.*
+
+---
+
+**Shubham Chatterjee** · Process Engineer
+[processengonline.github.io](https://processengonline.github.io/) · [GitHub](https://github.com/processengonline)
