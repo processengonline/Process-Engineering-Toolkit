@@ -549,3 +549,8 @@ Two compounding root causes were identified:
 ---
 
 *This guide is a practical study reference combining standard heat exchanger design methodology with worked sample calculations and lessons learned from real project experience. All numeric examples are illustrative — always validate against project-specific process data, the current edition of the referenced codes, and vendor-confirmed thermal/mechanical performance. This guide should be read alongside the companion Mechanical Datasheet Preparation, Steady-State Simulation, Flow Assurance, Flare Network Design, and Process Philosophies study guides, since heat exchanger design draws directly on the process duty, mechanical code, corrosion/fouling, and relief methodology those guides establish in detail.*
+
+---
+
+**Shubham Chatterjee** · Process Engineer
+[processengonline.github.io](https://processengonline.github.io/) · [GitHub](https://github.com/processengonline)
