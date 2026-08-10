@@ -523,3 +523,8 @@ Two compounding root causes were identified:
 ---
 
 *This guide is a practical study reference combining standard line list preparation methodology with worked sample calculations and lessons learned from real project experience. All numeric examples are illustrative — always validate against the project-specific Piping Material Specification (PMS), equipment vendor data, and the current edition of the referenced codes. This guide should be read alongside the companion Flare Network Design, Depressurization Calculation, and Compressor Settle-Out Calculations study guides, since the design pressures/temperatures those studies establish are exactly what the line list is built to carry forward.*
+
+---
+
+**Shubham Chatterjee** · Process Engineer
+[processengonline.github.io](https://processengonline.github.io/) · [GitHub](https://github.com/processengonline)
