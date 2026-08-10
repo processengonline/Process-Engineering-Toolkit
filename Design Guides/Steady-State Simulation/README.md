@@ -495,3 +495,8 @@ Two compounding root causes were identified:
 ---
 
 *This guide is a practical study reference combining standard steady-state simulation methodology with worked sample calculations and lessons learned from real project experience. All numeric examples are illustrative — always validate against project-specific PVT/composition data, the current version of the simulation software's property packages, and vendor/licensor guarantees. This guide should be read alongside the companion Flare Network Design, Depressurization Calculation, Compressor Settle-Out Calculations, Line List Preparation, Instrumentation Process Datasheet Preparation, Mechanical Datasheet Preparation, and P&ID/PEFS Development study guides, since the steady-state simulation is the source every one of those disciplines' design conditions is ultimately extracted from.*
+
+---
+
+**Shubham Chatterjee** · Process Engineer
+[processengonline.github.io](https://processengonline.github.io/) · [GitHub](https://github.com/processengonline)
