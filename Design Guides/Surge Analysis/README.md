@@ -419,3 +419,8 @@ Two compounding root causes were identified:
 ---
 
 *This guide is a practical study reference combining standard surge analysis and anti-surge system design methodology with worked sample calculations and lessons learned from real project experience. All numeric examples are illustrative — always validate against project-specific compressor performance map data, vendor-confirmed valve/actuator response, and dynamic simulation results. This guide should be read alongside the companion Compressor Settle-Out Calculations, Dynamic Simulation, Separator Design, PSV Sizing & Design, and Flare Network Design study guides, since surge protection sits at the intersection of the mechanical compressor design, the dynamic process response, and the broader relief/flare system those guides each address in their own detail.*
+
+---
+
+**Shubham Chatterjee** · Process Engineer
+[processengonline.github.io](https://processengonline.github.io/) · [GitHub](https://github.com/processengonline)
