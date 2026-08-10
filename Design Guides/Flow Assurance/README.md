@@ -558,3 +558,8 @@ Two compounding root causes were identified:
 ---
 
 *This guide is a practical study reference combining standard flow assurance design theory with worked sample calculations and lessons learned from real project experience. All numeric examples are illustrative — always validate against project-specific PVT/water-chemistry data, dynamic simulation results (OLGA/PIPESIM), and current regulatory/code requirements.*
+
+---
+
+**Shubham Chatterjee** · Process Engineer
+[processengonline.github.io](https://processengonline.github.io/) · [GitHub](https://github.com/processengonline)
