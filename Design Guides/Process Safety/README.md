@@ -493,3 +493,8 @@ Two compounding root causes were identified:
 ---
 
 *This guide is a practical study reference combining standard process safety methodology with worked sample calculations and lessons learned from real project and operational experience. All numeric examples are illustrative — always validate against project-specific hazard, reliability, and site data, and the current edition of the referenced codes and standards. This guide is the capstone companion to the Flare Network Design, Depressurization Calculation, Compressor Settle-Out Calculations, Line List Preparation, Instrumentation Process Datasheet Preparation, Mechanical Datasheet Preparation, P&ID/PEFS Development, Steady-State Simulation, Dynamic Simulation, and Process Philosophies study guides — process safety is the discipline that ties every one of those guides' individual outputs into a coherent, risk-managed whole, from design through operations.*
+
+---
+
+**Shubham Chatterjee** · Process Engineer
+[processengonline.github.io](https://processengonline.github.io/) · [GitHub](https://github.com/processengonline)
