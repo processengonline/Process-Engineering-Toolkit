@@ -32,6 +32,23 @@ flow rates given, the physically-correct optimal vessel is quite a bit larger
 than the one reported in the original (buggy) file -- this is expected and is
 called out in the report footer.
 
+NOTE ON A SECOND BUG FOUND (2026-08-13) -- NON-DETERMINISTIC OPTIMAL DIAMETER
+------------------------------------------------------------------------------
+`iterate()` originally chose the optimal trial with a raw
+`min(feasible_trials, key=lambda t: t.area_cross * t.selected_length)`. When
+liquid retention time -- not gas capacity or the L/D bounds -- controls the
+design, area_cross * selected_length is *analytically constant* across a wide
+range of diameters (it reduces to V_liquid_required / liquid_area_fraction,
+which has no diameter dependence). In that flat region many trial diameters
+produced volumes agreeing to 14+ significant figures, differing only by
+floating-point rounding noise -- so the raw `min()` was effectively picking
+an arbitrary diameter out of the tied region (observed: diameters anywhere
+from ~2.5 m to ~5.6 m for the same inputs, with no real economic difference
+between them, depending only on which trial's rounding error happened to land
+lowest). This has been fixed with a relative-tolerance comparison that ties
+toward the smallest feasible diameter, giving a deterministic, physically
+sensible result. See the comment above the fix in `iterate()` for details.
+
 All internal results are cross-checked with assertions (see `self_test()`)
 so the tool cannot silently produce a geometrically-impossible design.
 """
@@ -256,10 +273,37 @@ class SeparatorSizer:
 
         # Choose the design that minimizes vessel volume (most economical)
         # among all feasible candidates.
-        self.optimal = min(
-            feasible_trials,
-            key=lambda t: t.area_cross * t.selected_length,
-        )
+        #
+        # NOTE ON A SECOND BUG FOUND AND FIXED HERE:
+        # When liquid retention time (rather than gas capacity or the L/D
+        # bounds) controls the design, area_cross * selected_length is
+        # *analytically constant* across a wide range of diameters: for a
+        # fixed liquid_area_fraction f_liq,
+        #     length_oil = V_oil_required / (f_liq * area_cross)
+        #     => area_cross * length_oil = V_oil_required / f_liq
+        # which does not depend on diameter at all. In that flat region,
+        # many trial diameters produce volumes that agree to 14+ significant
+        # figures, differing only by floating-point rounding noise (e.g.
+        # 59.99999999999999 vs 60.00000000000001). A raw `min(key=...)` over
+        # these values effectively picks an arbitrary diameter out of the tied
+        # region based on which one happens to round very slightly low --
+        # this produced non-deterministic, engineering-meaningless
+        # "optimal" diameters (observed: re-running with logically identical
+        # inputs could select anywhere from ~2.5 m to ~5.6 m with no real
+        # economic difference between them).
+        #
+        # Fixed by comparing with a relative tolerance and, among trials that
+        # tie within that tolerance, preferring the smallest diameter (the
+        # trials list is already in ascending-diameter order, so the first
+        # candidate found within tolerance of the running best is kept).
+        rel_tol = 1e-6
+        self.optimal = feasible_trials[0]
+        optimal_volume = self.optimal.area_cross * self.optimal.selected_length
+        for t in feasible_trials:
+            volume = t.area_cross * t.selected_length
+            if volume < optimal_volume - rel_tol * max(1.0, optimal_volume):
+                self.optimal = t
+                optimal_volume = volume
         return self.trials
 
     # ---------------------------------------------------------------- #

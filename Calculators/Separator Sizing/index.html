@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Separator Sizing Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy: #0B1F33;
+    --navy-2: #122A44;
+    --blueprint: #1B4F72;
+    --line: #3E7CB1;
+    --line-dim: #2A5A80;
+    --paper: #EAE6D9;
+    --paper-dim: #B9C4CC;
+    --amber: #E8A33D;
+    --green: #6FA787;
+    --red: #C96A5C;
+    --grid: rgba(62,124,177,0.16);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      linear-gradient(var(--grid) 1px, transparent 1px) 0 0/28px 28px,
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px) 0 0/28px 28px,
+      var(--navy);
+    color:var(--paper);
+    font-family:'Space Grotesk', sans-serif;
+    min-height:100vh;
+  }
+  .wrap{max-width:1080px;margin:0 auto;padding:48px 24px 80px;}
+
+  header{margin-bottom:40px;border-bottom:1px solid var(--line-dim);padding-bottom:24px;}
+  .eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--line);margin:0 0 10px;
+  }
+  h1{
+    font-size:clamp(28px,4vw,42px);
+    margin:0 0 12px;font-weight:700;letter-spacing:-0.01em;
+  }
+  .sub{color:var(--paper-dim);font-size:15px;max-width:680px;line-height:1.55;margin:0 0 16px;}
+  .source-link{
+    font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.03em;
+    color:var(--line);text-decoration:none;border-bottom:1px solid var(--line-dim);
+    padding-bottom:2px;transition:color .15s, border-color .15s;
+  }
+  .source-link:hover{color:var(--amber);border-color:var(--amber);}
+  .source-link:focus-visible{outline:2px solid var(--amber);outline-offset:2px;}
+
+  .bugnote{
+    font-family:'IBM Plex Mono',monospace;font-size:11.5px;line-height:1.55;color:var(--paper-dim);
+    background:rgba(232,163,61,.08);border:1px solid rgba(232,163,61,.35);border-radius:6px;
+    padding:12px 14px;margin-top:16px;
+  }
+  .bugnote b{color:var(--amber);}
+
+  .grid{display:grid;grid-template-columns:1.1fr 1fr;gap:36px;align-items:start;}
+  @media (max-width:820px){.grid{grid-template-columns:1fr;}}
+
+  .panel{
+    background:var(--navy-2);border:1px solid var(--line-dim);border-radius:8px;padding:26px;
+  }
+  .panel h2{
+    font-family:'IBM Plex Mono',monospace;font-size:12px;text-transform:uppercase;
+    letter-spacing:.14em;color:var(--line);margin:0 0 20px;
+  }
+  .panel h3{
+    font-family:'IBM Plex Mono',monospace;font-size:11px;text-transform:uppercase;
+    letter-spacing:.12em;color:var(--paper-dim);margin:22px 0 14px;
+    border-top:1px solid var(--line-dim);padding-top:16px;
+  }
+  .panel h3:first-of-type{margin-top:0;border-top:none;padding-top:0;}
+
+  .field{margin-bottom:16px;}
+  .field:last-child{margin-bottom:0;}
+  label{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;color:var(--paper);margin-bottom:6px;}
+  label .unit{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--paper-dim);}
+  input[type=number]{
+    width:100%;background:var(--navy);border:1px solid var(--line-dim);border-radius:5px;
+    color:var(--paper);font-family:'IBM Plex Mono',monospace;font-size:14px;
+    padding:9px 11px;transition:border-color .15s;
+  }
+  input[type=number]:focus{outline:none;border-color:var(--line);box-shadow:0 0 0 3px rgba(62,124,177,0.22);}
+  .hint{font-size:11px;color:var(--paper-dim);margin-top:4px;line-height:1.4;}
+  .err{font-size:11.5px;color:var(--red);margin-top:8px;display:none;}
+
+  .readout{
+    background:var(--navy-2);border:1px solid var(--line-dim);border-radius:8px;
+    padding:26px;display:flex;flex-direction:column;gap:20px;position:sticky;top:24px;
+  }
+  .readout h2{
+    font-family:'IBM Plex Mono',monospace;font-size:12px;text-transform:uppercase;
+    letter-spacing:.14em;color:var(--line);margin:0;
+  }
+  .dual-figure{display:flex;gap:22px;flex-wrap:wrap;}
+  .dual-figure div{flex:1;min-width:110px;}
+  .big-num{font-size:38px;font-weight:700;line-height:1;letter-spacing:-0.02em;font-variant-numeric:tabular-nums;display:block;}
+  .big-unit{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--paper-dim);}
+  .big-label{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--paper-dim);display:block;margin-bottom:4px;}
+
+  .diagram{display:flex;align-items:center;justify-content:center;padding:6px 0;}
+  .diagram svg{overflow:visible;max-width:100%;}
+
+  .stat-row{display:flex;justify-content:space-between;gap:12px;font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--paper-dim);border-top:1px solid var(--line-dim);padding-top:12px;}
+  .stat-row span:first-child{flex-shrink:0;}
+  .stat-row span:last-child{color:var(--paper);text-align:right;}
+  #stat-rows{display:flex;flex-direction:column;gap:12px;}
+
+  .badge{
+    font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.06em;
+    padding:4px 10px;border-radius:20px;display:inline-block;width:fit-content;
+  }
+  .badge.ok{background:rgba(111,167,135,.15);color:var(--green);border:1px solid rgba(111,167,135,.4);}
+  .badge.warn{background:rgba(232,163,61,.15);color:var(--amber);border:1px solid rgba(232,163,61,.4);}
+
+  .trials-section{margin-top:32px;background:var(--navy-2);border:1px solid var(--line-dim);border-radius:8px;padding:26px;}
+  .trials-section h2{
+    font-family:'IBM Plex Mono',monospace;font-size:12px;text-transform:uppercase;
+    letter-spacing:.14em;color:var(--line);margin:0 0 16px;
+  }
+  table{width:100%;border-collapse:collapse;font-family:'IBM Plex Mono',monospace;font-size:12px;}
+  th, td{text-align:right;padding:8px 10px;border-bottom:1px solid var(--line-dim);white-space:nowrap;}
+  th:first-child, td:first-child{text-align:left;}
+  th{color:var(--line);font-weight:600;text-transform:uppercase;font-size:10.5px;letter-spacing:.06em;}
+  td{color:var(--paper-dim);}
+  tr.optimal td{color:var(--amber);font-weight:600;}
+  .table-scroll{overflow-x:auto;}
+
+  footer{margin-top:40px;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--paper-dim);line-height:1.6;border-top:1px solid var(--line-dim);padding-top:20px;}
+  .hidden{display:none !important;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">Separator Sizing — Rev. 1</p>
+    <h1>3-Phase Separator Sizing Calculator</h1>
+    <p class="sub">Horizontal gas/oil/water separator sizing using Souders-Brown gas-capacity velocity, Stokes' law droplet settling, and liquid retention-time volume checks. Sweeps trial diameters and selects the smallest-volume feasible design.</p>
+    <a class="source-link" href="https://github.com/processengonline/Process-Engineering-Toolkit/tree/main/Calculators/Separator%20Sizing" target="_blank" rel="noopener noreferrer">
+      View calculation source on GitHub ↗
+    </a>
+    <div class="bugnote">
+      <b>Historical note (already fixed everywhere — no action needed):</b> an earlier, non-Python spreadsheet version of this tool computed liquid retention length using an effective liquid area roughly 3× the vessel's true cross-section — a dimensionally impossible result. <code>separator_sizing.py</code> has always used the corrected formula, L_liquid = V_liquid_required / (liquid_area_fraction × A_cross), and this calculator matches it. Results here will run larger than that old spreadsheet for the same inputs — that's expected, not a discrepancy to resolve.
+    </div>
+  </header>
+
+  <div class="grid">
+
+    <!-- INPUTS PANEL -->
+    <section class="panel">
+      <h2>Inputs</h2>
+
+      <h3>Process Conditions</h3>
+      <div class="field">
+        <label for="i-P">Operating pressure <span class="unit">kPa</span></label>
+        <input type="number" id="i-P" value="5000" step="any" min="0">
+      </div>
+      <div class="field">
+        <label for="i-T">Operating temperature <span class="unit">K</span></label>
+        <input type="number" id="i-T" value="323.15" step="any" min="0">
+      </div>
+      <div class="field">
+        <label for="i-Qg">Gas flow rate <span class="unit">m³/s</span></label>
+        <input type="number" id="i-Qg" value="0.50" step="any" min="0">
+      </div>
+      <div class="field">
+        <label for="i-Qo">Oil flow rate <span class="unit">m³/s</span></label>
+        <input type="number" id="i-Qo" value="0.10" step="any" min="0">
+      </div>
+      <div class="field">
+        <label for="i-Qw">Water flow rate <span class="unit">m³/s</span></label>
+        <input type="number" id="i-Qw" value="0.05" step="any" min="0">
+      </div>
+
+      <h3>Fluid Properties</h3>
+      <div class="field">
+        <label for="i-rhog">Gas density <span class="unit">kg/m³</span></label>
+        <input type="number" id="i-rhog" value="45.5" step="any" min="0">
+      </div>
+      <div class="field">
+        <label for="i-rhoo">Oil density <span class="unit">kg/m³</span></label>
+        <input type="number" id="i-rhoo" value="800" step="any" min="0">
+      </div>
+      <div class="field">
+        <label for="i-rhow">Water density <span class="unit">kg/m³</span></label>
+        <input type="number" id="i-rhow" value="1000" step="any" min="0">
+      </div>
+      <div class="field">
+        <label for="i-mug">Gas viscosity <span class="unit">Pa·s</span></label>
+        <input type="number" id="i-mug" value="0.000015" step="any" min="0">
+      </div>
+      <div class="field">
+        <label for="i-muo">Oil viscosity <span class="unit">Pa·s</span></label>
+        <input type="number" id="i-muo" value="0.003" step="any" min="0">
+        <div class="hint">Reported only — not used in the current gas/settling formulas.</div>
+      </div>
+      <div class="field">
+        <label for="i-muw">Water viscosity <span class="unit">Pa·s</span></label>
+        <input type="number" id="i-muw" value="0.001" step="any" min="0">
+        <div class="hint">Reported only — not used in the current gas/settling formulas.</div>
+      </div>
+      <div class="field">
+        <label for="i-siggo">Surface tension, gas-oil <span class="unit">N/m</span></label>
+        <input type="number" id="i-siggo" value="0.025" step="any" min="0">
+        <div class="hint">Reported only — not used in the current sizing formulas.</div>
+      </div>
+      <div class="field">
+        <label for="i-sigow">Surface tension, oil-water <span class="unit">N/m</span></label>
+        <input type="number" id="i-sigow" value="0.035" step="any" min="0">
+        <div class="hint">Reported only — not used in the current sizing formulas.</div>
+      </div>
+
+      <h3>Design Criteria</h3>
+      <div class="field">
+        <label for="i-K">K-factor (Souders-Brown)</label>
+        <input type="number" id="i-K" value="0.10" step="any" min="0">
+      </div>
+      <div class="field">
+        <label for="i-tro">Oil residence time <span class="unit">min</span></label>
+        <input type="number" id="i-tro" value="5.0" step="any" min="0">
+      </div>
+      <div class="field">
+        <label for="i-trw">Water residence time <span class="unit">min</span></label>
+        <input type="number" id="i-trw" value="3.0" step="any" min="0">
+      </div>
+      <div class="field">
+        <label for="i-dd">Design droplet size <span class="unit">m</span></label>
+        <input type="number" id="i-dd" value="0.0001" step="any" min="0">
+      </div>
+      <div class="field">
+        <label for="i-ldt">Target L/D ratio</label>
+        <input type="number" id="i-ldt" value="4.0" step="any" min="0">
+      </div>
+      <div class="field">
+        <label for="i-ldmin">Minimum L/D ratio</label>
+        <input type="number" id="i-ldmin" value="2.5" step="any" min="0">
+      </div>
+      <div class="field">
+        <label for="i-ldmax">Maximum L/D ratio</label>
+        <input type="number" id="i-ldmax" value="5.0" step="any" min="0">
+      </div>
+      <div class="field">
+        <label for="i-fliq">Liquid area fraction</label>
+        <input type="number" id="i-fliq" value="0.5" step="any" min="0.05" max="0.95">
+        <div class="hint">Fraction of cross-section occupied by liquid at design level.</div>
+        <div class="err" id="i-err"></div>
+      </div>
+    </section>
+
+    <!-- READOUT -->
+    <section class="readout">
+      <h2>Recommended Separator</h2>
+
+      <div class="diagram">
+        <svg width="260" height="140" viewBox="0 0 260 140" id="vessel-svg">
+          <rect id="vessel-body" x="30" y="40" width="200" height="60" rx="30" fill="none" stroke="var(--line)" stroke-width="2"/>
+          <clipPath id="vessel-clip"><rect id="vessel-clip-rect" x="30" y="40" width="200" height="60" rx="30"/></clipPath>
+          <rect id="liquid-fill" x="30" y="70" width="200" height="30" fill="var(--line)" opacity="0.35" clip-path="url(#vessel-clip)"/>
+          <line id="liquid-level-line" x1="30" y1="70" x2="230" y2="70" stroke="var(--amber)" stroke-width="1.5" stroke-dasharray="4 3"/>
+        </svg>
+      </div>
+
+      <div class="dual-figure">
+        <div>
+          <span class="big-label">Diameter</span>
+          <span class="big-num" id="out-diam">—</span>
+          <span class="big-unit">m</span>
+        </div>
+        <div>
+          <span class="big-label">Length</span>
+          <span class="big-num" id="out-length">—</span>
+          <span class="big-unit">m</span>
+        </div>
+      </div>
+
+      <span class="badge ok" id="status-badge">READY</span>
+
+      <div id="stat-rows"></div>
+    </section>
+
+  </div>
+
+  <div class="trials-section hidden" id="trials-section">
+    <h2>Trial Diameters Evaluated (Representative Subset)</h2>
+    <div class="table-scroll">
+      <table id="trials-table">
+        <thead>
+          <tr>
+            <th>Diameter (m)</th>
+            <th>Area (m²)</th>
+            <th>L, gas (m)</th>
+            <th>L, oil (m)</th>
+            <th>L, water (m)</th>
+            <th>L, L/D-min (m)</th>
+            <th>Selected L (m)</th>
+            <th>L/D</th>
+            <th>Gas v (m/s)</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="trials-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <footer>
+    Souders-Brown: V_max = K·√[(ρ_L−ρ_G)/ρ_G] &nbsp;|&nbsp; A_gas = Q_gas/V_max, D_min = √(4·A_gas / (π·(1−f_liq)))<br>
+    Droplet settling (Stokes'): V_t = g·d²·(ρ_oil−ρ_gas) / (18·μ_gas)<br>
+    Retention volumes: V_oil = Q_oil·t_oil·60, V_water = Q_water·t_water·60 &nbsp;|&nbsp; Corrected length: L_liquid = V_liquid / (f_liq·A_cross)<br>
+    Trial sweep: diameters from ⌈D_min/0.05⌉×0.05 upward in 0.05 m steps over a 6 m span; optimal = feasible trial minimizing A_cross × selected length.<br>
+    When liquid retention time (not gas capacity or L/D) controls the design, A_cross × length is nearly constant across a wide diameter range — several trial diameters can tie to 14+ significant figures. This calculator (and the current separator_sizing.py, after a second bug fix) breaks such ties toward the smallest feasible diameter for a deterministic, physically sensible result — both now select the same D = 2.50 m / L = 12.22 m for the default inputs, rather than the non-deterministic ~2.5–5.6 m the unpatched script could return purely from floating-point rounding noise.<br>
+    Converted from separator_sizing.py, including its liquid-retention-length bug fix (see note above). Preliminary/screening sizing only — final design must comply with API 12J, GPSA, and ASME Section VIII Div. 1, and be reviewed by a licensed professional engineer.<br>
+    Source: <a class="source-link" href="https://github.com/processengonline/Process-Engineering-Toolkit/tree/main/Calculators/Separator%20Sizing" target="_blank" rel="noopener noreferrer">Process-Engineering-Toolkit / Separator Sizing ↗</a>
+  </footer>
+
+</div>
+
+<script>
+const G = 9.80665;
+
+function fmt(num, sig=4){
+  if(num===0) return '0';
+  const abs = Math.abs(num);
+  if(abs < 0.001 || abs >= 100000) return num.toExponential(3);
+  return num.toPrecision(sig);
+}
+
+function soudersBrownVelocity(rhoOil, rhoGas, K){
+  if(!(rhoGas>0)) throw new Error("Gas density must be positive");
+  if(!(rhoOil>rhoGas)) throw new Error("Liquid density must exceed gas density");
+  const ratio = (rhoOil-rhoGas)/rhoGas;
+  return K*Math.sqrt(ratio);
+}
+
+function minimumGasArea(Qgas, vMax, liquidAreaFraction){
+  const aGasRequired = Qgas/vMax;
+  const gasAreaFraction = 1.0 - liquidAreaFraction;
+  const dMinGas = Math.sqrt(4*aGasRequired/(Math.PI*gasAreaFraction));
+  return {aGasRequired, dMinGas};
+}
+
+function liquidRetentionVolumes(Qoil, Qwater, tOilMin, tWaterMin){
+  const vOil = Qoil*tOilMin*60.0;
+  const vWater = Qwater*tWaterMin*60.0;
+  return {vOil, vWater, vTotal: vOil+vWater};
+}
+
+function dropletSettlingVelocity(dropletSize, rhoOil, rhoGas, muGas){
+  const deltaRho = rhoOil-rhoGas;
+  return (G*dropletSize*dropletSize*deltaRho)/(18.0*muGas);
+}
+
+function evaluateTrial(d, params){
+  const {fLiq, Qgas, vOilReq, vWaterReq, settlingVelocity, minLd, maxLd, vMax} = params;
+  const fGas = 1.0-fLiq;
+  const aCross = Math.PI/4.0*d*d;
+  const aLiquid = fLiq*aCross;
+  const aGas = fGas*aCross;
+
+  const vGasActual = Qgas/aGas;
+  const hGas = fGas*d;
+  const lengthGas = vGasActual*hGas/settlingVelocity;
+
+  const lengthOil = vOilReq/aLiquid;
+  const lengthWater = vWaterReq/aLiquid;
+  const lengthLdMin = minLd*d;
+
+  const requiredLength = Math.max(lengthGas, lengthOil, lengthWater, lengthLdMin);
+  const maxLengthAllowed = maxLd*d;
+
+  const failReasons = [];
+  let feasible = true;
+  if(vGasActual > vMax+1e-9){ feasible=false; failReasons.push('gas velocity exceeds V_max'); }
+  if(requiredLength > maxLengthAllowed+1e-9){ feasible=false; failReasons.push('required length exceeds Max L/D limit'); }
+
+  const selectedLength = feasible ? requiredLength : maxLengthAllowed;
+  const ldAchieved = selectedLength/d;
+
+  return {diameter:d, areaCross:aCross, lengthGas, lengthOil, lengthWater, lengthLdMin,
+          selectedLength, ldAchieved, gasVelocity:vGasActual, feasible, failReasons};
+}
+
+function nozzleSizeInches(q, rho, targetVelocity){
+  if(!(q>0)) return 1.0;
+  const area = q/targetVelocity;
+  const dM = Math.sqrt(4*area/Math.PI);
+  let dIn = dM/0.0254;
+  dIn = Math.max(1.0, Math.ceil(dIn*2)/2.0);
+  return dIn;
+}
+
+function clearError(){
+  const el = document.getElementById('i-err');
+  el.style.display = 'none';
+  el.textContent = '';
+}
+
+function showError(msg){
+  const el = document.getElementById('i-err');
+  el.textContent = msg;
+  el.style.display = 'block';
+  document.getElementById('out-diam').textContent = '—';
+  document.getElementById('out-length').textContent = '—';
+  document.getElementById('stat-rows').innerHTML = '';
+  document.getElementById('trials-section').classList.add('hidden');
+  const badge = document.getElementById('status-badge');
+  badge.textContent = 'CHECK INPUTS';
+  badge.className = 'badge warn';
+}
+
+function renderStats(rows){
+  const container = document.getElementById('stat-rows');
+  container.innerHTML = '';
+  rows.forEach(([label, val])=>{
+    const row = document.createElement('div');
+    row.className = 'stat-row';
+    row.innerHTML = `<span>${label}</span><span>${val}</span>`;
+    container.appendChild(row);
+  });
+}
+
+function updateVesselDiagram(diameter, length, fLiq){
+  const ld = length/diameter;
+  const ldClamped = Math.max(1.5, Math.min(7, ld));
+  const bodyW = 100 + ldClamped*20;
+  const bodyH = 60;
+  const totalW = bodyW + 60;
+  const svg = document.getElementById('vessel-svg');
+  svg.setAttribute('viewBox', `0 0 ${totalW} 140`);
+
+  const x = 30, y = 40, r = bodyH/2;
+  document.getElementById('vessel-body').setAttribute('x', x);
+  document.getElementById('vessel-body').setAttribute('width', bodyW);
+  document.getElementById('vessel-body').setAttribute('rx', r);
+
+  document.getElementById('vessel-clip-rect').setAttribute('x', x);
+  document.getElementById('vessel-clip-rect').setAttribute('width', bodyW);
+  document.getElementById('vessel-clip-rect').setAttribute('rx', r);
+
+  const liquidH = fLiq*bodyH;
+  const liquidY = y + (bodyH-liquidH);
+  document.getElementById('liquid-fill').setAttribute('x', x);
+  document.getElementById('liquid-fill').setAttribute('width', bodyW);
+  document.getElementById('liquid-fill').setAttribute('y', liquidY);
+  document.getElementById('liquid-fill').setAttribute('height', liquidH);
+
+  document.getElementById('liquid-level-line').setAttribute('x1', x);
+  document.getElementById('liquid-level-line').setAttribute('x2', x+bodyW);
+  document.getElementById('liquid-level-line').setAttribute('y1', liquidY);
+  document.getElementById('liquid-level-line').setAttribute('y2', liquidY);
+}
+
+function renderTrials(trials, optimal){
+  const infeasible = trials.filter(t=>!t.feasible).slice(0,2);
+  const feasible = trials.filter(t=>t.feasible);
+  const firstFeasible = feasible.length ? feasible[0] : null;
+  const lastTrial = trials[trials.length-1];
+
+  const representative = [...infeasible];
+  [firstFeasible, optimal, lastTrial].forEach(cand=>{
+    if(cand && !representative.includes(cand)) representative.push(cand);
+  });
+  representative.sort((a,b)=>a.diameter-b.diameter);
+
+  const tbody = document.getElementById('trials-tbody');
+  tbody.innerHTML = '';
+  representative.forEach(t=>{
+    const tr = document.createElement('tr');
+    if(t===optimal) tr.className = 'optimal';
+    const status = t.feasible ? 'Pass' : ('Fail: ' + t.failReasons.join('; '));
+    const tag = t===optimal ? ' (SELECTED)' : '';
+    tr.innerHTML = `
+      <td>${fmt(t.diameter,3)}${tag}</td>
+      <td>${fmt(t.areaCross,3)}</td>
+      <td>${fmt(t.lengthGas,3)}</td>
+      <td>${fmt(t.lengthOil,3)}</td>
+      <td>${fmt(t.lengthWater,3)}</td>
+      <td>${fmt(t.lengthLdMin,3)}</td>
+      <td>${fmt(t.selectedLength,3)}</td>
+      <td>${fmt(t.ldAchieved,3)}</td>
+      <td>${fmt(t.gasVelocity,3)}</td>
+      <td>${status}</td>`;
+    tbody.appendChild(tr);
+  });
+  document.getElementById('trials-section').classList.remove('hidden');
+}
+
+function compute(){
+  clearError();
+  const badge = document.getElementById('status-badge');
+
+  try{
+    const P = parseFloat(document.getElementById('i-P').value);
+    const T = parseFloat(document.getElementById('i-T').value);
+    const Qgas = parseFloat(document.getElementById('i-Qg').value);
+    const Qoil = parseFloat(document.getElementById('i-Qo').value);
+    const Qwater = parseFloat(document.getElementById('i-Qw').value);
+
+    const rhoGas = parseFloat(document.getElementById('i-rhog').value);
+    const rhoOil = parseFloat(document.getElementById('i-rhoo').value);
+    const rhoWater = parseFloat(document.getElementById('i-rhow').value);
+    const muGas = parseFloat(document.getElementById('i-mug').value);
+
+    const K = parseFloat(document.getElementById('i-K').value);
+    const tOil = parseFloat(document.getElementById('i-tro').value);
+    const tWater = parseFloat(document.getElementById('i-trw').value);
+    const dropletSize = parseFloat(document.getElementById('i-dd').value);
+    const minLd = parseFloat(document.getElementById('i-ldmin').value);
+    const maxLd = parseFloat(document.getElementById('i-ldmax').value);
+    const fLiq = parseFloat(document.getElementById('i-fliq').value);
+
+    if(!(Qgas>0)) throw new Error("Gas flow rate must be > 0");
+    if(!(Qoil>0)) throw new Error("Oil flow rate must be > 0");
+    if(!(Qwater>0)) throw new Error("Water flow rate must be > 0");
+    if(!(muGas>0)) throw new Error("Gas viscosity must be > 0");
+    if(!(K>0)) throw new Error("K-factor must be > 0");
+    if(!(tOil>0)) throw new Error("Oil residence time must be > 0");
+    if(!(tWater>0)) throw new Error("Water residence time must be > 0");
+    if(!(dropletSize>0)) throw new Error("Design droplet size must be > 0");
+    if(!(minLd>0)) throw new Error("Minimum L/D must be > 0");
+    if(!(maxLd>minLd)) throw new Error("Maximum L/D must exceed minimum L/D");
+    if(!(fLiq>0 && fLiq<1)) throw new Error("Liquid area fraction must be between 0 and 1");
+
+    const vMax = soudersBrownVelocity(rhoOil, rhoGas, K);
+    const {aGasRequired, dMinGas} = minimumGasArea(Qgas, vMax, fLiq);
+    const {vOil: vOilReq, vWater: vWaterReq, vTotal} = liquidRetentionVolumes(Qoil, Qwater, tOil, tWater);
+    const settlingVelocity = dropletSettlingVelocity(dropletSize, rhoOil, rhoGas, muGas);
+
+    const step = 0.05, searchSpan = 6.0;
+    const start = Math.ceil(dMinGas/step)*step;
+    const nSteps = Math.round(searchSpan/step);
+    const params = {fLiq, Qgas, vOilReq, vWaterReq, settlingVelocity, minLd, maxLd, vMax};
+
+    const trials = [];
+    for(let i=0;i<nSteps;i++){
+      const d = Math.round((start + i*step)*1000)/1000;
+      trials.push(evaluateTrial(d, params));
+    }
+
+    const feasibleTrials = trials.filter(t=>t.feasible);
+    if(feasibleTrials.length===0){
+      throw new Error("No feasible diameter found within the search span. Widen design criteria (e.g. K-factor, L/D bounds) and try again.");
+    }
+    // Tolerance-based selection: pick the smallest-volume feasible trial, preferring
+    // the smallest diameter among any that tie within a relative tolerance. This avoids
+    // picking arbitrary trials apart based on floating-point noise alone when several
+    // diameters land on essentially the same vessel volume (a flat region common when
+    // liquid retention time — not gas capacity or L/D — is the controlling constraint).
+    let optimal = feasibleTrials[0];
+    let optimalVol = optimal.areaCross*optimal.selectedLength;
+    for(const t of feasibleTrials){
+      const vol = t.areaCross*t.selectedLength;
+      const relTol = 1e-6*Math.max(1, optimalVol);
+      if(vol < optimalVol - relTol){
+        optimal = t;
+        optimalVol = vol;
+      }
+    }
+
+    // Outputs
+    document.getElementById('out-diam').textContent = fmt(optimal.diameter,3);
+    document.getElementById('out-length').textContent = fmt(optimal.selectedLength,3);
+
+    const safetyMargin = (vMax-optimal.gasVelocity)/vMax*100.0;
+    const aLiquidOpt = fLiq*optimal.areaCross;
+    const oilResAchieved = (aLiquidOpt*optimal.selectedLength)/Qoil/60.0;
+    const waterResAchieved = (aLiquidOpt*optimal.selectedLength)/Qwater/60.0;
+
+    const mixRho = (Qgas*rhoGas + Qoil*rhoOil + Qwater*rhoWater)/(Qgas+Qoil+Qwater);
+    const inletV = Math.sqrt(7000.0/mixRho);
+    const liqV = 2.0;
+    const gasV = Math.sqrt(7000.0/rhoGas);
+
+    const inletNozzle = nozzleSizeInches(Qgas+Qoil+Qwater, mixRho, inletV);
+    const gasNozzle = nozzleSizeInches(Qgas, rhoGas, gasV);
+    const oilNozzle = nozzleSizeInches(Qoil, rhoOil, liqV);
+    const waterNozzle = nozzleSizeInches(Qwater, rhoWater, liqV);
+
+    const rows = [
+      ['V_max (Souders-Brown)', fmt(vMax,4) + ' m/s'],
+      ['Min. diameter (gas capacity)', fmt(dMinGas,4) + ' m'],
+      ['Settling velocity (droplet)', fmt(settlingVelocity,4) + ' m/s'],
+      ['Oil / water volume required', fmt(vOilReq,3) + ' / ' + fmt(vWaterReq,3) + ' m³'],
+      ['L/D achieved', fmt(optimal.ldAchieved,4)],
+      ['Gas velocity vs. V_max', fmt(optimal.gasVelocity,4) + ' / ' + fmt(vMax,4) + ' m/s'],
+      ['Safety margin', fmt(safetyMargin,3) + ' %'],
+      ['Oil / water residence achieved', fmt(oilResAchieved,3) + ' / ' + fmt(waterResAchieved,3) + ' min'],
+      ['Inlet nozzle', fmt(inletNozzle,3) + ' in'],
+      ['Gas outlet nozzle', fmt(gasNozzle,3) + ' in'],
+      ['Oil outlet nozzle', fmt(oilNozzle,3) + ' in'],
+      ['Water outlet nozzle', fmt(waterNozzle,3) + ' in'],
+      ['Trials evaluated / feasible', trials.length + ' / ' + feasibleTrials.length],
+    ];
+    renderStats(rows);
+    renderTrials(trials, optimal);
+    updateVesselDiagram(optimal.diameter, optimal.selectedLength, fLiq);
+
+    badge.textContent = 'FEASIBLE DESIGN FOUND';
+    badge.className = 'badge ok';
+
+  } catch(e){
+    showError(e.message);
+    return;
+  }
+}
+
+const ids = ['i-P','i-T','i-Qg','i-Qo','i-Qw','i-rhog','i-rhoo','i-rhow','i-mug','i-muo','i-muw',
+             'i-siggo','i-sigow','i-K','i-tro','i-trw','i-dd','i-ldt','i-ldmin','i-ldmax','i-fliq'];
+ids.forEach(id=>document.getElementById(id).addEventListener('input', compute));
+
+compute();
+</script>
+</body>
+</html>
