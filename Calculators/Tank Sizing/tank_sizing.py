@@ -6,6 +6,7 @@ and surface areas). Includes a small CLI to compute:
  - volume from diameter and height
  - required diameter (or height) for a target volume
  - shell, roof and bottom areas for insulation/heat-loss estimation
+ - flat or conical roof area (--roof-type flat|conical, default flat)
 
 Units: SI (meters, cubic meters, kg/m³)
 
@@ -13,8 +14,20 @@ Usage examples:
     python tank_sizing.py --diameter 10 --height 8
     python tank_sizing.py --target-volume 500 --assume-height 6
     python tank_sizing.py --target-volume 200 --assume-diameter 4
+    python tank_sizing.py --diameter 10 --height 8 --roof-type conical
+    python tank_sizing.py --diameter 10 --height 8 --roof-type conical --roof-rise 1.0
 
 You can also pass a JSON or YAML inputs file via --inputs (supports YAML when PyYAML is installed).
+
+Changelog:
+ - Added: conical roof area option. area_roof_for_type() dispatches to the
+   existing flat formula (pi*D^2/4, unchanged default behavior) or a new
+   area_roof_conical() using a right-circular-cone approximation:
+   r = D/2, slant_height = sqrt(r^2 + rise^2), area = pi*r*slant_height.
+   When --roof-type conical is given without --roof-rise, rise defaults to
+   D/16 (a typical ~1:16 roof slope) via default_roof_rise(). Existing
+   callers that don't pass roof_type are unaffected (default remains "flat",
+   identical output to before this change).
 """
 from dataclasses import dataclass
 import math
@@ -38,6 +51,8 @@ class TankSizingInputs:
     assume_diameter: Optional[float] = None  # m (for sizing height)
     assume_height: Optional[float] = None  # m (for sizing diameter)
     product_density: float = 1000.0  # kg/m³ default (water)
+    roof_type: str = "flat"  # "flat" or "conical"
+    roof_rise: Optional[float] = None  # m, apex height above shell top (conical only)
 
 
 def volume_cylinder(diameter: float, height: float) -> float:
@@ -68,6 +83,42 @@ def area_shell(diameter: float, height: float) -> float:
 def area_roof(diameter: float) -> float:
     """Flat roof area: π D² / 4"""
     return math.pi * diameter * diameter / 4.0
+
+
+def default_roof_rise(diameter: float) -> float:
+    """Default conical roof rise (m) using a typical ~1:16 slope (rise ≈ D/16)."""
+    return diameter / 16.0
+
+
+def area_roof_conical(diameter: float, rise: float) -> float:
+    """Conical (peaked) roof lateral surface area (m²).
+
+    Treats the roof as a right circular cone of base diameter `diameter` and
+    apex height `rise` above the shell top:
+        r = diameter / 2
+        slant_height = sqrt(r^2 + rise^2)
+        area = pi * r * slant_height
+    """
+    if diameter <= 0:
+        raise ValueError("Diameter must be > 0")
+    if rise < 0:
+        raise ValueError("Roof rise must be >= 0")
+    r = diameter / 2.0
+    slant_height = math.sqrt(r * r + rise * rise)
+    return math.pi * r * slant_height
+
+
+def area_roof_for_type(diameter: float, roof_type: str = "flat", rise: Optional[float] = None) -> float:
+    """Dispatch roof area calculation based on roof_type ("flat" or "conical").
+
+    For "conical" with no explicit `rise`, falls back to `default_roof_rise(diameter)`
+    (a typical ~1:16 roof slope). Unknown roof_type values fall back to "flat".
+    """
+    roof_type = (roof_type or "flat").lower()
+    if roof_type == "conical":
+        r = rise if rise is not None else default_roof_rise(diameter)
+        return area_roof_conical(diameter, r)
+    return area_roof(diameter)
 
 
 def area_bottom(diameter: float, bottom_present: bool = True) -> float:
@@ -113,7 +164,7 @@ def compute_from_args(args: argparse.Namespace) -> Dict[str, float]:
         if val is not None:
             data[name] = val
 
-    for name in ('diameter', 'height', 'target_volume', 'assume_diameter', 'assume_height', 'product_density'):
+    for name in ('diameter', 'height', 'target_volume', 'assume_diameter', 'assume_height', 'product_density', 'roof_type', 'roof_rise'):
         _set_if_provided(name)
 
     # Build inputs dataclass
@@ -124,6 +175,8 @@ def compute_from_args(args: argparse.Namespace) -> Dict[str, float]:
         assume_diameter=data.get('assume_diameter'),
         assume_height=data.get('assume_height'),
         product_density=float(data.get('product_density', 1000.0)),
+        roof_type=str(data.get('roof_type', 'flat')),
+        roof_rise=float(data.get('roof_rise')) if data.get('roof_rise') is not None else None,
     )
 
     result: Dict[str, float] = {}
@@ -136,7 +189,7 @@ def compute_from_args(args: argparse.Namespace) -> Dict[str, float]:
         result['volume_gal_us'] = gallons_from_m3(vol)
         result['volume_barrels'] = barrels_from_m3(vol)
         result['shell_area_m2'] = area_shell(inputs.diameter, inputs.height)
-        result['roof_area_m2'] = area_roof(inputs.diameter)
+        result['roof_area_m2'] = area_roof_for_type(inputs.diameter, inputs.roof_type, inputs.roof_rise)
         result['bottom_area_m2'] = area_bottom(inputs.diameter, True)
         result['mass_kg'] = vol * inputs.product_density
         return result
@@ -156,7 +209,7 @@ def compute_from_args(args: argparse.Namespace) -> Dict[str, float]:
         result['solution_height_m'] = h
         result['volume_m3'] = vol
         result['shell_area_m2'] = area_shell(d, h)
-        result['roof_area_m2'] = area_roof(d)
+        result['roof_area_m2'] = area_roof_for_type(d, inputs.roof_type, inputs.roof_rise)
         result['bottom_area_m2'] = area_bottom(d, True)
         result['mass_kg'] = vol * inputs.product_density
         return result
@@ -182,6 +235,8 @@ def main(argv: Optional[list] = None):
     parser.add_argument('--assume-diameter', dest='assume_diameter', type=float, help='Assumed diameter (m) when solving for height')
     parser.add_argument('--assume-height', dest='assume_height', type=float, help='Assumed height (m) when solving for diameter')
     parser.add_argument('--product-density', dest='product_density', type=float, help='Product density (kg/m³)')
+    parser.add_argument('--roof-type', dest='roof_type', type=str, choices=['flat', 'conical'], help='Roof type: flat (default) or conical')
+    parser.add_argument('--roof-rise', dest='roof_rise', type=float, help='Conical roof apex rise above shell top (m). Defaults to diameter/16 (~1:16 slope) if omitted.')
 
     args = parser.parse_args(argv)
     try:
