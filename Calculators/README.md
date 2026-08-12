@@ -10,7 +10,7 @@ Python-based sizing and hydraulic calculation tools for common process engineeri
 | Line Hydraulics | Pressure drop, velocity, and erosional velocity checks for single- and two-phase pipe segments. | [Open ↗](https://processengonline.github.io/Process-Engineering-Toolkit/Calculators/Line%20Hydraulics/) |
 | PSV Sizing | Relief valve orifice sizing for vapor, liquid, two-phase, and fire relief scenarios per API 520/521. | [Open ↗](https://processengonline.github.io/Process-Engineering-Toolkit/Calculators/PSV%20Sizing/) |
 | Pump Hydraulics | System curve generation, NPSH available calculation, and duty point verification. | [Open ↗](https://processengonline.github.io/Process-Engineering-Toolkit/Calculators/Pump%20Hydraulics/) |
-| Separator Sizing | Vertical/horizontal two- and three-phase separator sizing per droplet settling theory (Souders-Brown). | [Open ↗](https://processengonline.github.io/Process-Engineering-Toolkit/Calculators/Separator%20Sizing/) |
+| Separator Sizing | Horizontal two- and three-phase separator sizing per droplet settling theory (Souders-Brown). | [Open ↗](https://processengonline.github.io/Process-Engineering-Toolkit/Calculators/Separator%20Sizing/) |
 | Tank Heat Loss | Storage tank heat loss estimation for insulation design and heat tracing load calculations. | [Open ↗](https://processengonline.github.io/Process-Engineering-Toolkit/Calculators/Tank%20Heat%20Loss/) |
 | Tank Sizing | Atmospheric/low-pressure storage tank sizing including working, minimum, and vapor space volumes. | [Open ↗](https://processengonline.github.io/Process-Engineering-Toolkit/Calculators/Tank%20Sizing/) |
 
