@@ -23,9 +23,8 @@ bash
 cd <tool-name>
 python <tool_name>.py --help
 ```
-Refer to each tool's individual README for required input parameters, units convention, and applicable design codes/standards.
 
-Some tools also ship an interactive browser-based calculator (see the **Live Calculator** column above) — open it directly in-browser, no Python install required.
+Some tools also ship an interactive browser-based calculator (see the **Live Calculator** column above) — open it directly in-browser
 
 ```
 **Shubham Chatterjee** · Process Engineer
