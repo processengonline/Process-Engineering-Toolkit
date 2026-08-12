@@ -142,9 +142,6 @@
     <p class="eyebrow">Separator Sizing — Rev. 1</p>
     <h1>3-Phase Separator Sizing Calculator</h1>
     <p class="sub">Horizontal gas/oil/water separator sizing using Souders-Brown gas-capacity velocity, Stokes' law droplet settling, and liquid retention-time volume checks. Sweeps trial diameters and selects the smallest-volume feasible design.</p>
-    <a class="source-link" href="https://github.com/processengonline/Process-Engineering-Toolkit/tree/main/Calculators/Separator%20Sizing" target="_blank" rel="noopener noreferrer">
-      View calculation source on GitHub ↗
-    </a>
     <div class="bugnote">
       <b>Historical note (already fixed everywhere — no action needed):</b> an earlier, non-Python spreadsheet version of this tool computed liquid retention length using an effective liquid area roughly 3× the vessel's true cross-section — a dimensionally impossible result. <code>separator_sizing.py</code> has always used the corrected formula, L_liquid = V_liquid_required / (liquid_area_fraction × A_cross), and this calculator matches it. Results here will run larger than that old spreadsheet for the same inputs — that's expected, not a discrepancy to resolve.
     </div>
@@ -316,7 +313,6 @@
     Trial sweep: diameters from ⌈D_min/0.05⌉×0.05 upward in 0.05 m steps over a 6 m span; optimal = feasible trial minimizing A_cross × selected length.<br>
     When liquid retention time (not gas capacity or L/D) controls the design, A_cross × length is nearly constant across a wide diameter range — several trial diameters can tie to 14+ significant figures. This calculator (and the current separator_sizing.py, after a second bug fix) breaks such ties toward the smallest feasible diameter for a deterministic, physically sensible result — both now select the same D = 2.50 m / L = 12.22 m for the default inputs, rather than the non-deterministic ~2.5–5.6 m the unpatched script could return purely from floating-point rounding noise.<br>
     Converted from separator_sizing.py, including its liquid-retention-length bug fix (see note above). Preliminary/screening sizing only — final design must comply with API 12J, GPSA, and ASME Section VIII Div. 1, and be reviewed by a licensed professional engineer.<br>
-    Source: <a class="source-link" href="https://github.com/processengonline/Process-Engineering-Toolkit/tree/main/Calculators/Separator%20Sizing" target="_blank" rel="noopener noreferrer">Process-Engineering-Toolkit / Separator Sizing ↗</a>
   </footer>
 
 </div>
