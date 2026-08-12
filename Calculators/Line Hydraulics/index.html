@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Line Hydraulics — Pressure Drop Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy: #0B1F33;
+    --navy-2: #122A44;
+    --blueprint: #1B4F72;
+    --line: #3E7CB1;
+    --line-dim: #2A5A80;
+    --paper: #EAE6D9;
+    --paper-dim: #B9C4CC;
+    --amber: #E8A33D;
+    --green: #6FA787;
+    --red: #C96A5C;
+    --grid: rgba(62,124,177,0.16);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      linear-gradient(var(--grid) 1px, transparent 1px) 0 0/28px 28px,
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px) 0 0/28px 28px,
+      var(--navy);
+    color:var(--paper);
+    font-family:'Space Grotesk', sans-serif;
+    min-height:100vh;
+  }
+  .wrap{max-width:1080px;margin:0 auto;padding:48px 24px 80px;}
+
+  header{margin-bottom:40px;border-bottom:1px solid var(--line-dim);padding-bottom:24px;}
+  .eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--line);margin:0 0 10px;
+  }
+  h1{
+    font-size:clamp(28px,4vw,42px);
+    margin:0 0 12px;font-weight:700;letter-spacing:-0.01em;
+  }
+  .sub{color:var(--paper-dim);font-size:15px;max-width:640px;line-height:1.55;margin:0 0 16px;}
+  .source-link{
+    font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.03em;
+    color:var(--line);text-decoration:none;border-bottom:1px solid var(--line-dim);
+    padding-bottom:2px;transition:color .15s, border-color .15s;
+  }
+  .source-link:hover{color:var(--amber);border-color:var(--amber);}
+  .source-link:focus-visible{outline:2px solid var(--amber);outline-offset:2px;}
+
+  .tabs{display:flex;gap:2px;margin-bottom:28px;border:1px solid var(--line-dim);width:fit-content;border-radius:6px;overflow:hidden;flex-wrap:wrap;}
+  .tab{
+    font-family:'IBM Plex Mono',monospace;font-size:13px;letter-spacing:.05em;
+    padding:11px 20px;background:var(--navy-2);color:var(--paper-dim);
+    border:none;cursor:pointer;transition:background .15s, color .15s;
+  }
+  .tab.active{background:var(--line);color:var(--navy);font-weight:600;}
+  .tab:not(.active):hover{background:#17324f;color:var(--paper);}
+  .tab:focus-visible{outline:2px solid var(--amber);outline-offset:-2px;}
+
+  .grid{display:grid;grid-template-columns:1.1fr 1fr;gap:36px;}
+  @media (max-width:820px){.grid{grid-template-columns:1fr;}}
+
+  .panel{
+    background:var(--navy-2);border:1px solid var(--line-dim);border-radius:8px;padding:26px;
+  }
+  .panel h2{
+    font-family:'IBM Plex Mono',monospace;font-size:12px;text-transform:uppercase;
+    letter-spacing:.14em;color:var(--line);margin:0 0 20px;
+  }
+  .panel h3{
+    font-family:'IBM Plex Mono',monospace;font-size:11px;text-transform:uppercase;
+    letter-spacing:.12em;color:var(--paper-dim);margin:22px 0 14px;
+    border-top:1px solid var(--line-dim);padding-top:16px;
+  }
+
+  .field{margin-bottom:18px;}
+  .field:last-child{margin-bottom:0;}
+  label{display:flex;justify-content:space-between;align-items:baseline;font-size:13.5px;color:var(--paper);margin-bottom:6px;}
+  label .unit{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--paper-dim);}
+  input[type=number]{
+    width:100%;background:var(--navy);border:1px solid var(--line-dim);border-radius:5px;
+    color:var(--paper);font-family:'IBM Plex Mono',monospace;font-size:15px;
+    padding:10px 12px;transition:border-color .15s;
+  }
+  input[type=number]:focus{outline:none;border-color:var(--line);box-shadow:0 0 0 3px rgba(62,124,177,0.22);}
+  .hint{font-size:11.5px;color:var(--paper-dim);margin-top:5px;line-height:1.4;}
+  .err{font-size:11.5px;color:var(--red);margin-top:5px;display:none;}
+
+  .readout{
+    background:var(--navy-2);border:1px solid var(--line-dim);border-radius:8px;
+    padding:26px;display:flex;flex-direction:column;gap:22px;
+  }
+  .readout h2{
+    font-family:'IBM Plex Mono',monospace;font-size:12px;text-transform:uppercase;
+    letter-spacing:.14em;color:var(--line);margin:0;
+  }
+  .big-figure{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;}
+  .big-num{font-size:48px;font-weight:700;line-height:1;letter-spacing:-0.02em;font-variant-numeric:tabular-nums;}
+  .big-unit{font-family:'IBM Plex Mono',monospace;font-size:16px;color:var(--paper-dim);}
+  .subfigure{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--paper-dim);}
+
+  .diagram{display:flex;align-items:center;justify-content:center;padding:10px 0 6px;}
+  .diagram svg{overflow:visible;width:100%;max-width:280px;}
+  .flow-dash{stroke-dasharray:9 7;animation:flowmove 1.2s linear infinite;}
+  @keyframes flowmove{to{stroke-dashoffset:-32;}}
+  @media (prefers-reduced-motion: reduce){.flow-dash{animation:none;}}
+
+  .stat-row{display:flex;justify-content:space-between;gap:12px;font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--paper-dim);border-top:1px solid var(--line-dim);padding-top:12px;}
+  .stat-row span:first-child{flex-shrink:0;}
+  .stat-row span:last-child{color:var(--paper);text-align:right;}
+  #stat-rows{display:flex;flex-direction:column;gap:12px;}
+
+  .badge{
+    font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.06em;
+    padding:4px 10px;border-radius:20px;display:inline-block;width:fit-content;
+  }
+  .badge.ok{background:rgba(111,167,135,.15);color:var(--green);border:1px solid rgba(111,167,135,.4);}
+  .badge.warn{background:rgba(232,163,61,.15);color:var(--amber);border:1px solid rgba(232,163,61,.4);}
+
+  footer{margin-top:40px;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--paper-dim);line-height:1.6;border-top:1px solid var(--line-dim);padding-top:20px;}
+  .hidden{display:none !important;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">Hydraulics — Rev. 1</p>
+    <h1>Line Hydraulics Calculator</h1>
+    <p class="sub">Darcy-Weisbach pressure drop for single-phase flow, or a simplified homogeneous + Lockhart-Martinelli estimate for two-phase flow. Screening-level only — validate against detailed models for critical designs.</p>
+    <a class="source-link" href="https://github.com/processengonline/Process-Engineering-Toolkit/tree/main/Calculators/Line%20Hydraulics" target="_blank" rel="noopener noreferrer">
+      View calculation source on GitHub ↗
+    </a>
+  </header>
+
+  <div class="tabs" role="tablist" aria-label="Flow mode">
+    <button class="tab active" id="tab-single" role="tab" aria-selected="true">SINGLE-PHASE</button>
+    <button class="tab" id="tab-two" role="tab" aria-selected="false">TWO-PHASE</button>
+  </div>
+
+  <div class="grid">
+
+    <!-- SINGLE-PHASE PANEL -->
+    <section class="panel" id="panel-single">
+      <h2>Inputs — Single-Phase Flow</h2>
+      <div class="field">
+        <label for="s-Q">Volumetric flow rate <span class="unit">m³/s</span></label>
+        <input type="number" id="s-Q" value="0.05" step="any" min="0">
+      </div>
+      <div class="field">
+        <label for="s-D">Internal pipe diameter <span class="unit">m</span></label>
+        <input type="number" id="s-D" value="0.1" step="any" min="0">
+      </div>
+      <div class="field">
+        <label for="s-L">Pipe length <span class="unit">m</span></label>
+        <input type="number" id="s-L" value="50" step="any" min="0">
+      </div>
+      <div class="field">
+        <label for="s-rho">Fluid density <span class="unit">kg/m³</span></label>
+        <input type="number" id="s-rho" value="1000" step="any" min="0">
+      </div>
+      <div class="field">
+        <label for="s-mu">Dynamic viscosity <span class="unit">Pa·s</span></label>
+        <input type="number" id="s-mu" value="0.001" step="any" min="0">
+      </div>
+      <div class="field">
+        <label for="s-rough">Absolute roughness <span class="unit">m</span></label>
+        <input type="number" id="s-rough" value="0.000015" step="any" min="0">
+        <div class="hint">Default ≈ commercial steel (1.5×10⁻⁵ m).</div>
+      </div>
+      <div class="field">
+        <label for="s-elev">Elevation difference (z₂−z₁) <span class="unit">m</span></label>
+        <input type="number" id="s-elev" value="0" step="any">
+        <div class="hint">Positive if downstream is higher.</div>
+      </div>
+      <div class="field">
+        <label for="s-K">Sum of fittings K <span class="unit">Σ K</span></label>
+        <input type="number" id="s-K" value="0" step="any" min="0">
+        <div class="hint">Minor-loss K factors for valves, elbows, tees, etc.</div>
+        <div class="err" id="s-err"></div>
+      </div>
+    </section>
+
+    <!-- TWO-PHASE PANEL -->
+    <section class="panel hidden" id="panel-two">
+      <h2>Inputs — Two-Phase Flow</h2>
+      <div class="field">
+        <label for="t-Q">Volumetric flow rate <span class="unit">m³/s</span></label>
+        <input type="number" id="t-Q" value="0.05" step="any" min="0">
+      </div>
+      <div class="field">
+        <label for="t-D">Internal pipe diameter <span class="unit">m</span></label>
+        <input type="number" id="t-D" value="0.1" step="any" min="0">
+      </div>
+      <div class="field">
+        <label for="t-L">Pipe length <span class="unit">m</span></label>
+        <input type="number" id="t-L" value="50" step="any" min="0">
+      </div>
+      <div class="field">
+        <label for="t-rho">Liquid density <span class="unit">kg/m³</span></label>
+        <input type="number" id="t-rho" value="1000" step="any" min="0">
+      </div>
+      <div class="field">
+        <label for="t-mu">Liquid viscosity <span class="unit">Pa·s</span></label>
+        <input type="number" id="t-mu" value="0.001" step="any" min="0">
+      </div>
+      <div class="field">
+        <label for="t-rough">Absolute roughness <span class="unit">m</span></label>
+        <input type="number" id="t-rough" value="0.000015" step="any" min="0">
+      </div>
+      <div class="field">
+        <label for="t-elev">Elevation difference (z₂−z₁) <span class="unit">m</span></label>
+        <input type="number" id="t-elev" value="0" step="any">
+      </div>
+      <div class="field">
+        <label for="t-K">Sum of fittings K <span class="unit">Σ K</span></label>
+        <input type="number" id="t-K" value="0" step="any" min="0">
+      </div>
+
+      <h3>Gas Phase &amp; Quality</h3>
+      <div class="field">
+        <label for="t-rhog">Gas density <span class="unit">kg/m³</span></label>
+        <input type="number" id="t-rhog" value="2.5" step="any" min="0">
+      </div>
+      <div class="field">
+        <label for="t-mug">Gas viscosity <span class="unit">Pa·s</span></label>
+        <input type="number" id="t-mug" value="0.000012" step="any" min="0">
+      </div>
+      <div class="field">
+        <label for="t-x">Vapor mass quality x <span class="unit">0–1</span></label>
+        <input type="number" id="t-x" value="0.1" step="any" min="0" max="1">
+        <div class="hint">Homogeneous mixture + Lockhart-Martinelli multiplier (C ≈ 20). Screening estimate only.</div>
+        <div class="err" id="t-err"></div>
+      </div>
+    </section>
+
+    <!-- READOUT -->
+    <section class="readout">
+      <h2>Total Pressure Drop</h2>
+
+      <div class="diagram">
+        <svg viewBox="0 0 280 70" id="pipe-svg">
+          <rect x="10" y="24" width="260" height="22" rx="11" fill="none" stroke="var(--line-dim)" stroke-width="2"/>
+          <line x1="22" y1="35" x2="258" y2="35" stroke="var(--line)" stroke-width="4" stroke-linecap="round" class="flow-dash" id="pipe-flow"/>
+        </svg>
+      </div>
+
+      <div class="big-figure">
+        <span class="big-num" id="out-primary">—</span>
+        <span class="big-unit">Pa</span>
+      </div>
+      <span class="subfigure" id="out-secondary">≈ — kPa · ≈ — bar</span>
+
+      <span class="badge ok" id="status-badge">READY</span>
+
+      <div id="stat-rows"></div>
+    </section>
+
+  </div>
+
+  <footer>
+    Darcy-Weisbach: ΔP = f·(L/D)·(ρv²/2) &nbsp;|&nbsp; f: laminar 64/Re, turbulent Swamee-Jain &nbsp;|&nbsp; Minor: ΔP = K·(ρv²/2) &nbsp;|&nbsp; Elevation: ΔP = ρ·g·Δz<br>
+    Two-phase: homogeneous mixture density 1/ρ_mix = x/ρ_g + (1−x)/ρ_l, then single-phase ΔP scaled by Lockhart-Martinelli multiplier φ² (C ≈ 20).<br>
+    Converted from line_hydraulics.py. Screening-level estimates only — use validated multiphase models for critical designs.<br>
+    Source: <a class="source-link" href="https://github.com/processengonline/Process-Engineering-Toolkit/tree/main/Calculators/Line%20Hydraulics" target="_blank" rel="noopener noreferrer">Process-Engineering-Toolkit / Line Hydraulics ↗</a>
+  </footer>
+
+</div>
+
+<script>
+const G = 9.80665;
+
+function areaFromD(d){ return Math.PI * Math.pow(d/2.0, 2); }
+function velocityFromFlow(Q, d){ return Q / areaFromD(d); }
+function reynoldsNumber(rho, v, d, mu){ return rho * v * d / mu; }
+
+function frictionFactorSwameeJain(Re, relRoughness){
+  if(!(Re > 0)) throw new Error("Reynolds number must be > 0");
+  if(Re < 2300) return 64.0 / Re;
+  const term = relRoughness/3.7 + 5.74/Math.pow(Re, 0.9);
+  return 0.25 / Math.pow(Math.log10(term), 2);
+}
+
+function darcyWeisbachPressureDrop(f, L, D, rho, v){ return f * (L/D) * (rho * v * v / 2.0); }
+function minorLossPressure(Ktotal, rho, v){ return Ktotal * (rho * v * v / 2.0); }
+
+function homogeneousTwoPhaseProperties(rhoL, rhoG, quality){
+  if(quality===null || quality===undefined) throw new Error("quality required for two-phase homogeneous estimate");
+  if(!(rhoG>0)) throw new Error("rho_g (gas density) required for two-phase homogeneous estimate");
+  const x = quality;
+  const invRhoMix = x/rhoG + (1.0-x)/rhoL;
+  return 1.0/invRhoMix;
+}
+
+function lockhartMartinelliMultiplier(rhoL, rhoG, ReL, ReG, x){
+  if(x===null || rhoG===null || rhoL===null) throw new Error("liquid/gas properties and quality required for LM estimate");
+  if(x <= 0) return 1.0;
+  const chi = Math.pow((1.0-x)/x, 0.9) * Math.sqrt(rhoG/rhoL);
+  const C = 20.0;
+  const phi2 = 1.0 + C/Math.sqrt(chi) + 1.0/chi;
+  return Math.max(phi2, 1.0);
+}
+
+function calcSinglePhase(Q, D, L, rho, mu, roughness, elevDiff, K){
+  if(!(Q>0)) throw new Error("Flow rate must be > 0");
+  if(!(D>0)) throw new Error("Diameter must be > 0");
+  if(!(L>0)) throw new Error("Length must be > 0");
+  if(!(rho>0)) throw new Error("Density must be > 0");
+  if(!(mu>0)) throw new Error("Viscosity must be > 0");
+  if(!(roughness>=0)) throw new Error("Roughness must be ≥ 0");
+
+  const v = velocityFromFlow(Q, D);
+  const Re = reynoldsNumber(rho, v, D, mu);
+  const relRoughness = roughness / D;
+  const f = frictionFactorSwameeJain(Re, relRoughness);
+  const dpFriction = darcyWeisbachPressureDrop(f, L, D, rho, v);
+  const dpMinor = minorLossPressure(K, rho, v);
+  const dpElevation = rho * G * elevDiff;
+  const dpTotal = dpFriction + dpMinor + dpElevation;
+
+  return {
+    velocity_m_s: v,
+    Reynolds_number: Re,
+    friction_factor: f,
+    dp_friction_Pa: dpFriction,
+    dp_minor_Pa: dpMinor,
+    dp_elevation_Pa: dpElevation,
+    dp_total_Pa: dpTotal,
+  };
+}
+
+function calcTwoPhase(Q, D, L, rho, mu, roughness, elevDiff, K, rhoG, muG, quality){
+  if(!(Q>0)) throw new Error("Flow rate must be > 0");
+  if(!(D>0)) throw new Error("Diameter must be > 0");
+  if(!(L>0)) throw new Error("Length must be > 0");
+  if(!(rho>0)) throw new Error("Liquid density must be > 0");
+  if(!(mu>0)) throw new Error("Liquid viscosity must be > 0");
+  if(!(roughness>=0)) throw new Error("Roughness must be ≥ 0");
+  if(!(rhoG>0)) throw new Error("Gas density must be > 0");
+  if(!(muG>0)) throw new Error("Gas viscosity must be > 0");
+  if(!(quality>=0 && quality<=1)) throw new Error("Quality x must be between 0 and 1");
+
+  const rhoMix = homogeneousTwoPhaseProperties(rho, rhoG, quality);
+  const muMix = (1.0-quality)*mu + quality*muG;
+  const v = velocityFromFlow(Q, D);
+  const ReMix = reynoldsNumber(rhoMix, v, D, muMix);
+  const relRoughness = roughness / D;
+  const fMix = frictionFactorSwameeJain(ReMix, relRoughness);
+  const dpFrictionSingle = darcyWeisbachPressureDrop(fMix, L, D, rhoMix, v);
+
+  const x = quality;
+  const alpha = (x/rhoG) / (x/rhoG + (1.0-x)/rho);
+  const vG = v * alpha;
+  const vL = v * (1.0-alpha);
+  const ReG = reynoldsNumber(rhoG, vG>0 ? vG : 1e-12, D, muG);
+  const ReL = reynoldsNumber(rho, vL>0 ? vL : 1e-12, D, mu);
+  const phi2 = lockhartMartinelliMultiplier(rho, rhoG, ReL, ReG, x);
+
+  const dpTwoPhase = dpFrictionSingle * phi2;
+  const dpMinor = minorLossPressure(K, rhoMix, v);
+  const dpElevation = rhoMix * G * elevDiff;
+  const dpTotal = dpTwoPhase + dpMinor + dpElevation;
+
+  return {
+    velocity_m_s: v,
+    rho_mix_kg_m3: rhoMix,
+    mu_mix_Pa_s: muMix,
+    Re_mix: ReMix,
+    friction_factor_mix: fMix,
+    dp_friction_single_Pa: dpFrictionSingle,
+    lockhart_martinelli_phi2: phi2,
+    dp_two_phase_Pa: dpTwoPhase,
+    dp_minor_Pa: dpMinor,
+    dp_elevation_Pa: dpElevation,
+    dp_total_Pa: dpTotal,
+  };
+}
+
+const LABELS = {
+  velocity_m_s: ['Velocity', 'm/s'],
+  Reynolds_number: ['Reynolds number', ''],
+  friction_factor: ['Friction factor', ''],
+  dp_friction_Pa: ['ΔP friction', 'Pa'],
+  dp_minor_Pa: ['ΔP minor losses', 'Pa'],
+  dp_elevation_Pa: ['ΔP elevation', 'Pa'],
+  rho_mix_kg_m3: ['Mixture density', 'kg/m³'],
+  mu_mix_Pa_s: ['Mixture viscosity', 'Pa·s'],
+  Re_mix: ['Reynolds number (mix)', ''],
+  friction_factor_mix: ['Friction factor (mix)', ''],
+  dp_friction_single_Pa: ['ΔP friction (single-phase basis)', 'Pa'],
+  lockhart_martinelli_phi2: ['LM multiplier φ²', ''],
+  dp_two_phase_Pa: ['ΔP two-phase (friction)', 'Pa'],
+};
+
+const ROW_ORDER = {
+  single: ['velocity_m_s','Reynolds_number','friction_factor','dp_friction_Pa','dp_minor_Pa','dp_elevation_Pa'],
+  two: ['velocity_m_s','rho_mix_kg_m3','mu_mix_Pa_s','Re_mix','friction_factor_mix','dp_friction_single_Pa','lockhart_martinelli_phi2','dp_two_phase_Pa','dp_minor_Pa','dp_elevation_Pa'],
+};
+
+const tabSingle = document.getElementById('tab-single');
+const tabTwo = document.getElementById('tab-two');
+const panelSingle = document.getElementById('panel-single');
+const panelTwo = document.getElementById('panel-two');
+let mode = 'single';
+
+function setMode(m){
+  mode = m;
+  const isSingle = m==='single';
+  tabSingle.classList.toggle('active', isSingle);
+  tabTwo.classList.toggle('active', !isSingle);
+  tabSingle.setAttribute('aria-selected', isSingle);
+  tabTwo.setAttribute('aria-selected', !isSingle);
+  panelSingle.classList.toggle('hidden', !isSingle);
+  panelTwo.classList.toggle('hidden', isSingle);
+  compute();
+}
+tabSingle.addEventListener('click', ()=>setMode('single'));
+tabTwo.addEventListener('click', ()=>setMode('two'));
+
+const ids = ['s-Q','s-D','s-L','s-rho','s-mu','s-rough','s-elev','s-K',
+             't-Q','t-D','t-L','t-rho','t-mu','t-rough','t-elev','t-K','t-rhog','t-mug','t-x'];
+ids.forEach(id=>document.getElementById(id).addEventListener('input', compute));
+
+function fmt(num, sig=4){
+  if(num===0) return '0';
+  const abs = Math.abs(num);
+  if(abs < 0.001 || abs >= 100000) return num.toExponential(3);
+  return num.toPrecision(sig);
+}
+
+function renderStats(results, order){
+  const container = document.getElementById('stat-rows');
+  container.innerHTML = '';
+  order.forEach(key=>{
+    if(!(key in results)) return;
+    const [label, unit] = LABELS[key];
+    const row = document.createElement('div');
+    row.className = 'stat-row';
+    const valStr = fmt(results[key]) + (unit ? ' ' + unit : '');
+    row.innerHTML = `<span>${label}</span><span>${valStr}</span>`;
+    container.appendChild(row);
+  });
+}
+
+function clearError(){
+  ['s-err','t-err'].forEach(id=>{
+    const el = document.getElementById(id);
+    el.style.display = 'none';
+    el.textContent = '';
+  });
+}
+
+function showError(id, msg){
+  const el = document.getElementById(id);
+  el.textContent = msg;
+  el.style.display = 'block';
+  document.getElementById('out-primary').textContent = '—';
+  document.getElementById('out-secondary').textContent = '≈ — kPa · ≈ — bar';
+  document.getElementById('stat-rows').innerHTML = '';
+  const badge = document.getElementById('status-badge');
+  badge.textContent = 'CHECK INPUTS';
+  badge.className = 'badge warn';
+}
+
+function compute(){
+  clearError();
+  const badge = document.getElementById('status-badge');
+  let results;
+
+  try{
+    if(mode==='single'){
+      const Q = parseFloat(document.getElementById('s-Q').value);
+      const D = parseFloat(document.getElementById('s-D').value);
+      const L = parseFloat(document.getElementById('s-L').value);
+      const rho = parseFloat(document.getElementById('s-rho').value);
+      const mu = parseFloat(document.getElementById('s-mu').value);
+      const rough = parseFloat(document.getElementById('s-rough').value);
+      const elev = parseFloat(document.getElementById('s-elev').value);
+      const K = parseFloat(document.getElementById('s-K').value);
+      results = calcSinglePhase(Q, D, L, rho, mu, rough, elev, K);
+    } else {
+      const Q = parseFloat(document.getElementById('t-Q').value);
+      const D = parseFloat(document.getElementById('t-D').value);
+      const L = parseFloat(document.getElementById('t-L').value);
+      const rho = parseFloat(document.getElementById('t-rho').value);
+      const mu = parseFloat(document.getElementById('t-mu').value);
+      const rough = parseFloat(document.getElementById('t-rough').value);
+      const elev = parseFloat(document.getElementById('t-elev').value);
+      const K = parseFloat(document.getElementById('t-K').value);
+      const rhoG = parseFloat(document.getElementById('t-rhog').value);
+      const muG = parseFloat(document.getElementById('t-mug').value);
+      const x = parseFloat(document.getElementById('t-x').value);
+      results = calcTwoPhase(Q, D, L, rho, mu, rough, elev, K, rhoG, muG, x);
+    }
+  } catch(e){
+    showError(mode==='single' ? 's-err' : 't-err', e.message);
+    return;
+  }
+
+  const dpTotal = results.dp_total_Pa;
+  document.getElementById('out-primary').textContent = fmt(dpTotal);
+  document.getElementById('out-secondary').textContent =
+    '≈ ' + fmt(dpTotal/1000) + ' kPa · ≈ ' + fmt(dpTotal/1e5) + ' bar';
+  renderStats(results, ROW_ORDER[mode]);
+
+  const v = results.velocity_m_s;
+  const duration = Math.max(0.3, Math.min(3, 3 - Math.log10(Math.max(v,0.01))*0.8));
+  document.getElementById('pipe-flow').style.animationDuration = duration.toFixed(2) + 's';
+
+  badge.textContent = 'READY';
+  badge.className = 'badge ok';
+}
+
+setMode('single');
+</script>
+</body>
+</html>
