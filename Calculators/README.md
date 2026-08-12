@@ -17,7 +17,9 @@ Python-based sizing and hydraulic calculation tools for common process engineeri
 ```
 
 ## Running a Tool
-```bash
+
+```
+bash
 cd <tool-name>
 python <tool_name>.py --help
 ```
@@ -26,6 +28,5 @@ Refer to each tool's individual README for required input parameters, units conv
 Some tools also ship an interactive browser-based calculator (see the **Live Calculator** column above) — open it directly in-browser, no Python install required.
 
 ```
----
 **Shubham Chatterjee** · Process Engineer
 [processengonline.github.io](https://processengonline.github.io/) · [GitHub](https://github.com/processengonline)
