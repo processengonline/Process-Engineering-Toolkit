@@ -25,12 +25,7 @@ Refer to each tool's individual README for required input parameters, units conv
 
 Some tools also ship an interactive browser-based calculator (see the **Live Calculator** column above) — open it directly in-browser, no Python install required.
 
-## Requirements
-These scripts are written in standard Python 3 with minimal dependencies. If a `requirements.txt` is added at the repo root, install with:
-```bash
-pip install -r requirements.txt
 ```
-
 ---
 **Shubham Chatterjee** · Process Engineer
 [processengonline.github.io](https://processengonline.github.io/) · [GitHub](https://github.com/processengonline)
