@@ -112,6 +112,7 @@
   .diagram svg{overflow:visible;}
   .tank-fill{transition:height .3s ease, y .3s ease;}
   .tank-body{transition:width .3s ease, height .3s ease, x .3s ease, y .3s ease;}
+  #tank-roof{transition:points .3s ease;}
 
   .stat-row{display:flex;justify-content:space-between;gap:12px;font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--paper-dim);border-top:1px solid var(--line-dim);padding-top:12px;}
   .stat-row span:first-child{flex-shrink:0;}
@@ -235,6 +236,7 @@
           <rect id="tank-body" class="tank-body" x="40" y="30" width="70" height="110" fill="none" stroke="var(--line)" stroke-width="2"/>
           <clipPath id="tank-clip"><rect id="tank-clip-rect" x="40" y="30" width="70" height="110"/></clipPath>
           <rect id="tank-fill" class="tank-fill" x="40" y="90" width="70" height="50" fill="var(--line)" opacity="0.3" clip-path="url(#tank-clip)"/>
+          <polyline id="tank-roof" points="40,30 110,30" fill="none" stroke="var(--line)" stroke-width="3" stroke-linejoin="round"/>
         </svg>
       </div>
 
@@ -378,7 +380,7 @@ function renderStats(rows){
   });
 }
 
-function updateDiagram(D, H){
+function updateDiagram(D, H, roofType){
   const maxDim = 100;
   const ld = D>0 ? H/D : 1;
   const clamped = Math.max(0.3, Math.min(3.5, ld));
@@ -397,6 +399,12 @@ function updateDiagram(D, H){
   const fill = document.getElementById('tank-fill');
   fill.setAttribute('x', x); fill.setAttribute('width', bodyW);
   fill.setAttribute('y', y); fill.setAttribute('height', bodyH);
+
+  const roof = document.getElementById('tank-roof');
+  const peakY = y - Math.max(10, bodyW*0.22);
+  roof.setAttribute('points', roofType==='conical'
+    ? `${x},${y} ${x+bodyW/2},${peakY} ${x+bodyW},${y}`
+    : `${x},${y} ${x+bodyW},${y}`);
 }
 
 function compute(){
@@ -463,7 +471,7 @@ function compute(){
     rows.push(['Bottom area', fmt(bottom) + ' m²']);
     rows.push(['Mass (at ρ)', fmt(mass) + ' kg']);
     renderStats(rows);
-    updateDiagram(D, H);
+    updateDiagram(D, H, roofType);
 
     badge.textContent = 'READY';
     badge.className = 'badge ok';
