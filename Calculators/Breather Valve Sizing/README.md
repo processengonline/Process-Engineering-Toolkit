@@ -1,5 +1,11 @@
 # Breather Valve (Pressure–Vacuum Relief Valve) Sizing Tool
 
+**Script:** [`breather_valve.py`](./breather_valve.py) · **Sample output:** [`sample_report_output.txt`](./sample_report_output.txt)
+
+```bash
+python breather_valve.py --help
+```
+
 ## Overview
 
 This repository contains a comprehensive **Breather Valve (Pressure–Vacuum Relief Valve) Sizing Tool** developed for the sizing and selection of conservation vents used on **atmospheric** and **low-pressure storage tanks** in oil & gas, LNG, petrochemical, refinery, chemical, and terminal facilities.
