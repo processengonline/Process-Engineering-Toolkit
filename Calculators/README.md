@@ -2,7 +2,6 @@
 Python-based sizing and hydraulic calculation tools for common process engineering equipment. Each tool lives in its own folder with the script, a README describing methodology/inputs/outputs, and examples.
 
 ## Index
-
 | Tool | Folder | Purpose | Live Calculator |
 |---|---|---|---|
 | Breather Valve Sizing | [`Breather Valve Sizing/`](./Breather%20Valve%20Sizing) | Sizes tank conservation vents (breather valves) for thermal in/out-breathing and pump-in/pump-out venting per API 2000. | [Open ↗](https://processengonline.github.io/Process-Engineering-Toolkit/Calculators/Breather%20Valve%20Sizing/) |
@@ -13,7 +12,6 @@ Python-based sizing and hydraulic calculation tools for common process engineeri
 | Separator Sizing | [`Separator Sizing/`](./Separator%20Sizing) | Vertical/horizontal two- and three-phase separator sizing per droplet settling theory (Souders-Brown). | [Open ↗](https://processengonline.github.io/Process-Engineering-Toolkit/Calculators/Separator%20Sizing/) |
 | Tank Heat Loss | [`Tank Heat Loss/`](./Tank%20Heat%20Loss) | Storage tank heat loss estimation for insulation design and heat tracing load calcs. | [Open ↗](https://processengonline.github.io/Process-Engineering-Toolkit/Calculators/Tank%20Heat%20Loss/) |
 | Tank Sizing | [`Tank Sizing/`](./Tank%20Sizing) | Atmospheric/low-pressure storage tank sizing including working, minimum, and vapor space volumes. | [Open ↗](https://processengonline.github.io/Process-Engineering-Toolkit/Calculators/Tank%20Sizing/) |
-
 
 ## Folder Structure (per tool)
 ```
@@ -35,7 +33,6 @@ Some tools also ship an interactive browser-based calculator (see the **Live Cal
 
 ## Requirements
 These scripts are written in standard Python 3 with minimal dependencies. If a `requirements.txt` is added at the repo root, install with:
-
 ```bash
 pip install -r requirements.txt
 ```
