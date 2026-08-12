@@ -23,3 +23,21 @@ Python-based sizing and hydraulic calculation tools for common process engineeri
 ├── README.md                # methodology, standards referenced, inputs, outputs
 └── examples/
     └── sample_report_output.txt
+## Running a Tool
+```bash
+cd <tool-name>
+python <tool_name>.py --help
+```
+Refer to each tool's individual README for required input parameters, units convention, and applicable design codes/standards.
+
+Some tools also ship an interactive browser-based calculator (see the **Live Calculator** column above) — open it directly in-browser, no Python install required.
+
+## Requirements
+These scripts are written in standard Python 3 with minimal dependencies. If a `requirements.txt` is added at the repo root, install with:
+```bash
+pip install -r requirements.txt
+```
+
+---
+**Shubham Chatterjee** · Process Engineer
+[processengonline.github.io](https://processengonline.github.io/) · [GitHub](https://github.com/processengonline)
