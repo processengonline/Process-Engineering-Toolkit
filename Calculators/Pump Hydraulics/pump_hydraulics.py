@@ -17,6 +17,20 @@ Usage examples:
   python pump_hydraulics.py --inputs pump_inputs.json
 
 If you want YAML inputs, install PyYAML (pip install pyyaml) and pass a .yaml file to --inputs.
+
+Changelog:
+ - Fixed: --flow-gpm was accepted by the CLI but never converted to flow_m3_s,
+   silently producing a "Flow is required" error. Now wired up the same way
+   as --flow-m3h and --flow-Ls (US gpm -> m3/s via /15850.3231).
+ - Fixed: calculate() now validates flow_m3_s > 0 consistently for both the
+   head->power and power->head branches. Previously a flow of 0 on the
+   head->power path silently returned an all-zero result instead of raising
+   a validation error, unlike the power->head path which already rejected it.
+ - Removed: the NPSH available / NPSH margin check (npsh_available_m input,
+   --npsh-available CLI flag, npsh_margin_m output). The NPSHr estimate
+   itself (npshr_estimated_m) is unchanged and still always returned by
+   calculate() — only the available-vs-required margin comparison was
+   removed.
 """
 from dataclasses import dataclass
 import math
@@ -42,7 +56,6 @@ class PumpInputs:
     power_W: Optional[float] = None  # W (shaft input power)
     density: float = 1000.0  # kg/m³ (water)
     viscosity_cp: Optional[float] = None  # cP (optional, for notes)
-    npsh_available_m: Optional[float] = None  # m (for NPSH check)
 
 
 def hydraulic_power_W(rho: float, g: float, Q_m3_s: float, H_m: float) -> float:
@@ -125,7 +138,7 @@ def _args_to_inputs(args: argparse.Namespace) -> PumpInputs:
         if val is not None:
             data[field] = val
 
-    for name in ('flow_m3_s', 'head_m', 'efficiency', 'power_W', 'density', 'viscosity_cp', 'npsh_available_m'):
+    for name in ('flow_m3_s', 'head_m', 'efficiency', 'power_W', 'density', 'viscosity_cp'):
         _set_if_provided(name)
 
     # support alternative CLI names
@@ -135,6 +148,9 @@ def _args_to_inputs(args: argparse.Namespace) -> PumpInputs:
     if getattr(args, 'flow_l_s', None) is not None and 'flow_m3_s' not in data:
         data['flow_m3_s'] = float(args.flow_l_s) / 1000.0
 
+    if getattr(args, 'flow_gpm', None) is not None and 'flow_m3_s' not in data:
+        data['flow_m3_s'] = float(args.flow_gpm) / 15850.3231
+
     # Build dataclass with defaults
     return PumpInputs(
         flow_m3_s=float(data.get('flow_m3_s')) if data.get('flow_m3_s') is not None else None,
@@ -143,7 +159,6 @@ def _args_to_inputs(args: argparse.Namespace) -> PumpInputs:
         power_W=float(data.get('power_W')) if data.get('power_W') is not None else None,
         density=float(data.get('density', 1000.0)),
         viscosity_cp=data.get('viscosity_cp'),
-        npsh_available_m=data.get('npsh_available_m'),
     )
 
 
@@ -151,6 +166,8 @@ def calculate(inputs: PumpInputs) -> Dict[str, float]:
     """Perform calculations and return a results dict."""
     if inputs.flow_m3_s is None:
         raise ValueError('Flow (flow_m3_s) is required')
+    if inputs.flow_m3_s <= 0:
+        raise ValueError('Flow must be > 0')
 
     results: Dict[str, float] = {}
     Q = inputs.flow_m3_s
@@ -175,12 +192,8 @@ def calculate(inputs: PumpInputs) -> Dict[str, float]:
     results['flow_L_s'] = m3s_to_Ls(Q)
     results['flow_gpm_us'] = m3s_to_gpm_us(Q)
 
-    # NPSHr estimate (placeholder) and NPSH check if available
-    npshr_est = estimate_npshr(Q)
-    results['npshr_estimated_m'] = npshr_est
-    if inputs.npsh_available_m is not None:
-        results['npsh_available_m'] = inputs.npsh_available_m
-        results['npsh_margin_m'] = inputs.npsh_available_m - npshr_est
+    # NPSHr estimate (placeholder, screening only)
+    results['npshr_estimated_m'] = estimate_npshr(Q)
 
     return results
 
@@ -200,13 +213,12 @@ def main(argv: Optional[list] = None):
     parser.add_argument('--flow-m3s', dest='flow_m3_s', type=float, help='Flow (m³/s)')
     parser.add_argument('--flow-m3h', dest='flow_m3h', type=float, help='Flow (m³/h)')
     parser.add_argument('--flow-Ls', dest='flow_l_s', type=float, help='Flow (L/s)')
-    parser.add_argument('--flow-gpm', dest='flow_gpm', type=float, help='Flow (US gpm) -- not used directly')
+    parser.add_argument('--flow-gpm', dest='flow_gpm', type=float, help='Flow (US gpm)')
     parser.add_argument('--head', dest='head_m', type=float, help='Pump head (m)')
     parser.add_argument('--efficiency', type=float, help='Pump efficiency (decimal, 0-1)')
     parser.add_argument('--power-W', dest='power_W', type=float, help='Shaft input power (W)')
     parser.add_argument('--density', type=float, help='Fluid density (kg/m³)')
     parser.add_argument('--viscosity-cp', dest='viscosity_cp', type=float, help='Fluid viscosity (cP)')
-    parser.add_argument('--npsh-available', dest='npsh_available_m', type=float, help='NPSH available (m)')
 
     args = parser.parse_args(argv)
 

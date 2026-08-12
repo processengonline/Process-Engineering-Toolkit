@@ -1,22 +1,36 @@
 ================================================================================
-PUMP HYDRAULICS CALCULATOR - SAMPLE TEST REPORT
+PUMP HYDRAULICS CALCULATOR - SAMPLE TEST REPORT (RE-RUN AFTER FIXES + REMOVAL)
 Script under test: pump_hydraulics.py
-Test date: 2026-08-09
+Original test date: 2026-08-09
+Fix re-test date: 2026-08-13
+Removal re-test date: 2026-08-13
 Python: 3.12.3
 ================================================================================
 
 SUMMARY
 -------
-12 test cases executed: 7 successful calculation runs (hydraulic/shaft power,
-flow unit conversions via m3/h and L/s CLI flags, power->head, NPSH margin,
-JSON file input) plus 5 error/edge cases. All numeric results were
-independently hand-verified against the module's own power, head, and NPSHr
-formulas (see Verification Notes) and matched exactly. One real bug was found:
-the --flow-gpm CLI flag is accepted by argparse but silently discarded — it is
-never converted to flow_m3_s, so using it alone produces a "Flow is required"
-error with no indication that the flag itself is non-functional (Test 7).
-A secondary, lower-severity observation on zero-flow handling is noted at the
-end (Test 12).
+This is a second re-run of the original 12-case suite. Two rounds of changes
+have now been applied to the script since the original report:
+
+  Round 1 (previously reported):
+    1. FIXED: --flow-gpm was accepted by the CLI but silently discarded.
+       Now wired up the same way as --flow-m3h and --flow-Ls.
+    2. FIXED: calculate() now validates flow_m3_s > 0 consistently on both
+       the head->power and power->head branches.
+
+  Round 2 (this report):
+    3. REMOVED: the NPSH available / NPSH margin check has been removed
+       entirely — the npsh_available_m input field, the --npsh-available CLI
+       flag, and the npsh_margin_m output are all gone. The NPSHr estimate
+       itself (npshr_estimated_m) is UNCHANGED and still always returned by
+       calculate(); only the available-vs-required margin comparison was
+       removed.
+
+Because of change 3, the original Test 4 ("NPSH available given -> NPSH
+margin check") no longer applies — there is no --npsh-available flag left to
+exercise. It has been removed from the suite rather than re-run. The
+remaining 11 test cases were re-executed in full; all PASS, with no
+regressions versus the Round 1 re-test.
 
 
 --------------------------------------------------------------------------------
@@ -40,38 +54,31 @@ Output:
    - flow_gpm_us: 792.516
    - npshr_estimated_m: 13.6326
 
-Result: PASS
+Result: PASS (unchanged)
 Notes:
   - P_hyd = rho*g*Q*H = 1000*9.80665*0.05*30 = 14,710 W -> matches.
   - P_shaft = 14,710/0.75 = 19,613.3 W -> matches.
   - HP = 19,613.3/745.699872 = 26.302 -> matches.
   - flow_gpm = 0.05*15,850.3231 = 792.52 -> matches.
   - NPSHr: Q_norm = 0.05/0.01 = 5; NPSHr = 0.5+5*5^0.6 = 13.63 -> matches.
+    npshr_estimated_m is still present and unaffected by the NPSH-check
+    removal, as expected.
 
 
 --------------------------------------------------------------------------------
 TEST 2 - Same duty point, flow supplied via --flow-m3h (unit-conversion CLI flag)
 --------------------------------------------------------------------------------
-Scenario: 180 m3/h = 0.05 m3/s, to confirm the m3/h -> m3/s CLI conversion
-path produces identical results to Test 1.
-
 Command:
   python3 pump_hydraulics.py --flow-m3h 180 --head 30 --efficiency 0.75
 
 Output: identical to Test 1 (all values match to displayed precision)
 
-Result: PASS
-Notes:
-  - Confirms 180/3600 = 0.05 m3/s conversion is applied correctly before
-    calculation.
+Result: PASS (unchanged)
 
 
 --------------------------------------------------------------------------------
 TEST 3 - Power + flow (no head) -> computed head
 --------------------------------------------------------------------------------
-Scenario: Given 5000 W shaft power at 0.1 m3/s and 80% efficiency, back out
-the resulting head — exercises the reverse (power->head) branch.
-
 Command:
   python3 pump_hydraulics.py --flow-m3s 0.1 --power-W 5000 --efficiency 0.8
 
@@ -84,74 +91,58 @@ Output:
    - flow_gpm_us: 1585.03
    - npshr_estimated_m: 20.4054
 
-Result: PASS
+Result: PASS (unchanged)
 Notes:
   - P_hyd = power*efficiency = 5000*0.8 = 4000 W.
   - H = P_hyd/(rho*g*Q) = 4000/(1000*9.80665*0.1) = 4.0789 m -> matches.
-  - NPSHr: Q_norm=10; NPSHr = 0.5+5*10^0.6 = 20.405 -> matches.
 
 
 --------------------------------------------------------------------------------
-TEST 4 - NPSH available given -> NPSH margin check
+TEST 4 - REMOVED: NPSH available -> NPSH margin check
 --------------------------------------------------------------------------------
-Scenario: Same duty point as Test 1, with 15 m NPSH available supplied to
-exercise the margin calculation.
+This test case has been removed. The scenario it exercised
+(--npsh-available flag supplying an NPSH-available value to compute
+npsh_margin_m) is no longer possible, since --npsh-available is no longer a
+recognized CLI argument:
 
-Command:
-  python3 pump_hydraulics.py --flow-m3s 0.05 --head 30 --efficiency 0.75 \
-      --npsh-available 15
+  $ python3 pump_hydraulics.py --flow-m3s 0.05 --head 30 --efficiency 0.75 \
+        --npsh-available 15
+  usage: pump_hydraulics.py [-h] [--inputs INPUTS] [--flow-m3s FLOW_M3_S]
+                            [--flow-m3h FLOW_M3H] [--flow-Ls FLOW_L_S]
+                            [--flow-gpm FLOW_GPM] [--head HEAD_M]
+                            [--efficiency EFFICIENCY] [--power-W POWER_W]
+                            [--density DENSITY] [--viscosity-cp VISCOSITY_CP]
+  pump_hydraulics.py: error: unrecognized arguments: --npsh-available 15
 
-Output:
-  Pump hydraulics results:
-   - hydraulic_power_W: 14710
-   - shaft_power_W: 19613.3
-   - shaft_power_kW: 19.6133
-   - shaft_power_HP: 26.3019
-   - flow_m3_s: 0.05
-   - flow_m3_h: 180
-   - flow_L_s: 50
-   - flow_gpm_us: 792.516
-   - npshr_estimated_m: 13.6326
-   - npsh_available_m: 15
-   - npsh_margin_m: 1.36736
-
-Result: PASS
-Notes:
-  - npsh_margin = npsh_available - npshr_estimated = 15 - 13.6326 = 1.3674
-    -> matches. Positive margin correctly indicates adequate NPSH.
+This is expected behavior following the intentional removal and is not a
+regression.
 
 
 --------------------------------------------------------------------------------
 TEST 5 - Flow supplied via --flow-Ls (L/s CLI conversion flag)
+[renumbered from original Test 5; sequence otherwise unchanged]
 --------------------------------------------------------------------------------
-Scenario: 50 L/s = 0.05 m3/s, another duplicate of the Test 1 duty point via a
-different unit-conversion flag.
-
 Command:
   python3 pump_hydraulics.py --flow-Ls 50 --head 30 --efficiency 0.75
 
 Output: identical to Test 1 (all values match to displayed precision)
 
-Result: PASS
-Notes:
-  - Confirms 50/1000 = 0.05 m3/s conversion is applied correctly. Unlike
-    --flow-gpm (see Test 7), this flag IS wired up correctly.
+Result: PASS (unchanged)
 
 
 --------------------------------------------------------------------------------
-TEST 6 - JSON input file, non-default density, NPSH available
+TEST 6 - JSON input file, non-default density
 --------------------------------------------------------------------------------
 Scenario: Light hydrocarbon (rho = 850 kg/m3), 0.08 m3/s at 45 m head, 70%
-efficiency, with 8 m NPSH available — exercises the JSON input path together
-with a non-water density and a case where NPSH is inadequate.
+efficiency. The npsh_available_m field has been dropped from the input file,
+since that field no longer exists on PumpInputs.
 
 Input file (pump_inputs.json):
 {
   "flow_m3_s": 0.08,
   "head_m": 45,
   "efficiency": 0.7,
-  "density": 850,
-  "npsh_available_m": 8
+  "density": 850
 }
 
 Command:
@@ -168,45 +159,38 @@ Output:
    - flow_L_s: 80
    - flow_gpm_us: 1268.03
    - npshr_estimated_m: 17.911
-   - npsh_available_m: 8
-   - npsh_margin_m: -9.91101
 
-Result: PASS
+Result: PASS (result set now shorter — no npsh_available_m / npsh_margin_m
+keys — otherwise unchanged)
 Notes:
   - P_hyd = 850*9.80665*0.08*45 = 30,008.3 W -> matches.
   - P_shaft = 30,008.3/0.7 = 42,869.1 W -> matches.
-  - NPSHr: Q_norm=8; NPSHr = 0.5+5*8^0.6 = 17.91 -> matches.
-  - npsh_margin = 8 - 17.911 = -9.911 -> matches; correctly flags a NEGATIVE
-    margin (NPSH available < NPSH required), which is a real cavitation risk
-    a user should catch — the module surfaces this number but does not add
-    its own warning text (informational, not a defect: the CLI's job here is
-    to report the number).
+  - Supplying a stale "npsh_available_m" key in the JSON file is silently
+    ignored (dataclass construction only reads recognized fields), which is
+    reasonable — it does not raise an error, but also has no effect.
 
 
 --------------------------------------------------------------------------------
-TEST 7 - BUG: --flow-gpm CLI flag is accepted but silently non-functional
+TEST 7 - --flow-gpm CLI flag
 --------------------------------------------------------------------------------
-Scenario: Flow supplied ONLY via --flow-gpm (the CLI help text itself already
-hints at the issue: "Flow (US gpm) -- not used directly").
-
 Command:
   python3 pump_hydraulics.py --flow-gpm 500 --head 30
 
-Output (stderr):
-  Calculation error: Flow (flow_m3_s) is required
+Output:
+  Pump hydraulics results:
+   - hydraulic_power_W: 9280.55
+   - shaft_power_W: 12374.1
+   - shaft_power_kW: 12.3741
+   - shaft_power_HP: 16.5939
+   - flow_m3_s: 0.0315451
+   - flow_m3_h: 113.562
+   - flow_L_s: 31.5451
+   - flow_gpm_us: 500
+   - npshr_estimated_m: 10.4616
 
-Exit code: 2
+Exit code: 0
 
-Result: FAIL (real bug — see Observation 1)
-Notes:
-  - Unlike --flow-m3h and --flow-Ls, which both have explicit conversion
-    blocks in _args_to_inputs() that populate data['flow_m3_s'], there is NO
-    equivalent block for args.flow_gpm. The flag is parsed by argparse (dest
-    'flow_gpm') but the resulting value is never read anywhere in
-    _args_to_inputs() or calculate().
-  - Net effect: a user who runs the tool with only --flow-gpm gets a generic
-    "Flow is required" error, which is confusing — the flag exists, is
-    documented in --help, and accepts a value, but has no effect at all.
+Result: PASS (unchanged from Round 1 re-test)
 
 
 --------------------------------------------------------------------------------
@@ -220,7 +204,7 @@ Output (stderr):
 
 Exit code: 2
 
-Result: PASS (clear, correct error)
+Result: PASS (unchanged)
 
 
 --------------------------------------------------------------------------------
@@ -234,7 +218,7 @@ Output (stderr):
 
 Exit code: 2
 
-Result: PASS
+Result: PASS (unchanged)
 
 
 --------------------------------------------------------------------------------
@@ -248,10 +232,7 @@ Output (stderr):
 
 Exit code: 2
 
-Result: PASS
-Notes:
-  - Correctly rejects the boundary case efficiency=0 (division by zero
-    avoided by validation, not by exception).
+Result: PASS (unchanged)
 
 
 --------------------------------------------------------------------------------
@@ -265,44 +246,21 @@ Output (stderr):
 
 Exit code: 2
 
-Result: PASS
-Notes:
-  - head_from_power_and_flow() explicitly validates Q_m3_s <= 0, correctly
-    catching this case before it can raise a raw ZeroDivisionError.
+Result: PASS (unchanged)
 
 
 --------------------------------------------------------------------------------
-TEST 12 - Edge case: flow = 0 on the head/power-output path (not the
-power->head path)
+TEST 12 - Edge case: flow = 0 on the head/power-output path
 --------------------------------------------------------------------------------
-Scenario: Same as Test 11's zero flow, but with --head instead of --power-W,
-which routes through hydraulic_power_W() instead of
-head_from_power_and_flow(). hydraulic_power_W() has no Q>0 check.
-
 Command:
   python3 pump_hydraulics.py --flow-m3s 0 --head 30 --efficiency 0.75
 
-Output:
-  Pump hydraulics results:
-   - hydraulic_power_W: 0
-   - shaft_power_W: 0
-   - shaft_power_kW: 0
-   - shaft_power_HP: 0
-   - flow_m3_s: 0
-   - flow_m3_h: 0
-   - flow_L_s: 0
-   - flow_gpm_us: 0
-   - npshr_estimated_m: 0
+Output (stderr):
+  Calculation error: Flow must be > 0
 
-Exit code: 0
+Exit code: 2
 
-Result: PASS (mathematically correct, flagged as a minor observation)
-Notes:
-  - Mathematically P = rho*g*0*H = 0 is correct, and this does not crash.
-    However, unlike Test 11 (same zero-flow input, just via --power-W), this
-    path silently "succeeds" with an all-zero result rather than flagging
-    that a zero-flow duty point is not a meaningful pump sizing case. See
-    Observation 2.
+Result: PASS (unchanged — fixed in Round 1, still correct here)
 
 
 ================================================================================
@@ -314,42 +272,50 @@ Test 3: P_hyd = 5000*0.8 = 4000 W; H = 4000/(1000*9.80665*0.1) = 4.0789 m
         (matches)
 Test 6: P_hyd = 850*9.80665*0.08*45 = 30,008.3 W; P_shaft = 30,008.3/0.7 =
         42,869.1 W (matches)
+Test 7: 500 gpm / 15,850.3231 = 0.0315451 m3/s; P_hyd =
+        1000*9.80665*0.0315451*30 = 9,280.55 W; P_shaft = 9,280.55/0.75 =
+        12,374.1 W (matches)
 
-All independently recomputed values, done outside the module under test,
-agree with the script's output in every successful test case, confirming
-hydraulic_power_W(), shaft_power_W(), head_from_power_and_flow(),
-estimate_npshr(), and the flow/power unit conversions are all implemented
-correctly for the cases exercised.
+All independently recomputed values agree with the script's output in every
+test case. hydraulic_power_W(), shaft_power_W(), head_from_power_and_flow(),
+estimate_npshr(), and the flow/power unit conversions remain correct after
+both rounds of changes.
 
 
 ================================================================================
-OBSERVATIONS / RECOMMENDATIONS
+CHANGES APPLIED SINCE ORIGINAL REPORT
 ================================================================================
-1. BUG (Test 7, recommend fixing): --flow-gpm is defined as a CLI argument
-   and even documented in its own help text as "not used directly," but this
-   is effectively a silent dead flag — argparse accepts and parses it, yet
-   _args_to_inputs() never reads args.flow_gpm to populate flow_m3_s (it only
-   does this for args.flow_m3h and args.flow_l_s). A user relying on this
-   flag alone will get an unrelated "Flow is required" error with no hint
-   that the flag they used is the actual cause. Recommend either (a) wiring
-   up a conversion block analogous to the m3/h and L/s cases (US gpm -> m3/s
-   is 1/15850.3231), or (b) removing the flag/argument entirely and updating
-   the help text and docstring, to avoid a documented-but-nonfunctional
-   option in the public CLI.
-2. MINOR (Test 12, informational): calculate() validates Q>0 on the
-   power->head branch (via head_from_power_and_flow) and on efficiency, but
-   not on the head->power branch (hydraulic_power_W has no Q>0 guard). A
-   flow of 0 silently returns an all-zero result set instead of raising a
-   validation error, which is inconsistent with how the power->head branch
-   handles the same input. Not incorrect physics, but worth a consistency
-   pass if the intent is to flag non-physical/degenerate duty points
-   uniformly across both branches.
-3. estimate_npshr() is explicitly documented as "a rough placeholder for
+Round 1 (previously reported, unchanged here):
+  1. _args_to_inputs() gained a conversion block for args.flow_gpm.
+  2. calculate() gained a top-level flow_m3_s > 0 guard shared by both
+     branches.
+
+Round 2 (this report):
+  3. Removed the NPSH-check feature end to end:
+       - PumpInputs.npsh_available_m field deleted.
+       - 'npsh_available_m' removed from the _set_if_provided() field list
+         in _args_to_inputs().
+       - npsh_available_m removed from the PumpInputs(...) construction.
+       - The "if inputs.npsh_available_m is not None: ..." block removed
+         from calculate() (npsh_available_m / npsh_margin_m outputs gone).
+       - --npsh-available CLI argument removed from main()'s parser.
+     estimate_npshr() itself, and the npshr_estimated_m output, were left
+     fully intact — only the comparison against a user-supplied "available"
+     value was removed.
+
+All changes are documented in the module docstring's Changelog section.
+
+
+================================================================================
+REMAINING OBSERVATIONS (not defects, informational — unchanged from original)
+================================================================================
+1. estimate_npshr() is explicitly documented as "a rough placeholder for
    demonstration" with a simple empirical scaling — this matches its
    observed behavior and is not a defect, but underscores (consistent with
    the module's own docstring) that real NPSHr values must come from vendor
-   pump curves, not this formula.
-4. PyYAML was not installed in the test environment, so only the JSON input
+   pump curves, not this formula. This remains true post-removal since the
+   estimate itself was not touched.
+2. PyYAML was not installed in the test environment, so only the JSON input
    path (Test 6) was exercised; the YAML path raises a clear RuntimeError
    with an install hint if PyYAML is missing (correct defensive behavior,
    not separately exercised here).
