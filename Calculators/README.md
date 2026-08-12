@@ -33,6 +33,7 @@ Some tools also ship an interactive browser-based calculator (see the **Live Cal
 
 ## Requirements
 These scripts are written in standard Python 3 with minimal dependencies. If a `requirements.txt` is added at the repo root, install with:
+
 ```bash
 pip install -r requirements.txt
 ```
