@@ -120,9 +120,17 @@
   }
   .badge.ok{background:rgba(111,167,135,.15);color:var(--green);border:1px solid rgba(111,167,135,.4);}
   .badge.warn{background:rgba(232,163,61,.15);color:var(--amber);border:1px solid rgba(232,163,61,.4);}
+  .badge-row{display:flex;gap:8px;flex-wrap:wrap;}
 
   footer{margin-top:40px;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--paper-dim);line-height:1.6;border-top:1px solid var(--line-dim);padding-top:20px;}
   .hidden{display:none !important;}
+  .signature{
+    margin-top:28px;padding-top:20px;border-top:1px solid var(--line-dim);
+    font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--paper-dim);line-height:1.7;
+  }
+  .signature strong{color:var(--paper);font-weight:600;}
+  .signature a{color:var(--line);text-decoration:none;border-bottom:1px solid var(--line-dim);padding-bottom:1px;transition:color .15s,border-color .15s;}
+  .signature a:hover{color:var(--amber);border-color:var(--amber);}
 </style>
 </head>
 <body>
@@ -162,6 +170,16 @@
         <input type="number" id="h-rho" value="1000" step="any" min="0">
       </div>
       <div class="field">
+        <label for="h-N">Pump speed <span class="unit">rpm</span></label>
+        <input type="number" id="h-N" value="2900" step="any" min="0">
+        <div class="hint">Used for specific speed (Ns) and suction specific speed (Nss) — pump selection/reliability screening.</div>
+      </div>
+      <div class="field">
+        <label for="h-motormargin">Motor sizing margin <span class="unit">%</span></label>
+        <input type="number" id="h-motormargin" value="15" step="any" min="0">
+        <div class="hint">Applied to shaft power before rounding up to a standard motor rating.</div>
+      </div>
+      <div class="field">
         <label for="h-npsha">NPSH available <span class="unit">m</span></label>
         <input type="number" id="h-npsha" value="0" step="any" min="0">
         <div class="hint">Leave at 0 to skip the NPSH margin check.</div>
@@ -189,6 +207,11 @@
         <input type="number" id="p-rho" value="1000" step="any" min="0">
       </div>
       <div class="field">
+        <label for="p-N">Pump speed <span class="unit">rpm</span></label>
+        <input type="number" id="p-N" value="2900" step="any" min="0">
+        <div class="hint">Used for specific speed (Ns) and suction specific speed (Nss).</div>
+      </div>
+      <div class="field">
         <label for="p-npsha">NPSH available <span class="unit">m</span></label>
         <input type="number" id="p-npsha" value="0" step="any" min="0">
         <div class="hint">Leave at 0 to skip the NPSH margin check.</div>
@@ -210,6 +233,15 @@
       <div class="field">
         <label for="y-eff">Pump efficiency <span class="unit">0–1</span></label>
         <input type="number" id="y-eff" value="0.75" step="any" min="0" max="1">
+      </div>
+      <div class="field">
+        <label for="y-N">Pump speed <span class="unit">rpm</span></label>
+        <input type="number" id="y-N" value="2900" step="any" min="0">
+        <div class="hint">Used for specific speed (Ns) and suction specific speed (Nss).</div>
+      </div>
+      <div class="field">
+        <label for="y-motormargin">Motor sizing margin <span class="unit">%</span></label>
+        <input type="number" id="y-motormargin" value="15" step="any" min="0">
       </div>
 
       <h3>Pressures</h3>
@@ -281,6 +313,7 @@
       <span class="subfigure" id="out-secondary">—</span>
 
       <span class="badge ok" id="status-badge">READY</span>
+      <div class="badge-row" id="extra-badges"></div>
 
       <div id="stat-rows"></div>
     </section>
@@ -290,8 +323,16 @@
   <footer>
     Hydraulic power: P = ρ·g·Q·H &nbsp;|&nbsp; Shaft power: P_shaft = P_hyd / η &nbsp;|&nbsp; Head from power: H = (P_shaft·η) / (ρ·g·Q)<br>
     System TDH = (z₂−z₁) + (P₂−P₁)/(ρg) + h_f,suction + h_f,discharge &nbsp;|&nbsp; NPSHa = (P_source−P_vapor)/(ρg) + z_suction − h_f,suction<br>
-    NPSHr estimate is a rough placeholder (NPSHr ≈ 0.5 + 5·(Q/0.01)^0.6) for screening only — use vendor pump curves for real designs.<br>
-    Converted from pump_hydraulics.py, with the System tab added as a detailed screening extension beyond the original script. Verify against vendor curves and applicable engineering standards before use in design.<br>
+    NPSHr estimate is a rough placeholder (NPSHr ≈ 0.5 + 5·(Q/0.01)^0.6) for screening only — use the vendor's certified NPSHr (NPSH3) curve for real designs. Specific speed and suction specific speed below are computed FROM this placeholder NPSHr, so they inherit the same limitation.<br>
+    <b>Specific speed (US customary):</b> Ns = N·√Q(gpm) / H(ft)^0.75 — classifies impeller geometry (radial &lt;2000, mixed 2000–4000, axial &gt;4000).<br>
+    <b>Suction specific speed:</b> Nss = N·√Q(gpm) / NPSHr(ft)^0.75 — screens suction-side design risk. Nss above ~11,000 (US) is commonly flagged per API 610/Hydraulic Institute guidance as high suction energy, warranting a larger NPSH margin (up to several times NPSHr) and closer attention to allowable operating range — this is industry practice, not a single codified API 610 numeric limit for all services.<br>
+    <b>Motor sizing:</b> shaft power is increased by the entered margin (%) and rounded up to the next rating in a common IEC kW series — a starting point for motor selection, not a substitute for the vendor's actual motor selection (which also accounts for starting torque, ambient temperature, altitude, and enclosure type).<br>
+    Converted from pump_hydraulics.py, substantially extended with the specific-speed, suction-specific-speed, and motor-sizing framework above as a detailed screening tool. Not a certified sizing package — verify NPSHr, Ns/Nss classification, and motor selection against vendor data before use in design.<br>
+    <div class="signature">
+      <strong>Shubham Chatterjee</strong> · Process Engineer<br>
+      <a href="https://processengonline.github.io/" target="_blank" rel="noopener noreferrer">processengonline.github.io</a> ·
+      <a href="https://github.com/processengonline" target="_blank" rel="noopener noreferrer">GitHub</a>
+    </div>
   </footer>
 
 </div>
@@ -319,6 +360,42 @@ function m3sToLs(q){ return q*1000.0; }
 function m3sToGpmUs(q){ return q*15850.3231; }
 function wToKw(p){ return p/1000.0; }
 function wToHp(p){ return p/745.699872; }
+function mToFt(h){ return h*3.28084; }
+
+// Specific speed (US customary): Ns = N*sqrt(Q_gpm) / H_ft^0.75
+function specificSpeedUS(N, Qm3h, Hm){
+  if(!(N>0) || !(Hm>0)) return null;
+  const Qgpm = m3sToGpmUs(Qm3h/3600.0);
+  return N*Math.sqrt(Qgpm)/Math.pow(mToFt(Hm), 0.75);
+}
+// Suction specific speed (US customary): Nss = N*sqrt(Q_gpm) / NPSHr_ft^0.75
+function suctionSpecificSpeedUS(N, Qm3h, NpshrM){
+  if(!(N>0) || !(NpshrM>0)) return null;
+  const Qgpm = m3sToGpmUs(Qm3h/3600.0);
+  return N*Math.sqrt(Qgpm)/Math.pow(mToFt(NpshrM), 0.75);
+}
+function classifyNs(ns){
+  if(ns===null) return '—';
+  if(ns<2000) return 'Radial flow';
+  if(ns<4000) return 'Mixed flow';
+  return 'Axial flow';
+}
+function classifyNss(nss){
+  if(nss===null) return { label:'—', level:'ok' };
+  if(nss<8500) return { label:'Low/moderate suction energy — typical margin ratio 1.1–1.3×NPSHr', level:'ok' };
+  if(nss<=11000) return { label:'High suction energy — recommend margin ratio ≥1.3–2×NPSHr', level:'warn' };
+  return { label:'Very high suction energy (exceeds typical API 610 guidance ~11,000 US) — recommend ≥2×NPSHr margin, consult vendor', level:'warn' };
+}
+
+// Standard IEC motor kW ratings (common series)
+const STANDARD_MOTOR_KW = [0.75,1.1,1.5,2.2,3,4,5.5,7.5,11,15,18.5,22,30,37,45,55,75,90,110,132,150,160,185,200,220,250,280,300,315,335,355,375,400,450,500];
+function recommendedMotorKw(shaftKw, marginPct){
+  const target = shaftKw*(1+marginPct/100.0);
+  for(const kw of STANDARD_MOTOR_KW){
+    if(kw>=target) return kw;
+  }
+  return target; // beyond table, return raw target
+}
 
 const tabHead = document.getElementById('tab-head');
 const tabPower = document.getElementById('tab-power');
@@ -346,8 +423,9 @@ tabHead.addEventListener('click', ()=>setMode('head'));
 tabPower.addEventListener('click', ()=>setMode('power'));
 tabSystem.addEventListener('click', ()=>setMode('system'));
 
-const ids = ['h-Q','h-H','h-eff','h-rho','h-npsha','p-Q','p-P','p-eff','p-rho','p-npsha',
-             'y-Q','y-rho','y-eff','y-Psrc','y-Pdst','y-Pv','y-zsrc','y-zdst','y-hfs','y-hfd'];
+const ids = ['h-Q','h-H','h-eff','h-rho','h-npsha','h-N','h-motormargin',
+             'p-Q','p-P','p-eff','p-rho','p-npsha','p-N',
+             'y-Q','y-rho','y-eff','y-Psrc','y-Pdst','y-Pv','y-zsrc','y-zdst','y-hfs','y-hfd','y-N','y-motormargin'];
 ids.forEach(id=>document.getElementById(id).addEventListener('input', compute));
 
 function fmt(num, sig=4){
@@ -376,6 +454,17 @@ function renderStats(rows){
   });
 }
 
+function renderExtraBadges(badges){
+  const container = document.getElementById('extra-badges');
+  container.innerHTML = '';
+  badges.forEach(([label, level])=>{
+    const span = document.createElement('span');
+    span.className = 'badge ' + level;
+    span.textContent = label;
+    container.appendChild(span);
+  });
+}
+
 function showError(id, msg){
   const el = document.getElementById(id);
   el.textContent = msg;
@@ -383,6 +472,7 @@ function showError(id, msg){
   document.getElementById('out-primary').textContent = '—';
   document.getElementById('out-secondary').textContent = '—';
   document.getElementById('stat-rows').innerHTML = '';
+  document.getElementById('extra-badges').innerHTML = '';
   const badge = document.getElementById('status-badge');
   badge.textContent = 'CHECK INPUTS';
   badge.className = 'badge warn';
@@ -414,6 +504,9 @@ function compute(){
       document.getElementById('out-secondary').textContent = '≈ ' + fmt(wToHp(Pshaft)) + ' HP · hydraulic power ' + fmt(wToKw(Phyd)) + ' kW';
 
       const npshr = estimateNpshr(Q);
+      const N = parseFloat(document.getElementById('h-N').value);
+      const motorMargin = parseFloat(document.getElementById('h-motormargin').value);
+      const ns = specificSpeedUS(N, QM3h, H);
       const rows = [
         ['Head', fmt(H) + ' m'],
         ['Flow (m³/h)', fmt(QM3h)],
@@ -421,11 +514,23 @@ function compute(){
         ['Flow (US gpm)', fmt(m3sToGpmUs(Q))],
         ['NPSHr (estimated)', fmt(npshr) + ' m'],
       ];
+      let extraBadges = [];
       if(npshAvail>0){
         rows.push(['NPSH available', fmt(npshAvail) + ' m']);
         rows.push(['NPSH margin', fmt(npshAvail-npshr) + ' m']);
+        const nss = suctionSpecificSpeedUS(N, QM3h, npshr);
+        const nssInfo = classifyNss(nss);
+        rows.push(['Suction specific speed Nss', nss? fmt(nss) : '—']);
+        rows.push(['Suction energy', nssInfo.label]);
+        if(nssInfo.level==='warn') extraBadges.push(['HIGH SUCTION ENERGY', 'warn']);
       }
+      if(ns!==null){
+        rows.push(['Specific speed Ns', fmt(ns) + ' (' + classifyNs(ns) + ')']);
+      }
+      const motorKw = recommendedMotorKw(wToKw(Pshaft), motorMargin);
+      rows.push(['Recommended motor rating', fmt(motorKw) + ' kW (' + fmt(motorKw*1.34102) + ' HP, std. frame)']);
       renderStats(rows);
+      renderExtraBadges(extraBadges);
 
       const duration = Math.max(0.4, Math.min(4, 4 - Math.log10(Math.max(Q,0.0001))*0.6));
       document.getElementById('impeller').style.animationDuration = duration.toFixed(2) + 's';
@@ -451,6 +556,8 @@ function compute(){
       document.getElementById('out-secondary').textContent = 'at ' + fmt(Pkw) + ' kW shaft input, η = ' + fmt(eff);
 
       const npshr = estimateNpshr(Q);
+      const N = parseFloat(document.getElementById('p-N').value);
+      const ns = specificSpeedUS(N, QM3h, H);
       const rows = [
         ['Shaft power', fmt(Pkw) + ' kW'],
         ['Flow (m³/h)', fmt(QM3h)],
@@ -458,11 +565,21 @@ function compute(){
         ['Flow (US gpm)', fmt(m3sToGpmUs(Q))],
         ['NPSHr (estimated)', fmt(npshr) + ' m'],
       ];
+      let extraBadges = [];
       if(npshAvail>0){
         rows.push(['NPSH available', fmt(npshAvail) + ' m']);
         rows.push(['NPSH margin', fmt(npshAvail-npshr) + ' m']);
+        const nss = suctionSpecificSpeedUS(N, QM3h, npshr);
+        const nssInfo = classifyNss(nss);
+        rows.push(['Suction specific speed Nss', nss? fmt(nss) : '—']);
+        rows.push(['Suction energy', nssInfo.label]);
+        if(nssInfo.level==='warn') extraBadges.push(['HIGH SUCTION ENERGY', 'warn']);
+      }
+      if(ns!==null){
+        rows.push(['Specific speed Ns', fmt(ns) + ' (' + classifyNs(ns) + ')']);
       }
       renderStats(rows);
+      renderExtraBadges(extraBadges);
 
       const duration = Math.max(0.4, Math.min(4, 4 - Math.log10(Math.max(Q,0.0001))*0.6));
       document.getElementById('impeller').style.animationDuration = duration.toFixed(2) + 's';
@@ -505,6 +622,12 @@ function compute(){
       const Pshaft = shaftPowerW(Phyd, eff);
       const npshr = estimateNpshr(Q);
       const margin = NPSHa - npshr;
+      const N = parseFloat(document.getElementById('y-N').value);
+      const motorMargin = parseFloat(document.getElementById('y-motormargin').value);
+      const ns = specificSpeedUS(N, QM3h, TDH);
+      const nss = suctionSpecificSpeedUS(N, QM3h, npshr);
+      const nssInfo = classifyNss(nss);
+      const motorKw = recommendedMotorKw(wToKw(Pshaft), motorMargin);
 
       document.getElementById('out-primary').textContent = fmt(TDH);
       document.getElementById('out-primary-unit').textContent = 'm';
@@ -517,13 +640,21 @@ function compute(){
         ['Suction + discharge losses', fmt(hfs+hfd) + ' m'],
         ['TDH', fmt(TDH) + ' m'],
         ['Shaft power', fmt(wToKw(Pshaft)) + ' kW (' + fmt(wToHp(Pshaft)) + ' HP)'],
+        ['Recommended motor rating', fmt(motorKw) + ' kW'],
         ['NPSH available', fmt(NPSHa) + ' m'],
         ['NPSHr (estimated)', fmt(npshr) + ' m'],
         ['NPSH margin', fmt(margin) + ' m'],
         ['Status', margin>0 ? 'Adequate NPSH margin' : 'Cavitation risk — margin ≤ 0'],
+        ['Specific speed Ns', ns? fmt(ns) + ' (' + classifyNs(ns) + ')' : '—'],
+        ['Suction specific speed Nss', nss? fmt(nss) : '—'],
+        ['Suction energy', nssInfo.label],
         ['Flow (m³/h)', fmt(QM3h)],
       ];
       renderStats(rows);
+      let extraBadges = [];
+      if(margin<=0) extraBadges.push(['CAVITATION RISK', 'warn']);
+      if(nssInfo.level==='warn') extraBadges.push(['HIGH SUCTION ENERGY', 'warn']);
+      renderExtraBadges(extraBadges);
 
       const duration = Math.max(0.4, Math.min(4, 4 - Math.log10(Math.max(Q,0.0001))*0.6));
       document.getElementById('impeller').style.animationDuration = duration.toFixed(2) + 's';
