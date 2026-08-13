@@ -33,7 +33,7 @@
   }
   .wrap{max-width:1080px;margin:0 auto;padding:48px 24px 80px;}
 
-  header{margin-bottom:40px;border-bottom:1px solid var(--line-dim);padding-bottom:24px;}
+  header{margin-bottom:32px;border-bottom:1px solid var(--line-dim);padding-bottom:24px;}
   .eyebrow{
     font-family:'IBM Plex Mono',monospace;
     font-size:12px;letter-spacing:.18em;text-transform:uppercase;
@@ -43,16 +43,16 @@
     font-size:clamp(28px,4vw,42px);
     margin:0 0 12px;font-weight:700;letter-spacing:-0.01em;
   }
-  .sub{color:var(--paper-dim);font-size:15px;max-width:640px;line-height:1.55;margin:0 0 16px;}
-  .source-link{
-    font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.03em;
-    color:var(--line);text-decoration:none;border-bottom:1px solid var(--line-dim);
-    padding-bottom:2px;transition:color .15s, border-color .15s;
-  }
-  .source-link:hover{color:var(--amber);border-color:var(--amber);}
-  .source-link:focus-visible{outline:2px solid var(--amber);outline-offset:2px;}
+  .sub{color:var(--paper-dim);font-size:15px;max-width:680px;line-height:1.55;margin:0 0 16px;}
 
-  .tabs{display:flex;gap:2px;margin-bottom:28px;border:1px solid var(--line-dim);width:fit-content;border-radius:6px;overflow:hidden;}
+  .epcnote{
+    font-family:'IBM Plex Mono',monospace;font-size:11.5px;line-height:1.6;color:var(--paper-dim);
+    background:rgba(201,106,92,.08);border:1px solid rgba(201,106,92,.4);border-radius:6px;
+    padding:14px 16px;margin-top:16px;
+  }
+  .epcnote b{color:var(--red);}
+
+  .tabs{display:flex;gap:2px;margin:24px 0 28px;border:1px solid var(--line-dim);width:fit-content;border-radius:6px;overflow:hidden;}
   .tab{
     font-family:'IBM Plex Mono',monospace;font-size:13px;letter-spacing:.05em;
     padding:11px 22px;background:var(--navy-2);color:var(--paper-dim);
@@ -62,7 +62,7 @@
   .tab:not(.active):hover{background:#17324f;color:var(--paper);}
   .tab:focus-visible{outline:2px solid var(--amber);outline-offset:-2px;}
 
-  .grid{display:grid;grid-template-columns:1.1fr 1fr;gap:36px;}
+  .grid{display:grid;grid-template-columns:1.1fr 1fr;gap:36px;align-items:start;}
   @media (max-width:820px){.grid{grid-template-columns:1fr;}}
 
   .panel{
@@ -72,42 +72,56 @@
     font-family:'IBM Plex Mono',monospace;font-size:12px;text-transform:uppercase;
     letter-spacing:.14em;color:var(--line);margin:0 0 20px;
   }
+  .panel h3{
+    font-family:'IBM Plex Mono',monospace;font-size:11px;text-transform:uppercase;
+    letter-spacing:.12em;color:var(--paper-dim);margin:22px 0 14px;
+    border-top:1px solid var(--line-dim);padding-top:16px;
+  }
+  .panel h3:first-of-type{margin-top:0;border-top:none;padding-top:0;}
 
-  .field{margin-bottom:18px;}
+  .field{margin-bottom:16px;}
   .field:last-child{margin-bottom:0;}
   label{display:flex;justify-content:space-between;align-items:baseline;font-size:13.5px;color:var(--paper);margin-bottom:6px;}
   label .unit{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--paper-dim);}
-  input[type=number]{
+  input[type=number], select{
     width:100%;background:var(--navy);border:1px solid var(--line-dim);border-radius:5px;
-    color:var(--paper);font-family:'IBM Plex Mono',monospace;font-size:15px;
-    padding:10px 12px;transition:border-color .15s;
+    color:var(--paper);font-family:'IBM Plex Mono',monospace;font-size:14px;
+    padding:9px 11px;transition:border-color .15s;
   }
-  input[type=number]:focus{outline:none;border-color:var(--line);box-shadow:0 0 0 3px rgba(62,124,177,0.22);}
+  select{cursor:pointer;}
+  input[type=number]:focus, select:focus{outline:none;border-color:var(--line);box-shadow:0 0 0 3px rgba(62,124,177,0.22);}
+  input[type=number]:disabled{opacity:0.65;cursor:not-allowed;color:var(--amber);border-color:var(--amber);}
   .hint{font-size:11.5px;color:var(--paper-dim);margin-top:5px;line-height:1.4;}
   .err{font-size:11.5px;color:var(--red);margin-top:5px;display:none;}
 
   .readout{
     background:var(--navy-2);border:1px solid var(--line-dim);border-radius:8px;
-    padding:26px;display:flex;flex-direction:column;gap:22px;
+    padding:26px;display:flex;flex-direction:column;gap:20px;position:sticky;top:24px;
   }
   .readout h2{
     font-family:'IBM Plex Mono',monospace;font-size:12px;text-transform:uppercase;
     letter-spacing:.14em;color:var(--line);margin:0;
   }
   .big-figure{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;}
-  .big-num{font-size:56px;font-weight:700;line-height:1;letter-spacing:-0.02em;font-variant-numeric:tabular-nums;}
+  .big-num{font-size:48px;font-weight:700;line-height:1;letter-spacing:-0.02em;font-variant-numeric:tabular-nums;}
   .big-unit{font-family:'IBM Plex Mono',monospace;font-size:16px;color:var(--paper-dim);}
   .subfigure{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--paper-dim);}
 
-  .diagram{display:flex;align-items:center;justify-content:center;padding:8px 0 4px;}
+  .diagram{display:flex;align-items:center;justify-content:center;padding:6px 0 2px;}
   .diagram svg{overflow:visible;}
   .orifice-ring{transition:r .3s ease;}
   .flow-dash{stroke-dasharray:5 6;animation:flowmove 1.1s linear infinite;}
   @keyframes flowmove{to{stroke-dashoffset:-22;}}
   @media (prefers-reduced-motion: reduce){.flow-dash{animation:none;}}
 
-  .stat-row{display:flex;justify-content:space-between;gap:12px;font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--paper-dim);border-top:1px solid var(--line-dim);padding-top:14px;}
+  .stat-row{display:flex;justify-content:space-between;gap:12px;font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--paper-dim);border-top:1px solid var(--line-dim);padding-top:12px;}
+  .stat-row span:first-child{flex-shrink:0;}
   .stat-row span:last-child{color:var(--paper);text-align:right;}
+  #stat-rows{display:flex;flex-direction:column;gap:12px;}
+  .stat-group-label{
+    font-family:'IBM Plex Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.08em;
+    color:var(--line);margin-top:6px;
+  }
 
   .badge{
     font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.06em;
@@ -116,18 +130,37 @@
   .badge.ok{background:rgba(111,167,135,.15);color:var(--green);border:1px solid rgba(111,167,135,.4);}
   .badge.warn{background:rgba(232,163,61,.15);color:var(--amber);border:1px solid rgba(232,163,61,.4);}
   .badge.info{background:rgba(62,124,177,.18);color:var(--line);border:1px solid rgba(62,124,177,.4);}
+  .badge-row{display:flex;gap:8px;flex-wrap:wrap;}
+
+  .multivalve{
+    margin-top:4px;padding:12px 14px;border-radius:6px;
+    background:rgba(232,163,61,.08);border:1px solid rgba(232,163,61,.35);
+    font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--paper-dim);line-height:1.5;
+  }
+  .multivalve b{color:var(--amber);}
 
   footer{margin-top:40px;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--paper-dim);line-height:1.6;border-top:1px solid var(--line-dim);padding-top:20px;}
   .hidden{display:none !important;}
+
+  .signature{
+    margin-top:28px;padding-top:20px;border-top:1px solid var(--line-dim);
+    font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--paper-dim);line-height:1.7;
+  }
+  .signature strong{color:var(--paper);font-weight:600;}
+  .signature a{color:var(--line);text-decoration:none;border-bottom:1px solid var(--line-dim);padding-bottom:1px;transition:color .15s,border-color .15s;}
+  .signature a:hover{color:var(--amber);border-color:var(--amber);}
 </style>
 </head>
 <body>
 <div class="wrap">
 
   <header>
-    <p class="eyebrow">PSV Sizing — Rev. 1 · Screening</p>
+    <p class="eyebrow">PSV Sizing — Rev. 3 · API 520/521 Detailed</p>
     <h1>PSV Orifice Sizing Calculator</h1>
-    <p class="sub">Screening-level required orifice area for gas (isentropic, choked or sub-critical) or liquid (incompressible orifice) relief. Final PSV selection must use vendor-certified methods per API 520/521.</p>
+    <p class="sub">Sizes per the literal API 520 Part I equations — Kd, Kb/Kw (backpressure), Kc (rupture disk), Kv (liquid viscosity), and gas compressibility (Z) — with set-pressure/overpressure logic, API 526 orifice selection, multi-valve distribution, and an inlet-line 3% pressure-drop check.</p>
+    <div class="epcnote">
+      <b>Not a substitute for certified sizing.</b> This tool uses standard API 520 "preliminary sizing" Kd values (0.975 vapor / 0.65 liquid) when a certified value isn't entered, and an <b>approximate</b> Kb/Kw backpressure-correction curve fitted to the shape of API 520 Fig. 30&ndash;32 (not the exact 53-point manufacturer-certified table). For an actual EPC deliverable you still need: the valve manufacturer's certified Kd/Kb/Kw from their published capacity data, a full inlet/outlet piping hydraulic study (not just the single-number 3% check below), reaction-force and noise calculations, two-phase/flashing evaluation where applicable, and review/stamp by a licensed engineer. Treat this as a rigorous screening/pre-sizing tool that gets you very close to the final answer and lets you sanity-check vendor quotes — not as the calculation package itself.
+    </div>
   </header>
 
   <div class="tabs" role="tablist" aria-label="Relief phase">
@@ -139,15 +172,85 @@
 
     <!-- GAS PANEL -->
     <section class="panel" id="panel-gas">
-      <h2>Inputs — Gas (Isentropic)</h2>
+      <h2>Inputs — Gas (API 520 Part I)</h2>
+
+      <h3>Relief Scenario &amp; Set Pressure</h3>
+      <div class="field">
+        <label for="g-Pset">Set pressure <span class="unit">barg</span></label>
+        <input type="number" id="g-Pset" value="9" step="any" min="0">
+      </div>
+      <div class="field">
+        <label for="g-Pop">Operating pressure <span class="unit">barg</span></label>
+        <input type="number" id="g-Pop" value="7" step="any" min="0">
+        <div class="hint">Checked against set pressure for adequate margin.</div>
+      </div>
+      <div class="field">
+        <label for="g-install">Installation</label>
+        <select id="g-install">
+          <option value="single" selected>Single PRV</option>
+          <option value="multiple">Multiple PRVs</option>
+        </select>
+        <div class="hint">Sets allowable accumulation: 10% (single, non-fire) or 16% (multiple, non-fire). Fire case uses 21% regardless.</div>
+      </div>
+      <div class="field">
+        <label for="g-scenario">Relief scenario</label>
+        <select id="g-scenario">
+          <option value="other" selected>Other (enter relieving load directly)</option>
+          <option value="fire">Fire case — API 521 wetted-area method</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="g-psvtype">PSV type</label>
+        <select id="g-psvtype">
+          <option value="conventional" selected>Conventional</option>
+          <option value="balanced">Balanced Bellows</option>
+          <option value="pilot">Pilot Operated</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Allowable overpressure</label>
+        <input type="text" id="g-op-out" value="" disabled>
+      </div>
+      <div class="field">
+        <label>Relieving pressure P1 <span class="unit">bar abs</span></label>
+        <input type="text" id="g-P0" value="" disabled>
+        <div class="hint">P1 = (Set pressure + 1.01325 bar atm) × (1 + overpressure).</div>
+      </div>
+
+      <div class="field hidden" id="g-fire-block">
+        <h3 style="margin-top:18px;">Fire Case Inputs (API 521)</h3>
+        <div class="field">
+          <label for="g-wetarea">Wetted surface area <span class="unit">m²</span></label>
+          <input type="number" id="g-wetarea" value="50" step="any" min="0">
+        </div>
+        <div class="field">
+          <label for="g-envF">Environmental factor F</label>
+          <select id="g-envF">
+            <option value="1.0" selected>Bare vessel (F = 1.0)</option>
+            <option value="0.3">Insulated ~1 in (F ≈ 0.3)</option>
+            <option value="0.15">Insulated ~2 in (F ≈ 0.15)</option>
+            <option value="0.075">Insulated ~4 in (F ≈ 0.075)</option>
+            <option value="0.03">Earth-covered / below grade (F ≈ 0.03)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="g-drainage">Drainage &amp; firefighting adequacy</label>
+          <select id="g-drainage">
+            <option value="21000" selected>Adequate (C = 21,000)</option>
+            <option value="34500">Inadequate (C = 34,500)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="g-hvap">Latent heat of vaporization <span class="unit">kJ/kg</span></label>
+          <input type="number" id="g-hvap" value="350" step="any" min="0">
+        </div>
+        <div class="hint" id="g-fire-readout">Fire-case heat input: — kW · computed relieving mass flow: — kg/s</div>
+      </div>
+
       <div class="field">
         <label for="g-m">Relieving mass flow <span class="unit">kg/s</span></label>
         <input type="number" id="g-m" value="1.0" step="any" min="0">
-        <div class="hint">ṁ — required relief mass flow rate.</div>
-      </div>
-      <div class="field">
-        <label for="g-P0">Inlet (relieving) pressure <span class="unit">bar abs</span></label>
-        <input type="number" id="g-P0" value="10" step="any" min="0">
+        <div class="hint" id="g-m-hint">Auto-filled and locked when Fire case is selected; editable directly otherwise.</div>
       </div>
       <div class="field">
         <label for="g-P2">Outlet / backpressure <span class="unit">bar abs</span></label>
@@ -160,43 +263,129 @@
       <div class="field">
         <label for="g-M">Molecular weight <span class="unit">g/mol</span></label>
         <input type="number" id="g-M" value="28.97" step="any" min="0">
-        <div class="hint">Default 28.97 = air.</div>
       </div>
       <div class="field">
-        <label for="g-gamma">Specific heat ratio γ</label>
+        <label for="g-gamma">Specific heat ratio γ (Cp/Cv)</label>
         <input type="number" id="g-gamma" value="1.4" step="any" min="1.001">
       </div>
       <div class="field">
-        <label for="g-Cd">Discharge coefficient Cd</label>
-        <input type="number" id="g-Cd" value="0.9" step="any" min="0" max="1.5">
-        <div class="hint">Default 0.9.</div>
+        <label for="g-Z">Compressibility factor Z</label>
+        <input type="number" id="g-Z" value="1.0" step="any" min="0.1">
+        <div class="hint">Use 1.0 for near-ideal gas at low pressure; enter an EOS/chart-derived value for high-pressure or non-ideal service.</div>
+      </div>
+
+      <h3>Correction Factors (API 520)</h3>
+      <div class="field">
+        <label for="g-Kd-basis">Discharge coefficient basis</label>
+        <select id="g-Kd-basis">
+          <option value="preliminary" selected>Preliminary / uncertified (Kd = 0.975)</option>
+          <option value="certified">Certified — enter vendor Kd</option>
+        </select>
+      </div>
+      <div class="field hidden" id="g-Kd-custom-field">
+        <label for="g-Kd-custom">Certified Kd</label>
+        <input type="number" id="g-Kd-custom" value="0.975" step="any" min="0" max="1.2">
+      </div>
+      <div class="field">
+        <label for="g-Kc">Rupture disk upstream?</label>
+        <select id="g-Kc">
+          <option value="1.0" selected>None (Kc = 1.0)</option>
+          <option value="0.9">Installed, not certified in combination (Kc = 0.9)</option>
+        </select>
+      </div>
+
+      <h3>Inlet Line Check (API 520 Part II)</h3>
+      <div class="field">
+        <label for="g-dPinlet">Inlet line pressure drop <span class="unit">bar</span></label>
+        <input type="number" id="g-dPinlet" value="0.05" step="any" min="0">
+        <div class="hint">From the protected equipment to the PRV inlet flange, at relieving flow — calculate separately (e.g. with the Line Hydraulics calculator) and enter the result here. Must not exceed 3% of set pressure, or the valve may chatter.</div>
         <div class="err" id="g-err"></div>
       </div>
     </section>
 
     <!-- LIQUID PANEL -->
     <section class="panel hidden" id="panel-liquid">
-      <h2>Inputs — Liquid (Incompressible Orifice)</h2>
+      <h2>Inputs — Liquid (API 520 Part I)</h2>
+
+      <h3>Relief Scenario &amp; Set Pressure</h3>
+      <div class="field">
+        <label for="l-Pset">Set pressure <span class="unit">barg</span></label>
+        <input type="number" id="l-Pset" value="12" step="any" min="0">
+      </div>
+      <div class="field">
+        <label for="l-Pop">Operating pressure <span class="unit">barg</span></label>
+        <input type="number" id="l-Pop" value="9" step="any" min="0">
+        <div class="hint">Checked against set pressure for adequate margin.</div>
+      </div>
+      <div class="field">
+        <label for="l-install">Installation</label>
+        <select id="l-install">
+          <option value="single" selected>Single PRV</option>
+          <option value="multiple">Multiple PRVs</option>
+        </select>
+        <div class="hint">Sets allowable accumulation: 10% (single) or 16% (multiple). Fire-vapor scenario is not modeled for liquid-full relief in this tool.</div>
+      </div>
+      <div class="field">
+        <label for="l-psvtype">PSV type</label>
+        <select id="l-psvtype">
+          <option value="conventional" selected>Conventional</option>
+          <option value="balanced">Balanced Bellows</option>
+          <option value="pilot">Pilot Operated</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Allowable overpressure</label>
+        <input type="text" id="l-op-out" value="" disabled>
+      </div>
+      <div class="field">
+        <label>Relieving pressure P1 <span class="unit">bar abs</span></label>
+        <input type="text" id="l-P0" value="" disabled>
+        <div class="hint">P1 = (Set pressure + 1.01325 bar atm) × (1 + overpressure).</div>
+      </div>
+
       <div class="field">
         <label for="l-Q">Relieving flow rate <span class="unit">m³/s</span></label>
-        <input type="number" id="l-Q" value="0.02" step="any" min="0">
+        <input type="number" id="l-Q" value="0.006" step="any" min="0">
       </div>
       <div class="field">
         <label for="l-rho">Fluid density <span class="unit">kg/m³</span></label>
-        <input type="number" id="l-rho" value="1000" step="any" min="0">
+        <input type="number" id="l-rho" value="850" step="any" min="0">
       </div>
       <div class="field">
-        <label for="l-P0">Inlet pressure <span class="unit">bar abs</span></label>
-        <input type="number" id="l-P0" value="12" step="any" min="0">
+        <label for="l-mu">Liquid viscosity <span class="unit">cP</span></label>
+        <input type="number" id="l-mu" value="1.0" step="any" min="0">
+        <div class="hint">Below ~100 cP the viscosity correction Kv is negligible (Kv ≈ 1) and is set to 1 automatically. Above that, Kv is computed iteratively from the Reynolds number per API 520.</div>
       </div>
       <div class="field">
         <label for="l-P2">Outlet / backpressure <span class="unit">bar abs</span></label>
         <input type="number" id="l-P2" value="2" step="any" min="0">
       </div>
+
+      <h3>Correction Factors (API 520)</h3>
       <div class="field">
-        <label for="l-Cd">Discharge coefficient Cd</label>
-        <input type="number" id="l-Cd" value="0.9" step="any" min="0" max="1.5">
-        <div class="hint">Default 0.9.</div>
+        <label for="l-Kd-basis">Discharge coefficient basis</label>
+        <select id="l-Kd-basis">
+          <option value="preliminary" selected>Preliminary / uncertified (Kd = 0.65)</option>
+          <option value="certified">Certified — enter vendor Kd</option>
+        </select>
+      </div>
+      <div class="field hidden" id="l-Kd-custom-field">
+        <label for="l-Kd-custom">Certified Kd</label>
+        <input type="number" id="l-Kd-custom" value="0.65" step="any" min="0" max="1.2">
+      </div>
+      <div class="field">
+        <label for="l-Kc">Rupture disk upstream?</label>
+        <select id="l-Kc">
+          <option value="1.0" selected>None (Kc = 1.0)</option>
+          <option value="0.9">Installed, not certified in combination (Kc = 0.9)</option>
+        </select>
+      </div>
+
+      <h3>Inlet Line Check (API 520 Part II)</h3>
+      <div class="field">
+        <label for="l-dPinlet">Inlet line pressure drop <span class="unit">bar</span></label>
+        <input type="number" id="l-dPinlet" value="0.05" step="any" min="0">
+        <div class="hint">Must not exceed 3% of set pressure, or the valve may chatter. Calculate separately and enter the result here.</div>
         <div class="err" id="l-err"></div>
       </div>
     </section>
@@ -206,7 +395,7 @@
       <h2>Required Orifice</h2>
 
       <div class="diagram">
-        <svg width="180" height="180" viewBox="0 0 180 180" id="orifice-svg">
+        <svg width="160" height="160" viewBox="0 0 180 180" id="orifice-svg">
           <circle cx="90" cy="90" r="78" fill="none" stroke="var(--line-dim)" stroke-width="1" stroke-dasharray="2 6"/>
           <circle cx="90" cy="90" r="4" fill="none" stroke="var(--line)" stroke-width="2" class="flow-dash orifice-ring" id="ring-outer"/>
           <circle cx="90" cy="90" r="2" fill="var(--amber)" id="ring-dot"/>
@@ -219,119 +408,173 @@
       </div>
       <span class="subfigure" id="out-diam-in">≈ — in</span>
 
-      <span class="badge ok" id="status-badge">READY</span>
-      <span class="badge info hidden" id="flow-badge"></span>
+      <div class="badge-row">
+        <span class="badge ok" id="status-badge">READY</span>
+        <span class="badge info hidden" id="flow-badge"></span>
+        <span class="badge info hidden" id="bp-badge"></span>
+        <span class="badge info hidden" id="inlet-badge"></span>
+      </div>
 
-      <div class="stat-row"><span>API 526 orifice</span><span id="out-designation">—</span></div>
-      <div class="stat-row"><span>Orifice area</span><span id="out-area">—</span></div>
-      <div class="stat-row"><span>Notes</span><span id="out-notes">—</span></div>
-      <div class="stat-row"><span>Mode</span><span id="out-mode">Gas relief</span></div>
+      <div class="multivalve hidden" id="multivalve-box"></div>
+
+      <div id="stat-rows"></div>
     </section>
 
   </div>
 
   <footer>
-    Gas: choked if P2/P0 ≤ Pc = (2/(γ+1))^(γ/(γ-1)); choked G = P0·√(γ/(R_specific·T0))·(2/(γ+1))^((γ+1)/(2(γ-1))), A = ṁ/(Cd·G).<br>
-    Gas (sub-critical): A = ṁ / [Cd·P0·√((2γ/(R_specific·T0(γ-1)))·(r^(2/γ)·(1−r^((γ-1)/γ))))], r = P2/P0.<br>
-    Liquid: A = Q / (Cd·√(2ΔP/ρ)), d = √(4A/π).<br>
-    API 526 orifice designation: computed area is rounded up to the next standard API RP 526 (5th ed.) effective area — D 0.110 in² · E 0.196 · F 0.307 · G 0.503 · H 0.785 · J 1.287 · K 1.838 · L 2.853 · M 3.60 · N 4.34 · P 6.38 · Q 11.05 · R 16.00 · T 26.00 (letter "I" omitted per the standard). Confirm against the current edition and manufacturer catalog before ordering.<br>
-    Converted from psv_sizing.py. Screening tool only — final PSV selection must use vendor-certified methods (API 520/521) and account for backpressure, blowdown, two-phase relief, and alpha factors.<br>
+    <b>Gas/vapor (API 520 physics, first-principles form):</b> choked if P2/P1 ≤ Pc = (2/(γ+1))^(γ/(γ-1)); choked mass flux G = P1·√(γ/(Z·R_specific·T1))·(2/(γ+1))^((γ+1)/(2(γ-1))); A = ṁ / (Kd·Kb·Kc·G). Sub-critical uses the standard isentropic expansion form with the same Z, Kd, Kc, Kb factors.<br>
+    <b>Liquid (literal API 520 Part I imperial equation):</b> A(in²) = Q(gpm) / (38·Kd·Kw·Kc·Kv) × √(G1 / ΔP(psi)), where G1 = ρ/1000 (specific gravity vs. water), ΔP = P1−P2. Converted to/from SI for display.<br>
+    <b>Kv (viscosity correction):</b> Re = 2800·Q(gpm)·√G1 / (μ(cP)·√A(in²)); Kv = 1/(0.9935 + 2.878/√Re + 342.75/Re^1.5) for Re > 80 (solved iteratively since A depends on Kv); Kv = 1 for μ < 100 cP; Kv floored at 0.3 for very low Re (formula not valid below this — consult manufacturer data).<br>
+    <b>Kb/Kw (backpressure correction, APPROXIMATE):</b> = 1.0 for pilot-operated (design-dependent, not derated here) and for conventional (not applicable beyond the ~10% guideline — see badge). For balanced bellows, this tool holds Kb/Kw = 1.0 up to the API 520 Fig. 30 "flat region" threshold (~30/38/50% gauge backpressure for 10/16/21% overpressure) then linearly interpolates down to 0.5 at 50% backpressure. <b>This is a curve-fit approximation of the published figure's shape, not the certified 53-point table</b> — use the manufacturer's actual Kb/Kw curve for final sizing.<br>
+    <b>Kc (rupture disk combination):</b> 1.0 with no rupture disk upstream; 0.9 when a disk is installed and the combination has no certified value.<br>
+    <b>Kd (discharge coefficient):</b> preliminary/uncertified values per API 520 = 0.975 (vapor), 0.65 (liquid). Use the manufacturer's certified value whenever available — it changes the required area directly and proportionally.<br>
+    <b>Relieving pressure:</b> P1 = (P_set + 1.01325 bar atm) × (1 + overpressure). Overpressure: 10% single PRV / 16% multiple PRVs (non-fire), 21% fire case, per API 520/521.<br>
+    <b>Fire case (API 521 alternative method):</b> Q(Btu/hr) = C·F·A(ft²)^0.82, C = 21,000 (adequate drainage) or 34,500 (inadequate); ṁ = Q(kW)/h_vap(kJ/kg). F values shown are approximate — confirm against API 521 Table 5 for your actual system.<br>
+    <b>Inlet line check:</b> per API 520 Part II, non-recoverable pressure loss in the inlet piping (equipment to PRV flange) must not exceed 3% of set pressure at relieving flow, to avoid valve chatter and capacity loss. Enter that pressure drop (calculated separately) for a PASS/WARN check.<br>
+    <b>Multi-valve distribution:</b> if required area exceeds the largest standard API 526 orifice (T, 26.00 in²) and Installation = Multiple PRVs, the load is split across the minimum number of equal-capacity valves so each valve's share fits within a standard orifice.<br>
+    API 526 orifice designation: computed area rounded up to the next standard API RP 526 (5th ed.) effective area — D 0.110 in² · E 0.196 · F 0.307 · G 0.503 · H 0.785 · J 1.287 · K 1.838 · L 2.853 · M 3.60 · N 4.34 · P 6.38 · Q 11.05 · R 16.00 · T 26.00 (letter "I" omitted). Confirm against the current edition and manufacturer catalog before ordering.<br>
+    Converted from psv_sizing.py, substantially extended with the correction-factor framework above as a detailed screening tool beyond the original script's scope. Not a certified sizing package — see the note at the top of the page.<br>
+    <div class="signature">
+      <strong>Shubham Chatterjee</strong> · Process Engineer<br>
+      <a href="https://processengonline.github.io/" target="_blank" rel="noopener noreferrer">processengonline.github.io</a> ·
+      <a href="https://github.com/processengonline" target="_blank" rel="noopener noreferrer">GitHub</a>
+    </div>
   </footer>
 
 </div>
 
 <script>
 const R_UNIVERSAL = 8314.462618; // J/(kmol K)
+const ATM_PRESSURE_BAR_ABS = 1.01325;
+const KD_PRELIMINARY = { gas: 0.975, liquid: 0.65 };
 
-// API RP 526 (5th ed.) standard effective orifice areas, in^2, in ascending order.
-// Letter 'I' is intentionally omitted per the standard.
+// API RP 526 (5th ed.) standard effective orifice areas, in^2, ascending. Letter 'I' omitted.
 const API_526_ORIFICES = [
-  { letter: 'D', area_in2: 0.110 },
-  { letter: 'E', area_in2: 0.196 },
-  { letter: 'F', area_in2: 0.307 },
-  { letter: 'G', area_in2: 0.503 },
-  { letter: 'H', area_in2: 0.785 },
-  { letter: 'J', area_in2: 1.287 },
-  { letter: 'K', area_in2: 1.838 },
-  { letter: 'L', area_in2: 2.853 },
-  { letter: 'M', area_in2: 3.60 },
-  { letter: 'N', area_in2: 4.34 },
-  { letter: 'P', area_in2: 6.38 },
-  { letter: 'Q', area_in2: 11.05 },
-  { letter: 'R', area_in2: 16.00 },
-  { letter: 'T', area_in2: 26.00 },
+  { letter: 'D', area_in2: 0.110 },{ letter: 'E', area_in2: 0.196 },{ letter: 'F', area_in2: 0.307 },
+  { letter: 'G', area_in2: 0.503 },{ letter: 'H', area_in2: 0.785 },{ letter: 'J', area_in2: 1.287 },
+  { letter: 'K', area_in2: 1.838 },{ letter: 'L', area_in2: 2.853 },{ letter: 'M', area_in2: 3.60 },
+  { letter: 'N', area_in2: 4.34 },{ letter: 'P', area_in2: 6.38 },{ letter: 'Q', area_in2: 11.05 },
+  { letter: 'R', area_in2: 16.00 },{ letter: 'T', area_in2: 26.00 },
 ];
+const T_AREA_M2 = 26.00 / 1550.0031;
 
 function apiOrificeDesignation(areaM2){
-  const areaIn2 = areaM2 * 1550.0031; // m^2 -> in^2
+  const areaIn2 = areaM2 * 1550.0031;
   for(const o of API_526_ORIFICES){
-    if(areaIn2 <= o.area_in2) return { letter: o.letter, area_in2: o.area_in2, calc_in2: areaIn2 };
+    if(areaIn2 <= o.area_in2) return { letter: o.letter, area_in2: o.area_in2 };
   }
-  const last = API_526_ORIFICES[API_526_ORIFICES.length-1];
-  return { letter: 'Larger than T', area_in2: null, calc_in2: areaIn2 };
+  return { letter: 'Larger than T', area_in2: null };
 }
 
 function barToPa(p){ return p * 1e5; }
+function barToPsi(p){ return p * 14.5037738; }
+function m3sToGpm(q){ return q * 15850.3231; }
+function equivalentDiameter(areaM2){ return areaM2<=0 ? 0 : Math.sqrt(4*areaM2/Math.PI); }
 
-function equivalentDiameter(areaM2){
-  if(areaM2 <= 0) return 0;
-  return Math.sqrt(4.0*areaM2/Math.PI);
-}
+function criticalPressureRatio(gamma){ return Math.pow(2/(gamma+1), gamma/(gamma-1)); }
 
-function criticalPressureRatio(gamma){
-  return Math.pow(2.0/(gamma+1.0), gamma/(gamma-1.0));
-}
-
-function chokedMassFlux(P0, T0, M, gamma){
+function chokedMassFlux(P0, T0, M, gamma, Z){
   const Rspec = R_UNIVERSAL / M;
-  const factor = Math.pow(2.0/(gamma+1.0), (gamma+1.0)/(2.0*(gamma-1.0)));
-  return P0 * Math.sqrt(gamma/(Rspec*T0)) * factor;
+  const factor = Math.pow(2/(gamma+1), (gamma+1)/(2*(gamma-1)));
+  return P0 * Math.sqrt(gamma/(Z*Rspec*T0)) * factor;
 }
 
-function requiredAreaForGasMassflow(mDot, P0, P2, T0, M, gamma, Cd){
-  if(!(mDot>0)) throw new Error("Mass flow must be > 0");
-  if(!(P0>0)) throw new Error("Inlet pressure must be > 0");
-  if(!(P2>0)) throw new Error("Outlet pressure must be > 0");
-  if(P2>P0) throw new Error("Outlet pressure cannot exceed inlet pressure for relief flow");
+function allowableOverpressure(scenario, installation){
+  if(scenario==='fire') return 0.21;
+  return installation==='multiple' ? 0.16 : 0.10;
+}
+
+const BACKPRESSURE_GUIDE_LIMITS = { conventional: 0.10, balanced: 0.35, pilot: 0.50 };
+const PSV_TYPE_LABELS = { conventional: 'Conventional', balanced: 'Balanced Bellows', pilot: 'Pilot Operated' };
+
+function backpressureCorrectionFactor(psvType, bpRatioPercent, overpressureFraction){
+  if(psvType!=='balanced') return 1.0;
+  let threshold = 30;
+  if(Math.abs(overpressureFraction-0.16)<1e-6) threshold = 38;
+  else if(Math.abs(overpressureFraction-0.21)<1e-6) threshold = 50;
+  if(bpRatioPercent <= threshold) return 1.0;
+  const capped = Math.min(bpRatioPercent, 50);
+  const frac = (capped-threshold)/(50-threshold);
+  return 1.0 - frac*0.5;
+}
+
+function fireCaseMassFlow(areaM2, F, C, hvapKjKg){
+  if(!(areaM2>0)) throw new Error("Wetted surface area must be > 0");
+  if(!(hvapKjKg>0)) throw new Error("Latent heat of vaporization must be > 0");
+  const areaFt2 = areaM2 * 10.76391;
+  const qBtuHr = C * F * Math.pow(areaFt2, 0.82);
+  const qKw = qBtuHr * 0.00029307107;
+  return { qKw, mDot: qKw/hvapKjKg };
+}
+
+function requiredAreaGas(mDot, P1pa, P2pa, T0, M, gamma, Z, Kd, Kb, Kc){
+  if(!(mDot>0)) throw new Error("Relieving mass flow must be > 0");
+  if(!(P1pa>0)) throw new Error("Relieving pressure must be > 0");
+  if(!(P2pa>0)) throw new Error("Outlet pressure must be > 0");
+  if(P2pa>P1pa) throw new Error("Outlet pressure cannot exceed relieving pressure");
   if(!(T0>0)) throw new Error("Temperature must be > 0");
   if(!(M>0)) throw new Error("Molecular weight must be > 0");
   if(!(gamma>1)) throw new Error("γ must be > 1");
-  if(!(Cd>0 && Cd<=1.5)) throw new Error("Cd should be a reasonable positive value");
+  if(!(Z>0)) throw new Error("Z must be > 0");
+  if(!(Kd>0 && Kd<=1.2)) throw new Error("Kd should be a reasonable positive value");
 
-  const Pratio = P2/P0;
+  const Pratio = P2pa/P1pa;
   const Pc = criticalPressureRatio(gamma);
-  let A, choked, note;
+  let A, choked, notes;
+  const denomFactor = Kd*Kb*Kc;
+  if(!(denomFactor>0)) throw new Error("Kd·Kb·Kc must be > 0 — check correction factors");
 
   if(Pratio <= Pc){
-    const G = chokedMassFlux(P0, T0, M, gamma);
-    A = mDot / (Cd*G);
+    const G = chokedMassFlux(P1pa, T0, M, gamma, Z);
+    A = mDot/(denomFactor*G);
     choked = true;
-    note = 'Choked flow (critical) assumed';
+    notes = 'Choked (critical) flow';
   } else {
-    const Rspec = R_UNIVERSAL / M;
-    const term = (2.0*gamma)/(Rspec*T0*(gamma-1.0));
-    const part = Math.pow(Pratio, 2.0/gamma) * (1.0 - Math.pow(Pratio, (gamma-1.0)/gamma));
-    const denom = Cd * P0 * Math.sqrt(term*part);
+    const Rspec = R_UNIVERSAL/M;
+    const term = (2*gamma)/(Z*Rspec*T0*(gamma-1));
+    const part = Math.pow(Pratio, 2/gamma) * (1-Math.pow(Pratio, (gamma-1)/gamma));
+    const denom = denomFactor * P1pa * Math.sqrt(term*part);
     if(!(denom>0)) throw new Error("Denominator non-positive, check inputs");
     A = mDot/denom;
     choked = false;
-    note = 'Sub-critical isentropic flow assumed';
+    notes = 'Sub-critical flow';
   }
-
   const dM = equivalentDiameter(A);
-  return {area_m2: A, diameter_m: dM, diameter_mm: dM*1000.0, choked, notes: note};
+  return { area_m2: A, diameter_mm: dM*1000, choked, notes };
 }
 
-function requiredAreaForLiquidVolflow(Q, deltaP, rho, Cd){
-  if(!(Q>0)) throw new Error("Volumetric flow must be > 0");
-  if(!(deltaP>0)) throw new Error("Pressure drop must be > 0");
+function computeKv(Qgpm, G1, muCp, Ain2){
+  if(muCp < 100) return { Kv:1, Re: Infinity, clamped:false };
+  const Re = (2800*Qgpm*Math.sqrt(G1)) / (muCp*Math.sqrt(Ain2));
+  if(!(Re>80)) return { Kv:0.3, Re, clamped:true };
+  let Kv = 1/(0.9935 + 2.878/Math.sqrt(Re) + 342.75/Math.pow(Re,1.5));
+  Kv = Math.min(1.0, Math.max(0.3, Kv));
+  return { Kv, Re, clamped:false };
+}
+
+function requiredAreaLiquid(Qm3s, rho, P1pa, P2pa, muCp, Kd, Kw, Kc){
+  if(!(Qm3s>0)) throw new Error("Relieving flow rate must be > 0");
   if(!(rho>0)) throw new Error("Density must be > 0");
-  if(!(Cd>0 && Cd<=1.5)) throw new Error("Cd should be a reasonable positive value");
-  const denom = Cd * Math.sqrt(2.0*deltaP/rho);
-  if(!(denom>0)) throw new Error("Invalid denominator in liquid area calculation");
-  const A = Q/denom;
-  const dM = equivalentDiameter(A);
-  return {area_m2: A, diameter_m: dM, diameter_mm: dM*1000.0};
+  if(!(P1pa>P2pa)) throw new Error("Relieving pressure must exceed outlet/backpressure");
+  if(!(Kd>0 && Kd<=1.2)) throw new Error("Kd should be a reasonable positive value");
+  if(!(Kw>0)) throw new Error("Kw must be > 0");
+
+  const Qgpm = m3sToGpm(Qm3s);
+  const G1 = rho/1000.0;
+  const dPpsi = barToPsi((P1pa-P2pa)/1e5);
+  if(!(dPpsi>0)) throw new Error("Pressure differential must be > 0");
+
+  let Ain2 = Qgpm/(38*Kd*Kw*Kc*1.0) * Math.sqrt(G1/dPpsi);
+  let Kv=1, Re=Infinity, clamped=false;
+  for(let i=0;i<6;i++){
+    const r = computeKv(Qgpm, G1, muCp, Ain2);
+    Kv = r.Kv; Re = r.Re; clamped = r.clamped;
+    Ain2 = Qgpm/(38*Kd*Kw*Kc*Kv) * Math.sqrt(G1/dPpsi);
+  }
+  const areaM2 = Ain2 * 0.00064516;
+  const dM = equivalentDiameter(areaM2);
+  return { area_m2: areaM2, diameter_mm: dM*1000, Kv, Re, clamped };
 }
 
 const tabGas = document.getElementById('tab-gas');
@@ -349,14 +592,39 @@ function setMode(m){
   tabLiquid.setAttribute('aria-selected', !isGas);
   panelGas.classList.toggle('hidden', !isGas);
   panelLiquid.classList.toggle('hidden', isGas);
-  document.getElementById('out-mode').textContent = isGas ? 'Gas relief' : 'Liquid relief';
   compute();
 }
 tabGas.addEventListener('click', ()=>setMode('gas'));
 tabLiquid.addEventListener('click', ()=>setMode('liquid'));
 
-const ids = ['g-m','g-P0','g-P2','g-T0','g-M','g-gamma','g-Cd','l-Q','l-rho','l-P0','l-P2','l-Cd'];
-ids.forEach(id=>document.getElementById(id).addEventListener('input', compute));
+function setFireVisibility(){
+  const isFire = document.getElementById('g-scenario').value==='fire';
+  document.getElementById('g-fire-block').classList.toggle('hidden', !isFire);
+  const mField = document.getElementById('g-m');
+  mField.disabled = isFire;
+  document.getElementById('g-m-hint').textContent = isFire
+    ? 'Auto-calculated from the fire-case inputs above (locked). Switch scenario to "Other" to enter a value directly.'
+    : 'Auto-filled and locked when Fire case is selected; editable directly otherwise.';
+  compute();
+}
+document.getElementById('g-scenario').addEventListener('change', setFireVisibility);
+
+function setKdVisibility(prefix){
+  const isCertified = document.getElementById(prefix+'-Kd-basis').value==='certified';
+  document.getElementById(prefix+'-Kd-custom-field').classList.toggle('hidden', !isCertified);
+  compute();
+}
+document.getElementById('g-Kd-basis').addEventListener('change', ()=>setKdVisibility('g'));
+document.getElementById('l-Kd-basis').addEventListener('change', ()=>setKdVisibility('l'));
+
+const ids = ['g-Pset','g-Pop','g-install','g-psvtype','g-wetarea','g-envF','g-drainage','g-hvap','g-m','g-P2','g-T0','g-M','g-gamma','g-Z',
+             'g-Kd-basis','g-Kd-custom','g-Kc','g-dPinlet',
+             'l-Pset','l-Pop','l-install','l-psvtype','l-Q','l-rho','l-mu','l-P2','l-Kd-basis','l-Kd-custom','l-Kc','l-dPinlet'];
+ids.forEach(id=>{
+  const el = document.getElementById(id);
+  el.addEventListener('input', compute);
+  el.addEventListener('change', compute);
+});
 
 function fmt(num, sig=4){
   if(num===0) return '0';
@@ -373,32 +641,97 @@ function clearErrors(){
   });
 }
 
+function renderStats(rows){
+  const container = document.getElementById('stat-rows');
+  container.innerHTML = '';
+  rows.forEach(item=>{
+    if(item.length===1){
+      const label = document.createElement('div');
+      label.className = 'stat-group-label';
+      label.textContent = item[0];
+      container.appendChild(label);
+      return;
+    }
+    const [label, val] = item;
+    const row = document.createElement('div');
+    row.className = 'stat-row';
+    row.innerHTML = `<span>${label}</span><span>${val}</span>`;
+    container.appendChild(row);
+  });
+}
+
 function compute(){
   clearErrors();
   const badge = document.getElementById('status-badge');
   const flowBadge = document.getElementById('flow-badge');
+  const bpBadge = document.getElementById('bp-badge');
+  const inletBadge = document.getElementById('inlet-badge');
+  const multivalveBox = document.getElementById('multivalve-box');
   flowBadge.classList.add('hidden');
+  bpBadge.classList.add('hidden');
+  inletBadge.classList.add('hidden');
+  multivalveBox.classList.add('hidden');
 
-  let res;
+  const prefix = mode==='gas' ? 'g' : 'l';
+
+  let res, P0bar, P2bar, psvType, installation, Pset, Pop, Kd, Kc, dPinlet, OP;
   try{
+    Pset = parseFloat(document.getElementById(prefix+'-Pset').value);
+    Pop = parseFloat(document.getElementById(prefix+'-Pop').value);
+    installation = document.getElementById(prefix+'-install').value;
+    psvType = document.getElementById(prefix+'-psvtype').value;
+    const scenario = mode==='gas' ? document.getElementById('g-scenario').value : 'other';
+
+    if(!(Pset>=0)) throw new Error("Set pressure must be ≥ 0");
+    if(!(Pop>=0)) throw new Error("Operating pressure must be ≥ 0");
+    if(Pop>=Pset) throw new Error("Operating pressure must be less than set pressure");
+
+    OP = allowableOverpressure(scenario, installation);
+    document.getElementById(prefix+'-op-out').value = (OP*100).toFixed(0) + '%' +
+      (scenario==='fire' ? ' (fire case)' : (installation==='multiple' ? ' (multiple PRVs)' : ' (single PRV)'));
+
+    P0bar = (Pset + ATM_PRESSURE_BAR_ABS) * (1+OP);
+    document.getElementById(prefix+'-P0').value = fmt(P0bar) + ' bar abs';
+    const P0 = barToPa(P0bar);
+
+    P2bar = parseFloat(document.getElementById(prefix+'-P2').value);
+    const P2 = barToPa(P2bar);
+
+    const kdBasis = document.getElementById(prefix+'-Kd-basis').value;
+    Kd = kdBasis==='certified'
+      ? parseFloat(document.getElementById(prefix+'-Kd-custom').value)
+      : KD_PRELIMINARY[mode];
+    Kc = parseFloat(document.getElementById(prefix+'-Kc').value);
+    dPinlet = parseFloat(document.getElementById(prefix+'-dPinlet').value);
+    if(!(dPinlet>=0)) throw new Error("Inlet line pressure drop must be ≥ 0");
+
+    const bpRatio = P2bar/P0bar;
+    const Kb = backpressureCorrectionFactor(psvType, bpRatio*100, OP);
+
     if(mode==='gas'){
+      if(scenario==='fire'){
+        const areaM2 = parseFloat(document.getElementById('g-wetarea').value);
+        const F = parseFloat(document.getElementById('g-envF').value);
+        const C = parseFloat(document.getElementById('g-drainage').value);
+        const hvap = parseFloat(document.getElementById('g-hvap').value);
+        const fire = fireCaseMassFlow(areaM2, F, C, hvap);
+        document.getElementById('g-m').value = fire.mDot.toPrecision(4);
+        document.getElementById('g-fire-readout').textContent =
+          'Fire-case heat input: ' + fmt(fire.qKw) + ' kW · computed relieving mass flow: ' + fmt(fire.mDot) + ' kg/s';
+      }
       const mDot = parseFloat(document.getElementById('g-m').value);
-      const P0 = barToPa(parseFloat(document.getElementById('g-P0').value));
-      const P2 = barToPa(parseFloat(document.getElementById('g-P2').value));
       const T0 = parseFloat(document.getElementById('g-T0').value);
       const M = parseFloat(document.getElementById('g-M').value);
       const gamma = parseFloat(document.getElementById('g-gamma').value);
-      const Cd = parseFloat(document.getElementById('g-Cd').value);
-      res = requiredAreaForGasMassflow(mDot, P0, P2, T0, M, gamma, Cd);
+      const Z = parseFloat(document.getElementById('g-Z').value);
+      res = requiredAreaGas(mDot, P0, P2, T0, M, gamma, Z, Kd, Kb, Kc);
+      res.Kb = Kb;
     } else {
       const Q = parseFloat(document.getElementById('l-Q').value);
       const rho = parseFloat(document.getElementById('l-rho').value);
-      const P0 = barToPa(parseFloat(document.getElementById('l-P0').value));
-      const P2 = barToPa(parseFloat(document.getElementById('l-P2').value));
-      const Cd = parseFloat(document.getElementById('l-Cd').value);
-      const deltaP = P0 - P2;
-      if(!(deltaP>0)) throw new Error("Inlet pressure must be greater than outlet pressure for liquid flow");
-      res = requiredAreaForLiquidVolflow(Q, deltaP, rho, Cd);
+      const mu = parseFloat(document.getElementById('l-mu').value);
+      res = requiredAreaLiquid(Q, rho, P0, P2, mu, Kd, Kb, Kc);
+      res.Kb = Kb;
     }
   } catch(e){
     const errId = mode==='gas' ? 'g-err' : 'l-err';
@@ -407,9 +740,7 @@ function compute(){
     el.style.display = 'block';
     document.getElementById('out-diam').textContent = '—';
     document.getElementById('out-diam-in').textContent = '≈ — in';
-    document.getElementById('out-area').textContent = '—';
-    document.getElementById('out-notes').textContent = '—';
-    document.getElementById('out-designation').textContent = '—';
+    document.getElementById('stat-rows').innerHTML = '';
     badge.textContent = 'CHECK INPUTS';
     badge.className = 'badge warn';
     return;
@@ -420,13 +751,9 @@ function compute(){
 
   document.getElementById('out-diam').textContent = fmt(diamMm);
   document.getElementById('out-diam-in').textContent = '≈ ' + fmt(diamIn) + ' in';
-  document.getElementById('out-area').textContent = fmt(res.area_m2) + ' m² (' + fmt(res.area_m2*1e6) + ' mm²)';
-  document.getElementById('out-notes').textContent = res.notes || '—';
 
   const desig = apiOrificeDesignation(res.area_m2);
-  document.getElementById('out-designation').textContent = desig.area_in2
-    ? `"${desig.letter}" (${fmt(desig.area_in2)} in² min.)`
-    : desig.letter;
+  const desigText = desig.area_in2 ? `"${desig.letter}" (${fmt(desig.area_in2)} in² min.)` : desig.letter;
 
   badge.textContent = 'READY';
   badge.className = 'badge ok';
@@ -437,10 +764,62 @@ function compute(){
     flowBadge.classList.remove('hidden');
   }
 
-  const r = Math.max(4, Math.min(76, 4 + Math.sqrt(diamMm)*10));
+  const bpRatio = P2bar/P0bar;
+  const bpLimit = BACKPRESSURE_GUIDE_LIMITS[psvType];
+  const withinLimit = bpRatio <= bpLimit + 1e-9;
+  bpBadge.textContent = (withinLimit ? 'BACKPRESSURE OK' : 'BACKPRESSURE HIGH') + ' (' + (bpRatio*100).toFixed(1) + '%)';
+  bpBadge.className = 'badge ' + (withinLimit ? 'ok' : 'warn');
+  bpBadge.classList.remove('hidden');
+
+  const inletLimit = 0.03*Pset;
+  const inletOk = dPinlet <= inletLimit + 1e-9;
+  inletBadge.textContent = (inletOk ? 'INLET dP OK' : 'INLET dP EXCEEDS 3%') + ' (' + fmt(dPinlet) + '/' + fmt(inletLimit) + ' bar)';
+  inletBadge.className = 'badge ' + (inletOk ? 'ok' : 'warn');
+  inletBadge.classList.remove('hidden');
+
+  let multivalveHtml = '';
+  if(res.area_m2 > T_AREA_M2){
+    if(installation==='multiple'){
+      const n = Math.ceil(res.area_m2/T_AREA_M2);
+      const perValveArea = res.area_m2/n;
+      const perDesig = apiOrificeDesignation(perValveArea);
+      const perDesigText = perDesig.area_in2 ? `"${perDesig.letter}" (${fmt(perDesig.area_in2)} in² min.)` : perDesig.letter;
+      multivalveHtml = `Required area exceeds the largest standard orifice (T, 26.00 in²). <b>Distribute across ${n} PRVs</b> of equal capacity — each valve sized for &ge; ${fmt(perValveArea*1e6)} mm² (${fmt(perValveArea*1550.0031)} in²), orifice ${perDesigText}.`;
+    } else {
+      multivalveHtml = `Required area exceeds the largest standard orifice (T, 26.00 in²) for a <b>single PRV</b>. Switch Installation to "Multiple PRVs" to distribute the load, or consult the manufacturer for a non-standard orifice.`;
+    }
+    multivalveBox.innerHTML = multivalveHtml;
+    multivalveBox.classList.remove('hidden');
+  }
+
+  const rows = [
+    ['API 526 orifice', desigText],
+    ['Orifice area', fmt(res.area_m2) + ' m² (' + fmt(res.area_m2*1e6) + ' mm²)'],
+    ['Flow regime', res.notes || (mode==='liquid' ? 'Incompressible' : '—')],
+    ['Relieving pressure P1', fmt(P0bar) + ' bar abs'],
+    ['Backpressure ratio (P2/P1)', (bpRatio*100).toFixed(1) + '%'],
+    ['Operating margin (Set − Operating)', fmt(Pset-Pop) + ' barg'],
+    ['CORRECTION FACTORS'],
+    ['Kd (discharge coefficient)', fmt(Kd)],
+    [mode==='gas' ? 'Kb (backpressure, approx.)' : 'Kw (backpressure, approx.)', fmt(res.Kb)],
+    ['Kc (rupture disk)', fmt(Kc)],
+  ];
+  if(mode==='gas'){
+    rows.push(['Z (compressibility)', fmt(parseFloat(document.getElementById('g-Z').value))]);
+  } else {
+    rows.push(['Kv (viscosity)', fmt(res.Kv) + (res.clamped ? ' (floored — Re very low, consult vendor)' : '')]);
+    rows.push(['Reynolds number', res.Re===Infinity ? '> 10⁵ (low visc.)' : fmt(res.Re)]);
+  }
+  rows.push(['Mode', mode==='gas' ? 'Gas relief' : 'Liquid relief']);
+  renderStats(rows);
+
+  const r = Math.max(4, Math.min(76, 4+Math.sqrt(diamMm)*10));
   document.getElementById('ring-outer').setAttribute('r', r.toFixed(1));
 }
 
+setFireVisibility();
+setKdVisibility('g');
+setKdVisibility('l');
 setMode('gas');
 </script>
 </body>
