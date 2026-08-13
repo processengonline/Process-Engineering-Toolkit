@@ -1,5 +1,0 @@
-.env
-.env.local
-config.properties
-*.key
-node_modules/
