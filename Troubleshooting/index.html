@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Troubleshooting Case Studies — Process Engineering Toolkit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy: #0B1F33;
+    --navy-2: #122A44;
+    --line: #3E7CB1;
+    --line-dim: #2A5A80;
+    --paper: #EAE6D9;
+    --paper-dim: #B9C4CC;
+    --amber: #E8A33D;
+    --grid: rgba(62,124,177,0.16);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      linear-gradient(var(--grid) 1px, transparent 1px) 0 0/28px 28px,
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px) 0 0/28px 28px,
+      var(--navy);
+    color:var(--paper);
+    font-family:'Space Grotesk', sans-serif;
+    min-height:100vh;
+  }
+  .wrap{max-width:960px;margin:0 auto;padding:48px 24px 80px;}
+
+  .eyebrow{
+    font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--line);margin:0 0 10px;
+  }
+  h1{font-size:clamp(28px,4vw,40px);margin:0 0 12px;font-weight:700;letter-spacing:-0.01em;}
+  .sub{color:var(--paper-dim);font-size:15px;max-width:640px;line-height:1.6;margin:0 0 16px;}
+  .back{
+    font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--line);text-decoration:none;
+    border-bottom:1px solid var(--line-dim);padding-bottom:1px;
+  }
+  .back:hover{color:var(--amber);border-color:var(--amber);}
+
+  h2{
+    font-family:'IBM Plex Mono',monospace;font-size:13px;text-transform:uppercase;
+    letter-spacing:.14em;color:var(--line);font-weight:600;
+    margin:56px 0 4px;padding-bottom:12px;border-bottom:1px solid var(--line-dim);
+  }
+  h2.first{margin-top:36px;}
+  p.lead{color:var(--paper-dim);font-size:14px;line-height:1.6;max-width:680px;margin:16px 0 0;}
+
+  table{width:100%;border-collapse:collapse;margin-top:8px;}
+  th, td{text-align:left;padding:14px 16px;border-bottom:1px solid var(--line-dim);}
+  th{
+    font-family:'IBM Plex Mono',monospace;font-size:11px;text-transform:uppercase;
+    letter-spacing:.1em;color:var(--line);font-weight:600;
+  }
+  td{font-size:14px;}
+  tr:hover td{background:var(--navy-2);}
+  td.num{
+    font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--paper-dim);
+    white-space:nowrap;width:36px;
+  }
+  td.scope{color:var(--paper-dim);font-size:13.5px;line-height:1.5;}
+  td.cat{white-space:nowrap;}
+  td a{
+    color:var(--amber);text-decoration:none;font-family:'IBM Plex Mono',monospace;font-size:13px;
+    border-bottom:1px solid transparent;
+  }
+  td a:hover{border-color:var(--amber);}
+  td strong{font-weight:600;}
+
+  .pill{
+    display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:10.5px;
+    letter-spacing:.04em;padding:3px 9px;border:1px solid var(--line-dim);border-radius:999px;
+    color:var(--line);white-space:nowrap;
+  }
+
+  .cat-list{list-style:none;margin:8px 0 0;padding:0;}
+  .cat-list li{
+    display:flex;gap:16px;align-items:baseline;padding:12px 16px;
+    border-bottom:1px solid var(--line-dim);
+  }
+  .cat-list li:last-child{border-bottom:none;}
+  .cat-list strong{
+    min-width:200px;flex-shrink:0;font-weight:600;font-size:14px;
+  }
+  .cat-list span{
+    font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--paper-dim);
+    letter-spacing:.02em;
+  }
+
+  pre{
+    font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--paper-dim);
+    background:var(--navy-2);border:1px solid var(--line-dim);border-radius:4px;
+    padding:16px 20px;overflow-x:auto;margin-top:8px;line-height:1.6;
+  }
+
+  ul.notes{margin:8px 0 0;padding-left:0;list-style:none;}
+  ul.notes li{
+    position:relative;padding:10px 0 10px 22px;font-size:14px;color:var(--paper-dim);
+    line-height:1.6;border-bottom:1px solid var(--line-dim);
+  }
+  ul.notes li:last-child{border-bottom:none;}
+  ul.notes li::before{
+    content:"→";position:absolute;left:0;color:var(--amber);
+    font-family:'IBM Plex Mono',monospace;
+  }
+
+  footer{
+    margin-top:64px;padding-top:24px;border-top:1px solid var(--line-dim);
+    font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--paper-dim);
+  }
+  footer strong{color:var(--paper);font-family:'Space Grotesk',sans-serif;font-size:14px;}
+  footer a{color:var(--line);text-decoration:none;border-bottom:1px solid var(--line-dim);}
+  footer a:hover{color:var(--amber);border-color:var(--amber);}
+
+  @media (max-width:640px){
+    table, thead, tbody, th, td, tr{display:block;}
+    thead{display:none;}
+    tbody tr{border:1px solid var(--line-dim);border-radius:4px;margin-bottom:10px;padding:10px 14px;}
+    tbody td{border:none;padding:4px 0;}
+    td.num::before{content:"Case ";color:var(--line);font-family:'IBM Plex Mono',monospace;}
+    .cat-list li{flex-direction:column;gap:4px;}
+    .cat-list strong{min-width:0;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <p class="eyebrow">Process Engineering Toolkit</p>
+  <h1>Troubleshooting Case Studies</h1>
+  <p class="sub">Operational troubleshooting case studies covering rotating equipment, separation, heat transfer, gas treatment, wells, metering, and utility systems. Each case documents the symptom, diagnosis methodology, root cause, and corrective actions with real operational data.</p>
+  <a class="back" href="../">← Back to home</a>
+
+  <h2 class="first">Master Index</h2>
+  <table>
+    <thead>
+      <tr><th>#</th><th>Case</th><th>Category</th><th>Symptom</th><th></th></tr>
+    </thead>
+    <tbody>
+      <tr><td class="num">01</td><td><strong>Amine Circulation Pump</strong></td><td class="cat"><span class="pill">Rotating Equipment</span></td><td class="scope">Cavitation from Foam Ingestion</td><td><a href="./1.%20Amine%20Circulation%20Pump%20%E2%80%94%20Cavitation%20from%20Foam%20Ingestion/">Open ↗</a></td></tr>
+      <tr><td class="num">02</td><td><strong>Ammonia Refrigeration</strong></td><td class="cat"><span class="pill">Utilities</span></td><td class="scope">Oil Fouling Reducing Evaporator Capacity</td><td><a href="./2.%20Ammonia%20Refrigeration%20%E2%80%94%20Oil%20Fouling%20Reducing%20Evaporator%20Capacity/">Open ↗</a></td></tr>
+      <tr><td class="num">03</td><td><strong>Custody Transfer Prover</strong></td><td class="cat"><span class="pill">Metering</span></td><td class="scope">Calibration Drift (Meter Factor Bias)</td><td><a href="./3.%20Custody%20Transfer%20Prover%20%E2%80%94%20Calibration%20Drift%20%28Meter%20Factor%20Bias%29/">Open ↗</a></td></tr>
+      <tr><td class="num">04</td><td><strong>Diesel Genset</strong></td><td class="cat"><span class="pill">Utilities</span></td><td class="scope">Fuel Water Contamination Trips</td><td><a href="./4.%20Diesel%20Genset%20%E2%80%94%20Fuel%20Water%20Contamination%20Trips/">Open ↗</a></td></tr>
+      <tr><td class="num">05</td><td><strong>Gas Engine Genset</strong></td><td class="cat"><span class="pill">Utilities</span></td><td class="scope">Detonation from Fuel Wobbe Index Shift</td><td><a href="./5.%20Gas%20Engine%20Genset%20%E2%80%94%20Detonation%20from%20Fuel%20Wobbe%20Index%20Shift/">Open ↗</a></td></tr>
+      <tr><td class="num">06</td><td><strong>Gas Turbine</strong></td><td class="cat"><span class="pill">Rotating Equipment</span></td><td class="scope">Axial Compressor Fouling</td><td><a href="./6.%20Gas%20Turbine%20%E2%80%94%20Axial%20Compressor%20Fouling/">Open ↗</a></td></tr>
+      <tr><td class="num">07</td><td><strong>Heat Exchanger</strong></td><td class="cat"><span class="pill">Heat Transfer</span></td><td class="scope">Tube Leak Cross-Contamination</td><td><a href="./7.%20Heat%20Exchanger%20%E2%80%94%20Tube%20Leak%20Cross-Contamination/">Open ↗</a></td></tr>
+      <tr><td class="num">08</td><td><strong>Produced Water Disposal Well</strong></td><td class="cat"><span class="pill">Wells</span></td><td class="scope">Fines Migration Injectivity Decline</td><td><a href="./8.%20Produced%20Water%20Disposal%20Well%20%E2%80%94%20Fines%20Migration%20Injectivity%20Decline/">Open ↗</a></td></tr>
+      <tr><td class="num">09</td><td><strong>PSV Bench Testing</strong></td><td class="cat"><span class="pill">Relief Systems</span></td><td class="scope">Set Pressure Drift from Spring Corrosion</td><td><a href="./9.%20PSV%20Bench%20Testing%20%E2%80%94%20Set%20Pressure%20Drift%20from%20Spring%20Corrosion/">Open ↗</a></td></tr>
+      <tr><td class="num">10</td><td><strong>Sulfur Pit Degassing</strong></td><td class="cat"><span class="pill">Gas Treatment</span></td><td class="scope">Ventilation Underperformance (H2S)</td><td><a href="./10.%20Sulfur%20Pit%20Degassing%20%E2%80%94%20Ventilation%20Underperformance%20%20H2S/">Open ↗</a></td></tr>
+      <tr><td class="num">11</td><td><strong>Water Injection Well</strong></td><td class="cat"><span class="pill">Wells</span></td><td class="scope">Scale-Driven Injectivity Decline</td><td><a href="./11.%20Water%20Injection%20Well%20%E2%80%94%20Scale-Driven%20Injectivity%20Decline/">Open ↗</a></td></tr>
+      <tr><td class="num">12</td><td><strong>Wellhead Choke Valve</strong></td><td class="cat"><span class="pill">Wells</span></td><td class="scope">Joule-Thomson Icing</td><td><a href="./12.%20Wellhead%20Choke%20Valve%20%E2%80%94%20Joule-Thomson%20Icing/">Open ↗</a></td></tr>
+      <tr><td class="num">13</td><td><strong>Flare Knockout Drum</strong></td><td class="cat"><span class="pill">Relief Systems</span></td><td class="scope">Liquid Carryover to Flare Tip</td><td><a href="./13.%20Flare%20Knockout%20Drum%20%E2%80%94%20Liquid%20Carryover%20to%20Flare%20Tip/">Open ↗</a></td></tr>
+      <tr><td class="num">14</td><td><strong>Produced Water Hydrocyclone</strong></td><td class="cat"><span class="pill">Separation</span></td><td class="scope">Oil-in-Water Separation Decline</td><td><a href="./14.%20Produced%20Water%20Hydrocyclone%20%E2%80%94%20Oil-in-Water%20Separation/">Open ↗</a></td></tr>
+      <tr><td class="num">15</td><td><strong>Crude Preheat Train</strong></td><td class="cat"><span class="pill">Heat Transfer</span></td><td class="scope">Progressive Exchanger Fouling</td><td><a href="./15.%20Crude%20Preheat%20Train%20%E2%80%94%20Progressive%20Exchanger%20Fouling/">Open ↗</a></td></tr>
+      <tr><td class="num">16</td><td><strong>LNG &amp; NGL Cold Box</strong></td><td class="cat"><span class="pill">Gas Processing</span></td><td class="scope">Freeze-up from Trace Water Carryover</td><td><a href="./16.%20LNG%20%26%20NGL%20Cold%20Box%20%E2%80%94%20Freeze-up%20from%20Trace%20Water%20Carryover/">Open ↗</a></td></tr>
+      <tr><td class="num">17</td><td><strong>Sulfur Recovery Unit (Claus)</strong></td><td class="cat"><span class="pill">Gas Treatment</span></td><td class="scope">Catalyst Deactivation</td><td><a href="./17.%20Sulfur%20Recovery%20Unit%20%28Claus%29%20%E2%80%94%20Catalyst%20Deactivation/">Open ↗</a></td></tr>
+      <tr><td class="num">18</td><td><strong>Slug Catcher</strong></td><td class="cat"><span class="pill">Separation</span></td><td class="scope">Liquid Level Surge from Pipeline Slugging</td><td><a href="./18.%20Slug%20Catcher%20%E2%80%94%20Liquid%20Level%20Surge%20from%20Pipeline%20Slugging/">Open ↗</a></td></tr>
+      <tr><td class="num">19</td><td><strong>Anti-Surge Control</strong></td><td class="cat"><span class="pill">Rotating Equipment</span></td><td class="scope">Surge Line Drift from Gas MW Change</td><td><a href="./19.%20Anti-Surge%20Control%20%E2%80%94%20Surge%20Line%20Drift%20from%20Gas%20MW%20Change/">Open ↗</a></td></tr>
+      <tr><td class="num">20</td><td><strong>Cooling Tower</strong></td><td class="cat"><span class="pill">Utilities</span></td><td class="scope">Fill Fouling (Predictive Type)</td><td><a href="./20.%20Cooling%20Tower%20%E2%80%94%20Fill%20Fouling%20%28predictive%20type%29/">Open ↗</a></td></tr>
+      <tr><td class="num">21</td><td><strong>Steam Boiler</strong></td><td class="cat"><span class="pill">Utilities</span></td><td class="scope">Drum Carryover</td><td><a href="./21.%20Steam%20Boiler%20%E2%80%94%20Drum%20Carryover/">Open ↗</a></td></tr>
+      <tr><td class="num">22</td><td><strong>VRU Compressor</strong></td><td class="cat"><span class="pill">Rotating Equipment</span></td><td class="scope">Tank Vapor Composition Trips</td><td><a href="./22.%20VRU%20Compressor%20%E2%80%94%20Tank%20Vapor%20Composition%20Trips/">Open ↗</a></td></tr>
+      <tr><td class="num">23</td><td><strong>LACT Unit</strong></td><td class="cat"><span class="pill">Metering</span></td><td class="scope">Custody Transfer Discrepancy</td><td><a href="./23.%20LACT%20Unit%20%E2%80%94%20Custody%20Transfer%20Discrepancy/">Open ↗</a></td></tr>
+      <tr><td class="num">24</td><td><strong>Pipeline Pigging</strong></td><td class="cat"><span class="pill">Pipeline</span></td><td class="scope">Stuck Pig (Wax Accumulation)</td><td><a href="./24.%20Pipeline%20Pigging%20%E2%80%94%20Stuck%20Pig%20%28Wax%20Accumulation%29/">Open ↗</a></td></tr>
+      <tr><td class="num">25</td><td><strong>Wellhead Choke</strong></td><td class="cat"><span class="pill">Wells</span></td><td class="scope">Erosion Failure</td><td><a href="./25.%20Wellhead%20Choke%20%E2%80%94%20Erosion%20Failure/">Open ↗</a></td></tr>
+      <tr><td class="num">26</td><td><strong>Instrument Air Dryer</strong></td><td class="cat"><span class="pill">Utilities</span></td><td class="scope">Multi-Valve Malfunctions (Field Type)</td><td><a href="./26.%20Instrument%20Air%20Dryer%20%E2%80%94%20Multi-Valve%20Malfunctions%20%28field%20type%29/">Open ↗</a></td></tr>
+      <tr><td class="num">27</td><td><strong>Corrosion Under Insulation</strong></td><td class="cat"><span class="pill">Corrosion/Integrity</span></td><td class="scope">Pipeline Leak</td><td><a href="./27.%20Corrosion%20Under%20Insulation%20%E2%80%94%20Pipeline%20Leak/">Open ↗</a></td></tr>
+      <tr><td class="num">28</td><td><strong>Amine Regenerator</strong></td><td class="cat"><span class="pill">Gas Treatment</span></td><td class="scope">Reboiler Fouling &amp; Foaming</td><td><a href="./28.%20Amine%20Regenerator%20%E2%80%94%20Reboiler%20Fouling%20%26%20Foaming/">Open ↗</a></td></tr>
+      <tr><td class="num">29</td><td><strong>Gas Membrane System</strong></td><td class="cat"><span class="pill">Gas Treatment</span></td><td class="scope">Permeate Flux Decline</td><td><a href="./29.%20Gas%20Membrane%20System%20%E2%80%94%20Permeate%20Flux%20Decline/">Open ↗</a></td></tr>
+      <tr><td class="num">30</td><td><strong>Condensate Stabilizer</strong></td><td class="cat"><span class="pill">Separation</span></td><td class="scope">Off-Spec RVP</td><td><a href="./30.%20Condensate%20Stabilizer%20%E2%80%94%20Off-Spec%20RVP/">Open ↗</a></td></tr>
+      <tr><td class="num">31</td><td><strong>Gas Compressor Surge</strong></td><td class="cat"><span class="pill">Rotating Equipment</span></td><td class="scope">Liquid Slugs at Suction</td><td><a href="./31.%20Gas%20Compressor%20Surge%20%E2%80%94%20Liquid%20Slugs%20at%20Suction/">Open ↗</a></td></tr>
+      <tr><td class="num">32</td><td><strong>Electrostatic Coalescer</strong></td><td class="cat"><span class="pill">Separation</span></td><td class="scope">Water Separation Decline</td><td><a href="./32.%20Electrostatic%20Coalescer%20%E2%80%94%20Water%20Separation%20Decline/">Open ↗</a></td></tr>
+      <tr><td class="num">33</td><td><strong>Cathodic Protection</strong></td><td class="cat"><span class="pill">Corrosion/Integrity</span></td><td class="scope">Coating Shielding</td><td><a href="./33.%20Cathodic%20Protection%20%E2%80%94%20Coating%20Shielding/">Open ↗</a></td></tr>
+      <tr><td class="num">34</td><td><strong>Hot Oil System</strong></td><td class="cat"><span class="pill">Heat Transfer</span></td><td class="scope">Thermal Fluid Degradation/Coking</td><td><a href="./34.%20Hot%20Oil%20System%20%E2%80%94%20Thermal%20Fluid%20DegradationCoking/">Open ↗</a></td></tr>
+      <tr><td class="num">35</td><td><strong>LPG Sphere</strong></td><td class="cat"><span class="pill">Storage/Relief</span></td><td class="scope">Relief Valve Chatter (Thermal)</td><td><a href="./35.%20LPG%20Sphere%20%E2%80%94%20Relief%20Valve%20Chatter%20%28Thermal%29/">Open ↗</a></td></tr>
+      <tr><td class="num">36</td><td><strong>Ultrasonic Gas Meter</strong></td><td class="cat"><span class="pill">Metering</span></td><td class="scope">Liquid Carryover Drift</td><td><a href="./36.%20Ultrasonic%20Gas%20Meter%20%E2%80%94%20Liquid%20Carryover%20Drift/">Open ↗</a></td></tr>
+      <tr><td class="num">37</td><td><strong>Nitrogen PSA</strong></td><td class="cat"><span class="pill">Gas Processing</span></td><td class="scope">Purity Decline</td><td><a href="./37.%20Nitrogen%20PSA%20%E2%80%94%20Purity%20Decline/">Open ↗</a></td></tr>
+      <tr><td class="num">38</td><td><strong>Wellhead Separator</strong></td><td class="cat"><span class="pill">Separation</span></td><td class="scope">Sand Accumulation</td><td><a href="./38.%20Wellhead%20Separator%20%E2%80%94%20Sand%20Accumulation/">Open ↗</a></td></tr>
+      <tr><td class="num">39</td><td><strong>TEG Gas Dehydration</strong></td><td class="cat"><span class="pill">Gas Treatment</span></td><td class="scope">Off-Spec Export Gas Moisture</td><td><a href="./39.%20TEG%20Gas%20Dehydration%20%E2%80%94%20Off-Spec%20Export%20Gas%20Moisture/">Open ↗</a></td></tr>
+      <tr><td class="num">40</td><td><strong>Reciprocating Compressor</strong></td><td class="cat"><span class="pill">Rotating Equipment</span></td><td class="scope">High Discharge Temperature Trips</td><td><a href="./40.%20Reciprocating%20Compressor%20%20%E2%80%94%20High%20Discharge%20Temperature%20Trips/">Open ↗</a></td></tr>
+      <tr><td class="num">41</td><td><strong>Crude Desalter</strong></td><td class="cat"><span class="pill">Separation</span></td><td class="scope">Salt Deposition in the Downcomer</td><td><a href="./41.%20Crude%20Desalter%20%E2%80%94%20Salt%20Deposition%20in%20the%20Downcomer/">Open ↗</a></td></tr>
+      <tr><td class="num">42</td><td><strong>Distillation Column</strong></td><td class="cat"><span class="pill">Separation</span></td><td class="scope">Overhead Product Off-Spec</td><td><a href="./42.%20Distillation%20Column%20%E2%80%94%20Overhead%20Product%20Off-Spec/">Open ↗</a></td></tr>
+      <tr><td class="num">43</td><td><strong>Gas Filter Separator</strong></td><td class="cat"><span class="pill">Separation</span></td><td class="scope">Hydrate Blockage</td><td><a href="./43.%20Gas%20Filter%20Separator%20%E2%80%94%20Hydrate%20Blockage/">Open ↗</a></td></tr>
+      <tr><td class="num">44</td><td><strong>Seawater Cooler</strong></td><td class="cat"><span class="pill">Heat Transfer</span></td><td class="scope">Fouling and Runtime Prediction</td><td><a href="./44.%20Seawater%20Cooler%20%E2%80%94%20Fouling%20and%20Runtime%20Prediction/">Open ↗</a></td></tr>
+      <tr><td class="num">45</td><td><strong>Three-Phase Inlet Separator</strong></td><td class="cat"><span class="pill">Separation</span></td><td class="scope">Emulsion-Driven Level Instability</td><td><a href="./45.%20Three-Phase%20Inlet%20Separator%20%E2%80%94%20Emulsion-Driven%20Level%20Instability/">Open ↗</a></td></tr>
+      <tr><td class="num">46</td><td><strong>Centrifugal Compressor</strong></td><td class="cat"><span class="pill">Rotating Equipment</span></td><td class="scope">Wax-Blocked Dry Gas Seal Vent</td><td><a href="./46.%20Centrifugal%20Compressor%20%E2%80%94%20Wax-Blocked%20Dry%20Gas%20Seal%20Vent/">Open ↗</a></td></tr>
+      <tr><td class="num">47</td><td><strong>Amine Sweetening Unit</strong></td><td class="cat"><span class="pill">Gas Treatment</span></td><td class="scope">Absorber Foaming and H2S Slip</td><td><a href="./47.%20Amine%20Sweetening%20Unit%20%E2%80%94%20Absorber%20Foaming%20and%20H2S%20Slip/">Open ↗</a></td></tr>
+      <tr><td class="num">48</td><td><strong>Molecular Sieve Dehydration</strong></td><td class="cat"><span class="pill">Gas Treatment</span></td><td class="scope">Early Water Breakthrough</td><td><a href="./48.%20Molecular%20Sieve%20Dehydration%20%E2%80%94%20Early%20Water%20Breakthrough/">Open ↗</a></td></tr>
+      <tr><td class="num">49</td><td><strong>Fired Heater</strong></td><td class="cat"><span class="pill">Heat Transfer</span></td><td class="scope">Localized Tube Skin Overheating</td><td><a href="./49.%20Fired%20Heater%20%E2%80%94%20Localized%20Tube%20Skin%20Overheating/">Open ↗</a></td></tr>
+      <tr><td class="num">50</td><td><strong>Centrifugal Pump</strong></td><td class="cat"><span class="pill">Rotating Equipment</span></td><td class="scope">Cavitation from NPSH Margin Loss</td><td><a href="./50.%20Centrifugal%20Pump%20%E2%80%94%20Cavitation%20from%20NPSH%20Margin%20Loss/">Open ↗</a></td></tr>
+    </tbody>
+  </table>
+
+  <h2>By Category</h2>
+  <ul class="cat-list">
+    <li><strong>Rotating Equipment</strong><span>01, 06, 19, 22, 31, 40, 46, 50</span></li>
+    <li><strong>Separation</strong><span>14, 18, 30, 32, 38, 41, 42, 43, 45</span></li>
+    <li><strong>Heat Transfer</strong><span>07, 15, 34, 44, 49</span></li>
+    <li><strong>Gas Treatment</strong><span>10, 17, 28, 29, 39, 47, 48</span></li>
+    <li><strong>Gas Processing</strong><span>16, 37</span></li>
+    <li><strong>Wells</strong><span>08, 11, 12, 25</span></li>
+    <li><strong>Metering</strong><span>03, 23, 36</span></li>
+    <li><strong>Utilities</strong><span>02, 04, 05, 20, 21, 26</span></li>
+    <li><strong>Relief Systems</strong><span>09, 13</span></li>
+    <li><strong>Corrosion/Integrity</strong><span>27, 33</span></li>
+    <li><strong>Pipeline</strong><span>24</span></li>
+    <li><strong>Storage/Relief</strong><span>35</span></li>
+  </ul>
+
+  <h2>Folder Structure (Per Case)</h2>
+  <pre>&lt;##-case-name&gt;/
+└── &lt;case-name&gt;-troubleshooting.md</pre>
+
+  <h2>Notes</h2>
+  <ul class="notes">
+    <li>Case numbering is sequential and permanent — a case's number should not be reused or reassigned even if reorganized by category.</li>
+    <li>Markdown is the source of truth; PDF exports are for distribution only.</li>
+    <li>New case studies should be appended with the next sequential number and added to both the master index and the relevant category list above.</li>
+  </ul>
+
+  <footer>
+    <strong>Shubham Chatterjee</strong> · Process Engineer<br>
+    <a href="https://processengonline.github.io/">processengonline.github.io</a> · <a href="https://github.com/processengonline">GitHub</a>
+  </footer>
+
+</div>
+</body>
+</html>
