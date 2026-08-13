@@ -113,9 +113,23 @@
   }
   .badge.ok{background:rgba(111,167,135,.15);color:var(--green);border:1px solid rgba(111,167,135,.4);}
   .badge.warn{background:rgba(232,163,61,.15);color:var(--amber);border:1px solid rgba(232,163,61,.4);}
+  .badge-row{display:flex;gap:8px;flex-wrap:wrap;}
+  select{
+    width:100%;background:var(--navy);border:1px solid var(--line-dim);border-radius:5px;
+    color:var(--paper);font-family:'IBM Plex Mono',monospace;font-size:15px;
+    padding:10px 12px;cursor:pointer;
+  }
+  input[type=number]:disabled, input[type=text]:disabled{opacity:0.65;cursor:not-allowed;color:var(--amber);border-color:var(--amber);background:var(--navy);}
 
   footer{margin-top:40px;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--paper-dim);line-height:1.6;border-top:1px solid var(--line-dim);padding-top:20px;}
   .hidden{display:none !important;}
+  .signature{
+    margin-top:28px;padding-top:20px;border-top:1px solid var(--line-dim);
+    font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--paper-dim);line-height:1.7;
+  }
+  .signature strong{color:var(--paper);font-weight:600;}
+  .signature a{color:var(--line);text-decoration:none;border-bottom:1px solid var(--line-dim);padding-bottom:1px;transition:color .15s,border-color .15s;}
+  .signature a:hover{color:var(--amber);border-color:var(--amber);}
 </style>
 </head>
 <body>
@@ -136,7 +150,7 @@
 
     <!-- LIQUID PANEL -->
     <section class="panel" id="panel-liquid">
-      <h2>Inputs — Liquid Cv</h2>
+      <h2>Inputs — Liquid Cv (ISA 75.01 / IEC 60534-2-1)</h2>
       <div class="field">
         <label for="l-Q">Flow rate <span class="unit">US gpm</span></label>
         <input type="number" id="l-Q" value="50" step="any" min="0">
@@ -145,12 +159,45 @@
       <div class="field">
         <label for="l-SG">Specific gravity <span class="unit">SG</span></label>
         <input type="number" id="l-SG" value="1.0" step="any" min="0">
-        <div class="hint">Relative to water (1.0).</div>
+        <div class="hint">Relative to water (1.0), at flowing temperature.</div>
       </div>
       <div class="field">
-        <label for="l-dP">Pressure drop <span class="unit">psi</span></label>
-        <input type="number" id="l-dP" value="10" step="any" min="0">
-        <div class="hint">ΔP — pressure drop across the valve.</div>
+        <label for="l-P1">Upstream pressure P1 <span class="unit">psia</span></label>
+        <input type="number" id="l-P1" value="115" step="any" min="0">
+      </div>
+      <div class="field">
+        <label for="l-P2">Downstream pressure P2 <span class="unit">psia</span></label>
+        <input type="number" id="l-P2" value="105" step="any" min="0">
+        <div class="hint" id="l-dp-readout">ΔP = P1 − P2 = 10.0 psi</div>
+      </div>
+      <div class="field">
+        <label for="l-valvetype">Valve type</label>
+        <select id="l-valvetype">
+          <option value="globe" selected>Globe (FL ≈ 0.90)</option>
+          <option value="butterfly">Butterfly (FL ≈ 0.62)</option>
+          <option value="ball">Ball / segmented (FL ≈ 0.68)</option>
+          <option value="custom">Custom — enter FL directly</option>
+        </select>
+        <div class="hint">Typical representative values — use the manufacturer's certified FL for final sizing.</div>
+      </div>
+      <div class="field">
+        <label for="l-FL">Liquid pressure recovery factor FL</label>
+        <input type="number" id="l-FL" value="0.90" step="any" min="0" max="1">
+      </div>
+      <div class="field">
+        <label for="l-Pv">Vapor pressure Pv <span class="unit">psia</span></label>
+        <input type="number" id="l-Pv" value="0.34" step="any" min="0">
+        <div class="hint">At flowing temperature. Default ≈ water at 20°C.</div>
+      </div>
+      <div class="field">
+        <label for="l-Pc">Critical pressure Pc <span class="unit">psia</span></label>
+        <input type="number" id="l-Pc" value="3208" step="any" min="0">
+        <div class="hint">Thermodynamic critical pressure of the fluid. Default ≈ water (3208 psia).</div>
+      </div>
+      <div class="field">
+        <label for="l-Cv100">Rated Cv100 (valve fully open) <span class="unit">optional</span></label>
+        <input type="number" id="l-Cv100" value="" step="any" min="0" placeholder="leave blank to skip">
+        <div class="hint">If known, checks required Cv against the valve's rated capacity and flags the resulting % opening.</div>
         <div class="err" id="l-err"></div>
       </div>
     </section>
@@ -174,9 +221,28 @@
         <div class="hint">1.0 when there are no fittings/reducers at the valve.</div>
       </div>
       <div class="field">
-        <label for="g-Y">Expansion factor Y</label>
-        <input type="number" id="g-Y" value="1.0" step="any" min="0" max="1">
-        <div class="hint">Ranges 0.667 – 1.0; 1.0 for negligible expansion.</div>
+        <label for="g-valvetype">Valve type</label>
+        <select id="g-valvetype">
+          <option value="globe" selected>Globe (xT ≈ 0.75)</option>
+          <option value="butterfly">Butterfly (xT ≈ 0.35)</option>
+          <option value="ball">Ball / segmented (xT ≈ 0.60)</option>
+          <option value="custom">Custom — enter xT directly</option>
+        </select>
+        <div class="hint">Typical representative values — use the manufacturer's certified xT for final sizing.</div>
+      </div>
+      <div class="field">
+        <label for="g-xT">Pressure drop ratio factor xT</label>
+        <input type="number" id="g-xT" value="0.75" step="any" min="0" max="1">
+      </div>
+      <div class="field">
+        <label for="g-k">Specific heat ratio k (Cp/Cv)</label>
+        <input type="number" id="g-k" value="1.4" step="any" min="1.001">
+        <div class="hint">Fk = k / 1.4. Default 1.4 = air / diatomic gas.</div>
+      </div>
+      <div class="field">
+        <label>Expansion factor Y <span class="unit">computed</span></label>
+        <input type="text" id="g-Y-out" value="" disabled>
+        <div class="hint">Y = 1 − x_eff/(3·Fk·xT), floored at 0.667 when choked (x ≥ Fk·xT).</div>
       </div>
       <div class="field">
         <label for="g-x">Pressure drop ratio x <span class="unit">ΔP/P1</span></label>
@@ -221,17 +287,31 @@
       </div>
       <span class="subfigure" id="out-secondary">≈ — Kv</span>
 
-      <span class="badge ok" id="status-badge">READY</span>
+      <div class="badge-row">
+        <span class="badge ok" id="status-badge">READY</span>
+        <span class="badge warn hidden" id="flow-badge"></span>
+        <span class="badge warn hidden" id="opening-badge"></span>
+      </div>
 
+      <div id="stat-rows"></div>
       <div class="stat-row"><span>Mode</span><span id="out-mode">Liquid</span></div>
     </section>
 
   </div>
 
   <footer>
-    Liquid: Cv = Q · √(SG / ΔP) &nbsp;|&nbsp; Gas: Cv = Q / [N9 · Fp · Y · √((x · P1 · ρ1) / SG)]<br>
+    <b>Liquid (ISA 75.01 / IEC 60534-2-1):</b> Cv = Q · √(SG / ΔP_eff), where ΔP_eff = min(ΔP_actual, ΔP_choked).<br>
+    <b>Choked/cavitation check:</b> ΔP_choked = FL² · (P1 − FF·Pv); FF = 0.96 − 0.28·√(Pv/Pc). When ΔP_actual ≥ ΔP_choked, flow is choked/cavitating and ΔP_choked is used in place of the actual ΔP (this increases the required Cv vs. using actual ΔP directly).<br>
+    <b>Gas:</b> Cv = Q / [N9 · Fp · Y · √((x_eff · P1 · ρ1) / SG)].<br>
+    <b>Expansion factor:</b> Y = 1 − x_eff/(3·Fk·xT), Fk = k/1.4, x_eff = min(x, Fk·xT). When x ≥ Fk·xT the flow is choked (sonic) and Y is floored at 0.667.<br>
     Kv shown alongside as Kv ≈ Cv / 1.156 for reference.<br>
-    Liquid and gas sizing only, per the equations above — verify units and constants (e.g. N9 tables) against ISA S75.01 / IEC 60534 before use in design.<br>
+    FL and xT valve-type presets (globe/butterfly/ball) are typical representative values, not certified — use the manufacturer's actual FL/xT/Fd for final trim selection. This tool does not compute Fp from piping geometry (enter it directly) and does not apply a Reynolds-number/viscosity correction (FR) for laminar or highly viscous liquid service.<br>
+    Converted from control_valve_sizing.py, substantially extended with the ISA 75.01 choked-flow, cavitation, and expansion-factor framework above. Not a certified sizing package — verify against the current ISA 75.01 / IEC 60534 edition and manufacturer data before use in design.<br>
+    <div class="signature">
+      <strong>Shubham Chatterjee</strong> · Process Engineer<br>
+      <a href="https://processengonline.github.io/" target="_blank" rel="noopener noreferrer">processengonline.github.io</a> ·
+      <a href="https://github.com/processengonline" target="_blank" rel="noopener noreferrer">GitHub</a>
+    </div>
   </footer>
 
 </div>
@@ -239,27 +319,60 @@
 <script>
 const CV_KV_FACTOR = 1.156;
 
-// Liquid: Cv = Q * sqrt(SG / dP)
-function cvLiquid(Q, SG, dP){
+// --- Liquid: ISA 75.01 / IEC 60534-2-1 ---
+const LIQUID_FL_PRESETS = { globe: 0.90, butterfly: 0.62, ball: 0.68 };
+
+function liquidFF(Pv, Pc){ return 0.96 - 0.28*Math.sqrt(Pv/Pc); }
+
+function cvLiquidDetailed(Q, SG, P1, P2, FL, Pv, Pc){
   if(!(Q>0)) throw new Error("Flow rate must be > 0");
   if(!(SG>0)) throw new Error("Specific gravity must be > 0");
-  if(!(dP>0)) throw new Error("Pressure drop must be > 0");
-  return Q * Math.sqrt(SG/dP);
+  if(!(P1>0)) throw new Error("Upstream pressure P1 must be > 0");
+  if(!(P2>0)) throw new Error("Downstream pressure P2 must be > 0");
+  if(P2>=P1) throw new Error("Downstream pressure must be less than upstream pressure");
+  if(!(FL>0 && FL<=1)) throw new Error("FL should be between 0 and 1");
+  if(!(Pv>=0)) throw new Error("Vapor pressure must be ≥ 0");
+  if(!(Pc>Pv)) throw new Error("Critical pressure must exceed vapor pressure");
+
+  const dPactual = P1-P2;
+  const FF = liquidFF(Pv, Pc);
+  const dPchoked = FL*FL*(P1-FF*Pv);
+  const choked = dPactual >= dPchoked;
+  const dPeff = choked ? dPchoked : dPactual;
+  if(!(dPeff>0)) throw new Error("Effective ΔP is non-positive — check Pv/Pc/FL inputs");
+  const cv = Q*Math.sqrt(SG/dPeff);
+  return { cv, dPactual, dPchoked, choked, FF };
 }
 
-// Gas: Cv = Q / [N9 * Fp * Y * sqrt((x * P1 * rho1) / SG)]
-function cvGas(Q, N9, Fp, Y, x, P1, rho1, SG){
+// --- Gas: ISA 75.01 / IEC 60534-2-1 ---
+const GAS_XT_PRESETS = { globe: 0.75, butterfly: 0.35, ball: 0.60 };
+
+function gasExpansionY(x, Fk, xT){
+  const xEff = Math.min(x, Fk*xT);
+  const Y = 1 - xEff/(3*Fk*xT);
+  const choked = x >= Fk*xT;
+  return { Y, xEff, choked };
+}
+
+function cvGasDetailed(Q, N9, Fp, x, P1, rho1, SG, Fk, xT){
   if(!(Q>0)) throw new Error("Flow rate must be > 0");
   if(!(N9>0)) throw new Error("N9 must be > 0");
   if(!(Fp>0)) throw new Error("Fp must be > 0");
-  if(!(Y>0 && Y<=1)) throw new Error("Y should be between 0 and 1");
   if(!(x>0 && x<=1)) throw new Error("x (ΔP/P1) should be between 0 and 1");
   if(!(P1>0)) throw new Error("P1 must be > 0");
   if(!(rho1>0)) throw new Error("ρ1 must be > 0");
   if(!(SG>0)) throw new Error("Specific gravity must be > 0");
-  const denom = N9 * Fp * Y * Math.sqrt((x * P1 * rho1) / SG);
-  return Q / denom;
+  if(!(Fk>0)) throw new Error("Fk must be > 0");
+  if(!(xT>0 && xT<=1)) throw new Error("xT should be between 0 and 1");
+
+  const { Y, xEff, choked } = gasExpansionY(x, Fk, xT);
+  const denom = N9 * Fp * Y * Math.sqrt((xEff * P1 * rho1) / SG);
+  if(!(denom>0)) throw new Error("Invalid denominator — check inputs");
+  const cv = Q/denom;
+  return { cv, Y, xEff, choked };
 }
+
+function kvFromCv(cv){ return cv / CV_KV_FACTOR; }
 
 const tabLiquid = document.getElementById('tab-liquid');
 const tabGas = document.getElementById('tab-gas');
@@ -282,7 +395,28 @@ function setMode(m){
 tabLiquid.addEventListener('click', ()=>setMode('liquid'));
 tabGas.addEventListener('click', ()=>setMode('gas'));
 
-const ids = ['l-Q','l-SG','l-dP','g-Q','g-N9','g-Fp','g-Y','g-x','g-P1','g-rho1','g-SG'];
+function setLiquidValveType(){
+  const vt = document.getElementById('l-valvetype').value;
+  const flField = document.getElementById('l-FL');
+  if(vt!=='custom'){
+    flField.value = LIQUID_FL_PRESETS[vt];
+  }
+  compute();
+}
+document.getElementById('l-valvetype').addEventListener('change', setLiquidValveType);
+
+function setGasValveType(){
+  const vt = document.getElementById('g-valvetype').value;
+  const xtField = document.getElementById('g-xT');
+  if(vt!=='custom'){
+    xtField.value = GAS_XT_PRESETS[vt];
+  }
+  compute();
+}
+document.getElementById('g-valvetype').addEventListener('change', setGasValveType);
+
+const ids = ['l-Q','l-SG','l-P1','l-P2','l-FL','l-Pv','l-Pc','l-Cv100',
+             'g-Q','g-N9','g-Fp','g-xT','g-k','g-x','g-P1','g-rho1','g-SG'];
 ids.forEach(id=>document.getElementById(id).addEventListener('input', compute));
 
 function fmt(num, sig=4){
@@ -293,10 +427,9 @@ function fmt(num, sig=4){
 }
 
 function setGauge(value){
-  // log-scale gauge, roughly spans Cv 0.1 - 1000
   const clamped = Math.max(0.1, Math.min(1000, value));
-  const frac = (Math.log10(clamped) + 1) / 4; // maps 0.1..1000 -> 0..1
-  const angle = -90 + Math.max(0, Math.min(1, frac)) * 180; // -90deg .. +90deg
+  const frac = (Math.log10(clamped) + 1) / 4;
+  const angle = -90 + Math.max(0, Math.min(1, frac)) * 180;
   document.getElementById('gauge-needle').style.transform = `rotate(${angle}deg)`;
   const arcLen = 220;
   document.getElementById('gauge-fill').setAttribute('stroke-dashoffset', arcLen - (Math.max(0,Math.min(1,frac)) * arcLen));
@@ -310,12 +443,26 @@ function clearErrors(){
   });
 }
 
+function renderStats(rows){
+  const container = document.getElementById('stat-rows');
+  container.innerHTML = '';
+  rows.forEach(([label, val])=>{
+    const row = document.createElement('div');
+    row.className = 'stat-row';
+    row.innerHTML = `<span>${label}</span><span>${val}</span>`;
+    container.appendChild(row);
+  });
+}
+
 function showError(id, msg){
   const el = document.getElementById(id);
   el.textContent = msg;
   el.style.display = 'block';
   document.getElementById('out-primary').textContent = '—';
   document.getElementById('out-secondary').textContent = '≈ — Kv';
+  document.getElementById('stat-rows').innerHTML = '';
+  document.getElementById('flow-badge').classList.add('hidden');
+  document.getElementById('opening-badge').classList.add('hidden');
   const badge = document.getElementById('status-badge');
   badge.textContent = 'CHECK INPUTS';
   badge.className = 'badge warn';
@@ -324,24 +471,78 @@ function showError(id, msg){
 function compute(){
   clearErrors();
   const badge = document.getElementById('status-badge');
-  let cv;
+  const flowBadge = document.getElementById('flow-badge');
+  const openingBadge = document.getElementById('opening-badge');
+  flowBadge.classList.add('hidden');
+  openingBadge.classList.add('hidden');
+  let cv, rows;
 
   try{
     if(mode==='liquid'){
       const Q = parseFloat(document.getElementById('l-Q').value);
       const SG = parseFloat(document.getElementById('l-SG').value);
-      const dP = parseFloat(document.getElementById('l-dP').value);
-      cv = cvLiquid(Q, SG, dP);
+      const P1 = parseFloat(document.getElementById('l-P1').value);
+      const P2 = parseFloat(document.getElementById('l-P2').value);
+      const FL = parseFloat(document.getElementById('l-FL').value);
+      const Pv = parseFloat(document.getElementById('l-Pv').value);
+      const Pc = parseFloat(document.getElementById('l-Pc').value);
+      const Cv100raw = document.getElementById('l-Cv100').value;
+
+      document.getElementById('l-dp-readout').textContent = 'ΔP = P1 − P2 = ' + fmt(P1-P2) + ' psi';
+
+      const r = cvLiquidDetailed(Q, SG, P1, P2, FL, Pv, Pc);
+      cv = r.cv;
+
+      flowBadge.textContent = r.choked ? 'CHOKED / CAVITATING FLOW' : 'NORMAL FLOW';
+      flowBadge.className = 'badge ' + (r.choked ? 'warn' : 'ok');
+      flowBadge.classList.remove('hidden');
+
+      rows = [
+        ['FF (liquid critical ratio)', fmt(r.FF)],
+        ['ΔP actual', fmt(r.dPactual) + ' psi'],
+        ['ΔP choked (FL²(P1−FF·Pv))', fmt(r.dPchoked) + ' psi'],
+      ];
+
+      if(Cv100raw!==''){
+        const Cv100 = parseFloat(Cv100raw);
+        if(Cv100>0){
+          const pctOpen = (cv/Cv100)*100;
+          rows.push(['Rated Cv100', fmt(Cv100)]);
+          rows.push(['Estimated % open', fmt(pctOpen) + '%']);
+          if(pctOpen<20 || pctOpen>80){
+            openingBadge.textContent = pctOpen>80 ? 'VALVE UNDERSIZED (>80% open)' : 'VALVE OVERSIZED (<20% open)';
+            openingBadge.className = 'badge warn';
+            openingBadge.classList.remove('hidden');
+          }
+        }
+      }
     } else {
       const Q = parseFloat(document.getElementById('g-Q').value);
       const N9 = parseFloat(document.getElementById('g-N9').value);
       const Fp = parseFloat(document.getElementById('g-Fp').value);
-      const Y = parseFloat(document.getElementById('g-Y').value);
       const x = parseFloat(document.getElementById('g-x').value);
       const P1 = parseFloat(document.getElementById('g-P1').value);
       const rho1 = parseFloat(document.getElementById('g-rho1').value);
       const SG = parseFloat(document.getElementById('g-SG').value);
-      cv = cvGas(Q, N9, Fp, Y, x, P1, rho1, SG);
+      const xT = parseFloat(document.getElementById('g-xT').value);
+      const k = parseFloat(document.getElementById('g-k').value);
+      const Fk = k/1.4;
+
+      const r = cvGasDetailed(Q, N9, Fp, x, P1, rho1, SG, Fk, xT);
+      cv = r.cv;
+
+      document.getElementById('g-Y-out').value = fmt(r.Y);
+
+      flowBadge.textContent = r.choked ? 'CHOKED (SONIC) FLOW' : 'NORMAL FLOW';
+      flowBadge.className = 'badge ' + (r.choked ? 'warn' : 'ok');
+      flowBadge.classList.remove('hidden');
+
+      rows = [
+        ['Fk (k/1.4)', fmt(Fk)],
+        ['x (ΔP/P1)', fmt(x)],
+        ['x_effective (capped at Fk·xT)', fmt(r.xEff)],
+        ['Y (expansion factor)', fmt(r.Y)],
+      ];
     }
   } catch(e){
     showError(mode==='liquid' ? 'l-err' : 'g-err', e.message);
@@ -351,13 +552,15 @@ function compute(){
   const kv = kvFromCv(cv);
   document.getElementById('out-primary').textContent = fmt(cv);
   document.getElementById('out-secondary').textContent = '≈ ' + fmt(kv) + ' Kv';
+  renderStats(rows);
   setGauge(cv);
 
   badge.textContent = 'READY';
   badge.className = 'badge ok';
 }
-function kvFromCv(cv){ return cv / CV_KV_FACTOR; }
 
+setLiquidValveType();
+setGasValveType();
 setMode('liquid');
 </script>
 </body>
