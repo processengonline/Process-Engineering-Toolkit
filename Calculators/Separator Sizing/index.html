@@ -133,6 +133,13 @@
 
   footer{margin-top:40px;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--paper-dim);line-height:1.6;border-top:1px solid var(--line-dim);padding-top:20px;}
   .hidden{display:none !important;}
+  .signature{
+    margin-top:28px;padding-top:20px;border-top:1px solid var(--line-dim);
+    font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--paper-dim);line-height:1.7;
+  }
+  .signature strong{color:var(--paper);font-weight:600;}
+  .signature a{color:var(--line);text-decoration:none;border-bottom:1px solid var(--line-dim);padding-bottom:1px;transition:color .15s,border-color .15s;}
+  .signature a:hover{color:var(--amber);border-color:var(--amber);}
 </style>
 </head>
 <body>
@@ -246,6 +253,23 @@
         <label for="i-fliq">Liquid area fraction</label>
         <input type="number" id="i-fliq" value="0.5" step="any" min="0.05" max="0.95">
         <div class="hint">Fraction of cross-section occupied by liquid at design level.</div>
+      </div>
+
+      <h3>Inlet Device &amp; Nozzle Momentum</h3>
+      <div class="field">
+        <label for="i-inletdevice">Inlet device type</label>
+        <select id="i-inletdevice">
+          <option value="1000">None (ρV² ≤ 1000 kg/m·s²)</option>
+          <option value="1500" selected>Half-open pipe / diverter (ρV² ≤ 1500 kg/m·s²)</option>
+          <option value="6000">Vane-type (Schoepentoeter) (ρV² ≤ 6000 kg/m·s²)</option>
+          <option value="10000">Cyclonic (ρV² ≤ 10000 kg/m·s²)</option>
+        </select>
+        <div class="hint">Sets the inlet nozzle momentum limit used to size the inlet nozzle. Representative industry values (API 12J / DEP-style guidance) — company-specific standards vary; confirm against your project spec.</div>
+      </div>
+      <div class="field">
+        <label for="i-gasoutmom">Gas outlet momentum limit <span class="unit">kg/m·s²</span></label>
+        <input type="number" id="i-gasoutmom" value="5000" step="any" min="0">
+        <div class="hint">Typical GPSA guideline range ≈ 4500–5400 kg/m·s² to limit gas-outlet channeling. Default 5000.</div>
         <div class="err" id="i-err"></div>
       </div>
     </section>
@@ -312,7 +336,13 @@
     Retention volumes: V_oil = Q_oil·t_oil·60, V_water = Q_water·t_water·60 &nbsp;|&nbsp; Corrected length: L_liquid = V_liquid / (f_liq·A_cross)<br>
     Trial sweep: diameters from ⌈D_min/0.05⌉×0.05 upward in 0.05 m steps over a 6 m span; optimal = feasible trial minimizing A_cross × selected length.<br>
     When liquid retention time (not gas capacity or L/D) controls the design, A_cross × length is nearly constant across a wide diameter range — several trial diameters can tie to 14+ significant figures. This calculator (and the current separator_sizing.py, after a second bug fix) breaks such ties toward the smallest feasible diameter for a deterministic, physically sensible result — both now select the same D = 2.50 m / L = 12.22 m for the default inputs, rather than the non-deterministic ~2.5–5.6 m the unpatched script could return purely from floating-point rounding noise.<br>
-    Converted from separator_sizing.py, including its liquid-retention-length bug fix (see note above). Preliminary/screening sizing only — final design must comply with API 12J, GPSA, and ASME Section VIII Div. 1, and be reviewed by a licensed professional engineer.<br>
+    <b>Nozzle momentum sizing:</b> nozzle diameter = √(4Q / (π·V)), V = √(ρV²_limit / ρ) — i.e. each nozzle is sized to the minimum diameter that keeps mixture momentum ρV² at or below the selected limit. Inlet limits (representative industry values, not a single universal code number): None ≈1000, half-open pipe ≈1500, vane-type/Schoepentoeter ≈6000, cyclonic ≈10000 kg/m·s². Gas outlet default 5000 kg/m·s² per typical GPSA guidance (~4500–5400 range). Liquid outlets sized at a flat 2 m/s design velocity (unchanged from the original script). Confirm all limits against your project's actual specification (e.g. Shell DEP, company standard) — cited values vary by source.<br>
+    Converted from separator_sizing.py, including its liquid-retention-length bug fix (see note above) and the nozzle-momentum framework added here as a detailed screening extension. Preliminary/screening sizing only — final design must comply with API 12J, GPSA, and ASME Section VIII Div. 1, and be reviewed by a licensed professional engineer.<br>
+    <div class="signature">
+      <strong>Shubham Chatterjee</strong> · Process Engineer<br>
+      <a href="https://processengonline.github.io/" target="_blank" rel="noopener noreferrer">processengonline.github.io</a> ·
+      <a href="https://github.com/processengonline" target="_blank" rel="noopener noreferrer">GitHub</a>
+    </div>
   </footer>
 
 </div>
@@ -569,14 +599,20 @@ function compute(){
     const waterResAchieved = (aLiquidOpt*optimal.selectedLength)/Qwater/60.0;
 
     const mixRho = (Qgas*rhoGas + Qoil*rhoOil + Qwater*rhoWater)/(Qgas+Qoil+Qwater);
-    const inletV = Math.sqrt(7000.0/mixRho);
+    const inletMomentumLimit = parseFloat(document.getElementById('i-inletdevice').value);
+    const gasOutMomentumLimit = parseFloat(document.getElementById('i-gasoutmom').value);
+    if(!(inletMomentumLimit>0)) throw new Error("Inlet device momentum limit must be > 0");
+    if(!(gasOutMomentumLimit>0)) throw new Error("Gas outlet momentum limit must be > 0");
+    const inletV = Math.sqrt(inletMomentumLimit/mixRho);
     const liqV = 2.0;
-    const gasV = Math.sqrt(7000.0/rhoGas);
+    const gasV = Math.sqrt(gasOutMomentumLimit/rhoGas);
 
     const inletNozzle = nozzleSizeInches(Qgas+Qoil+Qwater, mixRho, inletV);
     const gasNozzle = nozzleSizeInches(Qgas, rhoGas, gasV);
     const oilNozzle = nozzleSizeInches(Qoil, rhoOil, liqV);
     const waterNozzle = nozzleSizeInches(Qwater, rhoWater, liqV);
+    const inletMomentumActual = mixRho*inletV*inletV;
+    const gasOutMomentumActual = rhoGas*gasV*gasV;
 
     const rows = [
       ['V_max (Souders-Brown)', fmt(vMax,4) + ' m/s'],
@@ -587,8 +623,8 @@ function compute(){
       ['Gas velocity vs. V_max', fmt(optimal.gasVelocity,4) + ' / ' + fmt(vMax,4) + ' m/s'],
       ['Safety margin', fmt(safetyMargin,3) + ' %'],
       ['Oil / water residence achieved', fmt(oilResAchieved,3) + ' / ' + fmt(waterResAchieved,3) + ' min'],
-      ['Inlet nozzle', fmt(inletNozzle,3) + ' in'],
-      ['Gas outlet nozzle', fmt(gasNozzle,3) + ' in'],
+      ['Inlet nozzle', fmt(inletNozzle,3) + ' in (sized at ρV² = ' + fmt(inletMomentumActual,3) + ' kg/m·s², limit ' + fmt(inletMomentumLimit,4) + ')'],
+      ['Gas outlet nozzle', fmt(gasNozzle,3) + ' in (sized at ρV² = ' + fmt(gasOutMomentumActual,3) + ' kg/m·s², limit ' + fmt(gasOutMomentumLimit,4) + ')'],
       ['Oil outlet nozzle', fmt(oilNozzle,3) + ' in'],
       ['Water outlet nozzle', fmt(waterNozzle,3) + ' in'],
       ['Trials evaluated / feasible', trials.length + ' / ' + feasibleTrials.length],
@@ -607,7 +643,7 @@ function compute(){
 }
 
 const ids = ['i-P','i-T','i-Qg','i-Qo','i-Qw','i-rhog','i-rhoo','i-rhow','i-mug','i-muo','i-muw',
-             'i-siggo','i-sigow','i-K','i-tro','i-trw','i-dd','i-ldt','i-ldmin','i-ldmax','i-fliq'];
+             'i-siggo','i-sigow','i-K','i-tro','i-trw','i-dd','i-ldt','i-ldmin','i-ldmax','i-fliq','i-inletdevice','i-gasoutmom'];
 ids.forEach(id=>document.getElementById(id).addEventListener('input', compute));
 
 compute();
