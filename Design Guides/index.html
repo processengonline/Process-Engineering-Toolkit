@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Design Guides — Process Engineering Toolkit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy: #0B1F33;
+    --navy-2: #122A44;
+    --line: #3E7CB1;
+    --line-dim: #2A5A80;
+    --paper: #EAE6D9;
+    --paper-dim: #B9C4CC;
+    --amber: #E8A33D;
+    --grid: rgba(62,124,177,0.16);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      linear-gradient(var(--grid) 1px, transparent 1px) 0 0/28px 28px,
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px) 0 0/28px 28px,
+      var(--navy);
+    color:var(--paper);
+    font-family:'Space Grotesk', sans-serif;
+    min-height:100vh;
+  }
+  .wrap{max-width:960px;margin:0 auto;padding:48px 24px 80px;}
+
+  .eyebrow{
+    font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--line);margin:0 0 10px;
+  }
+  h1{font-size:clamp(28px,4vw,40px);margin:0 0 12px;font-weight:700;letter-spacing:-0.01em;}
+  .sub{color:var(--paper-dim);font-size:15px;max-width:640px;line-height:1.6;margin:0 0 16px;}
+  .back{
+    font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--line);text-decoration:none;
+    border-bottom:1px solid var(--line-dim);padding-bottom:1px;
+  }
+  .back:hover{color:var(--amber);border-color:var(--amber);}
+
+  table{width:100%;border-collapse:collapse;margin-top:36px;}
+  th, td{text-align:left;padding:14px 16px;border-bottom:1px solid var(--line-dim);}
+  th{
+    font-family:'IBM Plex Mono',monospace;font-size:11px;text-transform:uppercase;
+    letter-spacing:.1em;color:var(--line);font-weight:600;
+  }
+  td{font-size:14px;}
+  tr:hover td{background:var(--navy-2);}
+  td.scope{color:var(--paper-dim);font-size:13.5px;line-height:1.5;}
+  td a{
+    color:var(--amber);text-decoration:none;font-family:'IBM Plex Mono',monospace;font-size:13px;
+    border-bottom:1px solid transparent;white-space:nowrap;
+  }
+  td a:hover{border-color:var(--amber);}
+  td strong{font-weight:600;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <p class="eyebrow">Process Engineering Toolkit</p>
+  <h1>Design Guides</h1>
+  <p class="sub">Reference study guides covering core process design and engineering topics — theory, standard industry practice, and worked examples.</p>
+  <a class="back" href="../">← Back to home</a>
+
+  <table>
+    <thead>
+      <tr><th>Guide</th><th>Scope</th><th></th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Compressor Settle-Out Calculations</strong></td>
+        <td class="scope">Settle-out pressure and temperature calculations for compressor trip/blowdown scenarios.</td>
+        <td><a href="./Compressor%20Settle-Out%20Calculations/">Open ↗</a></td>
+      </tr>
+      <tr>
+        <td><strong>Depressurization Calculation</strong></td>
+        <td class="scope">Blowdown/depressurization rate and time calculations for vessels and systems per API 521.</td>
+        <td><a href="./Depressurization%20Calculation/">Open ↗</a></td>
+      </tr>
+      <tr>
+        <td><strong>Dynamic Simulation</strong></td>
+        <td class="scope">Time-dependent process simulation methodology for transient and relief scenarios.</td>
+        <td><a href="./Dynamic%20Simulation/">Open ↗</a></td>
+      </tr>
+      <tr>
+        <td><strong>Flare Network Design</strong></td>
+        <td class="scope">Flare header sizing, backpressure analysis, and network hydraulics.</td>
+        <td><a href="./Flare%20Network%20Design/">Open ↗</a></td>
+      </tr>
+      <tr>
+        <td><strong>Flow Assurance</strong></td>
+        <td class="scope">Hydrate, wax, and slugging management strategy for multiphase flowlines.</td>
+        <td><a href="./Flow%20Assurance/">Open ↗</a></td>
+      </tr>
+      <tr>
+        <td><strong>Heat Exchanger Design</strong></td>
+        <td class="scope">Shell &amp; tube / plate exchanger thermal design and rating fundamentals.</td>
+        <td><a href="./Heat%20Exchanger%20Design/">Open ↗</a></td>
+      </tr>
+      <tr>
+        <td><strong>IPDS</strong></td>
+        <td class="scope">Instrument Protective Device Summary — logic, cause &amp; effect, and SIS documentation practice.</td>
+        <td><a href="./IPDS/">Open ↗</a></td>
+      </tr>
+      <tr>
+        <td><strong>Line List Preparation</strong></td>
+        <td class="scope">Standard practice for compiling and maintaining a piping line list.</td>
+        <td><a href="./Line%20List%20Preparation/">Open ↗</a></td>
+      </tr>
+      <tr>
+        <td><strong>MDS</strong></td>
+        <td class="scope">Material Data/Design Sheet preparation for equipment specification.</td>
+        <td><a href="./MDS/">Open ↗</a></td>
+      </tr>
+      <tr>
+        <td><strong>P&amp;ID</strong></td>
+        <td class="scope">P&amp;ID symbology, development conventions, and review checklist.</td>
+        <td><a href="./P%26ID/">Open ↗</a></td>
+      </tr>
+      <tr>
+        <td><strong>Process Philosophies</strong></td>
+        <td class="scope">Control, operating, and shutdown philosophy documentation practice.</td>
+        <td><a href="./Process%20Philosophies/">Open ↗</a></td>
+      </tr>
+      <tr>
+        <td><strong>Process Safety</strong></td>
+        <td class="scope">Process safety fundamentals — HAZOP inputs, safeguards, layers of protection.</td>
+        <td><a href="./Process%20Safety/">Open ↗</a></td>
+      </tr>
+      <tr>
+        <td><strong>PSV Sizing &amp; Design</strong></td>
+        <td class="scope">Relief system design basis, scenario identification, and PSV selection per API 520/521.</td>
+        <td><a href="./PSV%20Sizing%20%26%20Design/">Open ↗</a></td>
+      </tr>
+      <tr>
+        <td><strong>Separator Design</strong></td>
+        <td class="scope">Two/three-phase separator internals, sizing basis, and mechanical design considerations.</td>
+        <td><a href="./Separator%20Design/">Open ↗</a></td>
+      </tr>
+      <tr>
+        <td><strong>Steady-State Simulation</strong></td>
+        <td class="scope">Steady-state process simulation setup, convergence, and validation practice.</td>
+        <td><a href="./Steady-State%20Simulation/">Open ↗</a></td>
+      </tr>
+      <tr>
+        <td><strong>Surge Analysis</strong></td>
+        <td class="scope">Waterhammer/surge analysis methodology for liquid pipeline systems.</td>
+        <td><a href="./Surge%20Analysis/">Open ↗</a></td>
+      </tr>
+    </tbody>
+  </table>
+
+</div>
+</body>
+</html>
