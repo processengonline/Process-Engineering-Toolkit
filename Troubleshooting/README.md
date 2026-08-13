@@ -1,6 +1,6 @@
 # Troubleshooting Case Studies
 
-50 real-world operational troubleshooting case studies covering rotating equipment, separation, heat transfer, gas treatment, wells, metering, and utility systems. Each case documents the symptom, diagnosis methodology, root cause, and corrective actions with real operational data.
+Operational troubleshooting case studies covering rotating equipment, separation, heat transfer, gas treatment, wells, metering, and utility systems. Each case documents the symptom, diagnosis methodology, root cause, and corrective actions with real operational data.
 
 ## How to Use This Index
 
