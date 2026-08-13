@@ -120,6 +120,13 @@
 
   footer{margin-top:40px;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--paper-dim);line-height:1.6;border-top:1px solid var(--line-dim);padding-top:20px;}
   .hidden{display:none !important;}
+  .signature{
+    margin-top:28px;padding-top:20px;border-top:1px solid var(--line-dim);
+    font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--paper-dim);line-height:1.7;
+  }
+  .signature strong{color:var(--paper);font-weight:600;}
+  .signature a{color:var(--line);text-decoration:none;border-bottom:1px solid var(--line-dim);padding-bottom:1px;transition:color .15s,border-color .15s;}
+  .signature a:hover{color:var(--amber);border-color:var(--amber);}
 </style>
 </head>
 <body>
@@ -189,9 +196,22 @@
         <input type="number" id="i-hi" value="10" step="any" min="0">
       </div>
       <div class="field">
+        <label for="i-ho-basis">External film coefficient basis</label>
+        <select id="i-ho-basis">
+          <option value="direct" selected>Direct input</option>
+          <option value="wind">Compute from wind speed</option>
+        </select>
+      </div>
+      <div class="field" id="i-ho-direct-field">
         <label for="i-ho">External film coefficient <span class="unit">W/m²·K</span></label>
         <input type="number" id="i-ho" value="10" step="any" min="0">
         <div class="hint">Free/forced convection at the outer surface (or insulation jacket).</div>
+      </div>
+      <div class="field hidden" id="i-wind-field">
+        <label for="i-wind">Design wind speed <span class="unit">m/s</span></label>
+        <input type="number" id="i-wind" value="5" step="any" min="0">
+        <div class="hint">ho ≈ 5.7 + 3.8·V (W/m²·K) — a commonly used simplified outdoor film-coefficient correlation, not a rigorous Nusselt/Rayleigh-based calculation. For critical or high-value insulation designs, verify against a detailed correlation (e.g. the Aerstin &amp; Street / Kato procedure) or your company standard.</div>
+        <div class="hint" id="i-ho-computed">Computed ho: 24.7 W/m²·K</div>
       </div>
       <div class="field">
         <label for="i-sf">Heating duty safety factor</label>
@@ -239,8 +259,14 @@
     U-value: 1/U = 1/h_i + t_ins/k_ins + 1/h_o (t_ins/k_ins term dropped when uninsulated) &nbsp;|&nbsp; Q = U·A·(T_product − T_ambient)<br>
     Areas: A_shell = π·D·H &nbsp;|&nbsp; A_roof (flat) = π·D²/4 &nbsp;|&nbsp; A_roof (conical) = π·r·√(r² + rise²), r = D/2 &nbsp;|&nbsp; A_bottom = π·D²/4 (omitted if not present)<br>
     Energy = Q_total × 24 / 1000 (kWh/day) &nbsp;|&nbsp; Heating duty = Q_total × safety factor<br>
-    Same U-value is applied to shell, roof, and bottom (a simplification in the source script — real roof/bottom construction and film coefficients often differ from the shell).<br>
-    Converted from tank_heat_loss.py. The conical roof option is an extension beyond the source script: the Python script accepts a roof_type parameter but its area_roof() function always uses the flat formula regardless of its value. Preliminary/screening estimate only — final insulation and heat-tracing design should account for wind, solar gain, local weather extremes, and applicable engineering standards.<br>
+    Same U-value is applied to shell, roof, and bottom (a simplification in the source script). Roof and shell losses to ambient air via convection are reasonably represented this way; <b>bottom-to-ground heat loss is physically different</b> — it's conduction into soil, not air-film convection, and depends on soil conductivity and burial/contact geometry (a shape-factor calculation), not on h_i/h_o at all. Treating it with the same U as the shell is a conservative screening simplification carried over from the original script, not a rigorous ground-conduction model — for tanks where bottom losses matter (large diameter, high ΔT, poor soil insulation), use a proper soil heat-loss method.<br>
+    <b>Wind-speed film coefficient (added):</b> ho ≈ 5.7 + 3.8·V (W/m²·K, V in m/s) — a widely used simplified outdoor convection correlation, not a substitute for a rigorous Nusselt/Rayleigh-based calculation (e.g. the Aerstin &amp; Street procedure) for high-value or safety-critical insulation design.<br>
+    Converted from tank_heat_loss.py. The conical roof option and wind-speed-based ho are extensions beyond the source script (which only ever used the flat-roof formula and a fixed manual ho). Preliminary/screening estimate only — final insulation and heat-tracing design should account for solar gain, local weather extremes, ground conduction, and applicable engineering standards.<br>
+    <div class="signature">
+      <strong>Shubham Chatterjee</strong> · Process Engineer<br>
+      <a href="https://processengonline.github.io/" target="_blank" rel="noopener noreferrer">processengonline.github.io</a> ·
+      <a href="https://github.com/processengonline" target="_blank" rel="noopener noreferrer">GitHub</a>
+    </div>
   </footer>
 
 </div>
@@ -326,7 +352,16 @@ function compute(){
     const tIns = parseFloat(document.getElementById('i-tins').value);
     const kIns = parseFloat(document.getElementById('i-kins').value);
     const hi = parseFloat(document.getElementById('i-hi').value);
-    const ho = parseFloat(document.getElementById('i-ho').value);
+    const hoBasis = document.getElementById('i-ho-basis').value;
+    let ho;
+    if(hoBasis==='wind'){
+      const windSpeed = parseFloat(document.getElementById('i-wind').value);
+      if(!(windSpeed>=0)) throw new Error("Wind speed must be ≥ 0");
+      ho = 5.7 + 3.8*windSpeed;
+      document.getElementById('i-ho-computed').textContent = 'Computed ho: ' + ho.toFixed(2) + ' W/m²·K';
+    } else {
+      ho = parseFloat(document.getElementById('i-ho').value);
+    }
     const sf = parseFloat(document.getElementById('i-sf').value);
 
     if(!(D>0)) throw new Error("Tank diameter must be > 0");
@@ -381,9 +416,17 @@ function compute(){
   }
 }
 
-const ids = ['i-D','i-H','i-Tp','i-Ta','i-tins','i-kins','i-hi','i-ho','i-sf','i-rise'];
+const ids = ['i-D','i-H','i-Tp','i-Ta','i-tins','i-kins','i-hi','i-ho','i-sf','i-rise','i-wind'];
 ids.forEach(id=>document.getElementById(id).addEventListener('input', compute));
 document.getElementById('i-bottom').addEventListener('change', compute);
+
+function setHoBasisVisibility(){
+  const isWind = document.getElementById('i-ho-basis').value==='wind';
+  document.getElementById('i-ho-direct-field').classList.toggle('hidden', isWind);
+  document.getElementById('i-wind-field').classList.toggle('hidden', !isWind);
+  compute();
+}
+document.getElementById('i-ho-basis').addEventListener('change', setHoBasisVisibility);
 
 function setRoofType(){
   const roofType = document.getElementById('i-roof').value;
@@ -397,6 +440,7 @@ function setRoofType(){
 document.getElementById('i-roof').addEventListener('change', setRoofType);
 
 setRoofType();
+setHoBasisVisibility();
 </script>
 </body>
 </html>
