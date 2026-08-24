@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tank Heat Loss Calculator</title>
+<title>Tank Sizing Calculator</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -52,6 +52,16 @@
   .source-link:hover{color:var(--amber);border-color:var(--amber);}
   .source-link:focus-visible{outline:2px solid var(--amber);outline-offset:2px;}
 
+  .tabs{display:flex;gap:2px;margin-bottom:28px;border:1px solid var(--line-dim);width:fit-content;border-radius:6px;overflow:hidden;flex-wrap:wrap;}
+  .tab{
+    font-family:'IBM Plex Mono',monospace;font-size:13px;letter-spacing:.05em;
+    padding:11px 20px;background:var(--navy-2);color:var(--paper-dim);
+    border:none;cursor:pointer;transition:background .15s, color .15s;
+  }
+  .tab.active{background:var(--line);color:var(--navy);font-weight:600;}
+  .tab:not(.active):hover{background:#17324f;color:var(--paper);}
+  .tab:focus-visible{outline:2px solid var(--amber);outline-offset:-2px;}
+
   .grid{display:grid;grid-template-columns:1.1fr 1fr;gap:36px;align-items:start;}
   @media (max-width:820px){.grid{grid-template-columns:1fr;}}
 
@@ -67,7 +77,6 @@
     letter-spacing:.12em;color:var(--paper-dim);margin:22px 0 14px;
     border-top:1px solid var(--line-dim);padding-top:16px;
   }
-  .panel h3:first-of-type{margin-top:0;border-top:none;padding-top:0;}
 
   .field{margin-bottom:16px;}
   .field:last-child{margin-bottom:0;}
@@ -79,13 +88,17 @@
     padding:9px 11px;transition:border-color .15s;
   }
   input[type=number]:focus{outline:none;border-color:var(--line);box-shadow:0 0 0 3px rgba(62,124,177,0.22);}
-  input[type=number]:disabled{opacity:0.5;cursor:not-allowed;}
   .hint{font-size:11px;color:var(--paper-dim);margin-top:4px;line-height:1.4;}
   .err{font-size:11.5px;color:var(--red);margin-top:8px;display:none;}
 
-  .checkbox-field{display:flex;align-items:center;gap:10px;}
-  .checkbox-field input[type=checkbox]{width:16px;height:16px;accent-color:var(--line);}
-  .checkbox-field label{margin-bottom:0;flex:1;}
+  .subtabs{display:flex;gap:2px;margin-bottom:16px;border:1px solid var(--line-dim);border-radius:6px;overflow:hidden;width:fit-content;}
+  .subtab{
+    font-family:'IBM Plex Mono',monospace;font-size:11.5px;letter-spacing:.04em;
+    padding:8px 14px;background:var(--navy);color:var(--paper-dim);
+    border:none;cursor:pointer;transition:background .15s, color .15s;
+  }
+  .subtab.active{background:var(--line);color:var(--navy);font-weight:600;}
+  .subtab:not(.active):hover{background:#17324f;color:var(--paper);}
 
   .readout{
     background:var(--navy-2);border:1px solid var(--line-dim);border-radius:8px;
@@ -96,15 +109,15 @@
     letter-spacing:.14em;color:var(--line);margin:0;
   }
   .big-figure{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;}
-  .big-num{font-size:52px;font-weight:700;line-height:1;letter-spacing:-0.02em;font-variant-numeric:tabular-nums;}
+  .big-num{font-size:48px;font-weight:700;line-height:1;letter-spacing:-0.02em;font-variant-numeric:tabular-nums;}
   .big-unit{font-family:'IBM Plex Mono',monospace;font-size:16px;color:var(--paper-dim);}
   .subfigure{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--paper-dim);}
 
-  .diagram{display:flex;align-items:center;justify-content:center;padding:8px 0 4px;}
+  .diagram{display:flex;align-items:center;justify-content:center;padding:6px 0;}
   .diagram svg{overflow:visible;}
-  .heat-dash{stroke-dasharray:4 5;animation:flowout 1s linear infinite;}
-  @keyframes flowout{to{stroke-dashoffset:-18;}}
-  @media (prefers-reduced-motion: reduce){.heat-dash{animation:none;}}
+  .tank-fill{transition:height .3s ease, y .3s ease;}
+  .tank-body{transition:width .3s ease, height .3s ease, x .3s ease, y .3s ease;}
+  #tank-roof{transition:points .3s ease;}
 
   .stat-row{display:flex;justify-content:space-between;gap:12px;font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--paper-dim);border-top:1px solid var(--line-dim);padding-top:12px;}
   .stat-row span:first-child{flex-shrink:0;}
@@ -133,118 +146,154 @@
 <div class="wrap">
 
   <header>
-    <p class="eyebrow">Heat Loss — Rev. 1</p>
-    <h1>Tank Heat Loss Calculator</h1>
-    <p class="sub">Steady-state heat loss for a vertical cylindrical storage tank (shell, roof, bottom), with an overall U-value from internal/external film coefficients and optional insulation. Updates live as you type.</p>
+    <p class="eyebrow">Tank Sizing — Rev. 1</p>
+    <h1>Tank Sizing Calculator</h1>
+    <p class="sub">Vertical cylindrical storage tank volume, dimensions, surface areas, and operating-level volume breakdown (working, minimum/dead-stock, overfill protection, and vapor space). Compute volume from a given diameter and height, or solve for the missing dimension from a target volume.</p>
   </header>
+
+  <div class="tabs" role="tablist" aria-label="Sizing mode">
+    <button class="tab active" id="tab-dims" role="tab" aria-selected="true">DIAMETER + HEIGHT → VOLUME</button>
+    <button class="tab" id="tab-target" role="tab" aria-selected="false">TARGET VOLUME → DIMENSION</button>
+  </div>
 
   <div class="grid">
 
-    <!-- INPUTS PANEL -->
-    <section class="panel">
-      <h2>Inputs</h2>
-
-      <h3>Tank Geometry</h3>
+    <!-- DIAMETER+HEIGHT PANEL -->
+    <section class="panel" id="panel-dims">
+      <h2>Inputs — Known Dimensions</h2>
       <div class="field">
-        <label for="i-D">Tank diameter <span class="unit">m</span></label>
-        <input type="number" id="i-D" value="10" step="any" min="0">
+        <label for="d-D">Tank diameter <span class="unit">m</span></label>
+        <input type="number" id="d-D" value="10" step="any" min="0">
       </div>
       <div class="field">
-        <label for="i-H">Shell height <span class="unit">m</span></label>
-        <input type="number" id="i-H" value="8" step="any" min="0">
+        <label for="d-H">Shell / liquid height <span class="unit">m</span></label>
+        <input type="number" id="d-H" value="8" step="any" min="0">
       </div>
       <div class="field">
-        <label for="i-roof">Roof type</label>
-        <select id="i-roof">
+        <label for="d-roof">Roof type</label>
+        <select id="d-roof">
           <option value="flat" selected>Flat</option>
           <option value="conical">Conical</option>
         </select>
-        <div class="hint" id="roof-hint">Flat roof area = π D²/4 (matches the source script).</div>
+        <div class="hint" id="d-roof-hint">Flat roof area = π D²/4 (matches the source script).</div>
       </div>
-      <div class="field hidden" id="field-rise">
-        <label for="i-rise">Roof rise (apex above shell top) <span class="unit">m</span></label>
-        <input type="number" id="i-rise" value="0.625" step="any" min="0">
+      <div class="field hidden" id="d-field-rise">
+        <label for="d-rise">Roof rise (apex above shell top) <span class="unit">m</span></label>
+        <input type="number" id="d-rise" value="0.625" step="any" min="0">
         <div class="hint">Typical roof slope ≈ 1:16 (rise ≈ D/16). Lateral area = π·r·√(r² + rise²).</div>
       </div>
-      <div class="checkbox-field field">
-        <input type="checkbox" id="i-bottom" checked>
-        <label for="i-bottom">Bottom present</label>
+      <div class="field">
+        <label for="d-rho">Product density <span class="unit">kg/m³</span></label>
+        <input type="number" id="d-rho" value="1000" step="any" min="0">
+        <div class="hint">Default 1000 kg/m³ = water.</div>
       </div>
 
-      <h3>Temperatures</h3>
+      <h3>Operating Levels (Working / Minimum / Vapor Space)</h3>
       <div class="field">
-        <label for="i-Tp">Product temperature <span class="unit">°C</span></label>
-        <input type="number" id="i-Tp" value="60" step="any">
+        <label for="d-hhll">High-High Liquid Level (HHLL) <span class="unit">% of H</span></label>
+        <input type="number" id="d-hhll" value="95" step="any" min="0" max="100">
       </div>
       <div class="field">
-        <label for="i-Ta">Ambient temperature <span class="unit">°C</span></label>
-        <input type="number" id="i-Ta" value="20" step="any">
+        <label for="d-hll">High Liquid Level (HLL) <span class="unit">% of H</span></label>
+        <input type="number" id="d-hll" value="90" step="any" min="0" max="100">
+        <div class="hint">Normal max operating level.</div>
+      </div>
+      <div class="field">
+        <label for="d-lll">Low Liquid Level (LLL) <span class="unit">% of H</span></label>
+        <input type="number" id="d-lll" value="10" step="any" min="0" max="100">
+        <div class="hint">Normal min operating level.</div>
+      </div>
+      <div class="field">
+        <label for="d-llll">Low-Low Liquid Level (LLLL) <span class="unit">% of H</span></label>
+        <input type="number" id="d-llll" value="5" step="any" min="0" max="100">
+        <div class="hint">Below this is unusable dead-stock volume.</div>
+        <div class="err" id="d-err"></div>
+      </div>
+    </section>
+
+    <!-- TARGET VOLUME PANEL -->
+    <section class="panel hidden" id="panel-target">
+      <h2>Inputs — Target Volume</h2>
+      <div class="field">
+        <label for="t-V">Target volume <span class="unit">m³</span></label>
+        <input type="number" id="t-V" value="500" step="any" min="0">
       </div>
 
-      <h3>Insulation &amp; Film Coefficients</h3>
-      <div class="field">
-        <label for="i-tins">Insulation thickness <span class="unit">m</span></label>
-        <input type="number" id="i-tins" value="0.05" step="any" min="0">
-        <div class="hint">Set to 0 for a bare (uninsulated) tank.</div>
+      <div class="subtabs" role="tablist" aria-label="Solve for">
+        <button class="subtab active" id="subtab-solveD" role="tab" aria-selected="true">SOLVE FOR DIAMETER</button>
+        <button class="subtab" id="subtab-solveH" role="tab" aria-selected="false">SOLVE FOR HEIGHT</button>
       </div>
-      <div class="field">
-        <label for="i-kins">Insulation conductivity <span class="unit">W/m·K</span></label>
-        <input type="number" id="i-kins" value="0.04" step="any" min="0">
+
+      <div class="field" id="field-assumeH">
+        <label for="t-assumeH">Assumed height <span class="unit">m</span></label>
+        <input type="number" id="t-assumeH" value="6" step="any" min="0">
+        <div class="hint">Diameter will be solved to hit the target volume at this height.</div>
       </div>
-      <div class="field">
-        <label for="i-hi">Internal film coefficient <span class="unit">W/m²·K</span></label>
-        <input type="number" id="i-hi" value="10" step="any" min="0">
+      <div class="field hidden" id="field-assumeD">
+        <label for="t-assumeD">Assumed diameter <span class="unit">m</span></label>
+        <input type="number" id="t-assumeD" value="4" step="any" min="0">
+        <div class="hint">Height will be solved to hit the target volume at this diameter.</div>
       </div>
+
       <div class="field">
-        <label for="i-ho-basis">External film coefficient basis</label>
-        <select id="i-ho-basis">
-          <option value="direct" selected>Direct input</option>
-          <option value="wind">Compute from wind speed</option>
+        <label for="t-rho">Product density <span class="unit">kg/m³</span></label>
+        <input type="number" id="t-rho" value="1000" step="any" min="0">
+        <div class="hint">Default 1000 kg/m³ = water.</div>
+      </div>
+
+      <div class="field">
+        <label for="t-roof">Roof type</label>
+        <select id="t-roof">
+          <option value="flat" selected>Flat</option>
+          <option value="conical">Conical</option>
         </select>
+        <div class="hint" id="t-roof-hint">Flat roof area = π D²/4 (matches the source script).</div>
       </div>
-      <div class="field" id="i-ho-direct-field">
-        <label for="i-ho">External film coefficient <span class="unit">W/m²·K</span></label>
-        <input type="number" id="i-ho" value="10" step="any" min="0">
-        <div class="hint">Free/forced convection at the outer surface (or insulation jacket).</div>
+      <div class="field hidden" id="t-field-rise">
+        <label for="t-rise">Roof rise (apex above shell top) <span class="unit">m</span></label>
+        <input type="number" id="t-rise" value="0.625" step="any" min="0">
+        <div class="hint">Typical roof slope ≈ 1:16 (rise ≈ D/16). Lateral area = π·r·√(r² + rise²). Uses the solved diameter.</div>
       </div>
-      <div class="field hidden" id="i-wind-field">
-        <label for="i-wind">Design wind speed <span class="unit">m/s</span></label>
-        <input type="number" id="i-wind" value="5" step="any" min="0">
-        <div class="hint">ho ≈ 5.7 + 3.8·V (W/m²·K) — a commonly used simplified outdoor film-coefficient correlation, not a rigorous Nusselt/Rayleigh-based calculation. For critical or high-value insulation designs, verify against a detailed correlation (e.g. the Aerstin &amp; Street / Kato procedure) or your company standard.</div>
-        <div class="hint" id="i-ho-computed">Computed ho: 24.7 W/m²·K</div>
+
+      <h3>Operating Levels (Working / Minimum / Vapor Space)</h3>
+      <div class="field">
+        <label for="t-hhll">High-High Liquid Level (HHLL) <span class="unit">% of H</span></label>
+        <input type="number" id="t-hhll" value="95" step="any" min="0" max="100">
       </div>
       <div class="field">
-        <label for="i-sf">Heating duty safety factor</label>
-        <input type="number" id="i-sf" value="1.15" step="any" min="0">
-        <div class="hint">Applied to total heat loss to size heating/tracing duty.</div>
-        <div class="err" id="i-err"></div>
+        <label for="t-hll">High Liquid Level (HLL) <span class="unit">% of H</span></label>
+        <input type="number" id="t-hll" value="90" step="any" min="0" max="100">
+        <div class="hint">Normal max operating level.</div>
       </div>
+      <div class="field">
+        <label for="t-lll">Low Liquid Level (LLL) <span class="unit">% of H</span></label>
+        <input type="number" id="t-lll" value="10" step="any" min="0" max="100">
+        <div class="hint">Normal min operating level.</div>
+      </div>
+      <div class="field">
+        <label for="t-llll">Low-Low Liquid Level (LLLL) <span class="unit">% of H</span></label>
+        <input type="number" id="t-llll" value="5" step="any" min="0" max="100">
+        <div class="hint">Below this is unusable dead-stock volume. Uses the solved height.</div>
+      </div>
+      <div class="err" id="t-err"></div>
     </section>
 
     <!-- READOUT -->
     <section class="readout">
-      <h2>Total Heat Loss</h2>
+      <h2>Volume</h2>
 
       <div class="diagram">
-        <svg width="160" height="180" viewBox="0 0 160 180" id="tank-svg">
-          <rect id="tank-shell" x="45" y="40" width="70" height="100" fill="none" stroke="var(--line)" stroke-width="2"/>
-          <polyline id="tank-roof" points="45,40 115,40" fill="none" stroke="var(--line)" stroke-width="3" stroke-linejoin="round"/>
-          <line id="tank-bottom" x1="45" y1="140" x2="115" y2="140" stroke="var(--line)" stroke-width="3"/>
-          <rect id="tank-ins" x="41" y="36" width="78" height="108" fill="none" stroke="var(--amber)" stroke-width="1.5" stroke-dasharray="3 3" opacity="0.7"/>
-          <g stroke="var(--paper-dim)" stroke-width="1.5" class="heat-dash">
-            <line x1="115" y1="60" x2="135" y2="60"/>
-            <line x1="115" y1="90" x2="135" y2="90"/>
-            <line x1="115" y1="120" x2="135" y2="120"/>
-            <line x1="60" y1="40" x2="60" y2="24"/>
-            <line x1="80" y1="40" x2="80" y2="24"/>
-            <line x1="100" y1="40" x2="100" y2="24"/>
-          </g>
+        <svg width="150" height="170" viewBox="0 0 150 170" id="tank-svg">
+          <rect id="tank-body" class="tank-body" x="40" y="30" width="70" height="110" fill="none" stroke="var(--line)" stroke-width="2"/>
+          <clipPath id="tank-clip"><rect id="tank-clip-rect" x="40" y="30" width="70" height="110"/></clipPath>
+          <rect id="tank-fill" class="tank-fill" x="40" y="90" width="70" height="50" fill="var(--line)" opacity="0.3" clip-path="url(#tank-clip)"/>
+          <polyline id="tank-roof" points="40,30 110,30" fill="none" stroke="var(--line)" stroke-width="3" stroke-linejoin="round"/>
         </svg>
       </div>
 
       <div class="big-figure">
         <span class="big-num" id="out-primary">—</span>
-        <span class="big-unit">kW</span>
+        <span class="big-unit">m³</span>
       </div>
       <span class="subfigure" id="out-secondary">—</span>
 
@@ -256,12 +305,12 @@
   </div>
 
   <footer>
-    U-value: 1/U = 1/h_i + t_ins/k_ins + 1/h_o (t_ins/k_ins term dropped when uninsulated) &nbsp;|&nbsp; Q = U·A·(T_product − T_ambient)<br>
-    Areas: A_shell = π·D·H &nbsp;|&nbsp; A_roof (flat) = π·D²/4 &nbsp;|&nbsp; A_roof (conical) = π·r·√(r² + rise²), r = D/2 &nbsp;|&nbsp; A_bottom = π·D²/4 (omitted if not present)<br>
-    Energy = Q_total × 24 / 1000 (kWh/day) &nbsp;|&nbsp; Heating duty = Q_total × safety factor<br>
-    Same U-value is applied to shell, roof, and bottom (a simplification in the source script). Roof and shell losses to ambient air via convection are reasonably represented this way; <b>bottom-to-ground heat loss is physically different</b> — it's conduction into soil, not air-film convection, and depends on soil conductivity and burial/contact geometry (a shape-factor calculation), not on h_i/h_o at all. Treating it with the same U as the shell is a conservative screening simplification carried over from the original script, not a rigorous ground-conduction model — for tanks where bottom losses matter (large diameter, high ΔT, poor soil insulation), use a proper soil heat-loss method.<br>
-    <b>Wind-speed film coefficient (added):</b> ho ≈ 5.7 + 3.8·V (W/m²·K, V in m/s) — a widely used simplified outdoor convection correlation, not a substitute for a rigorous Nusselt/Rayleigh-based calculation (e.g. the Aerstin &amp; Street procedure) for high-value or safety-critical insulation design.<br>
-    Converted from tank_heat_loss.py. The conical roof option and wind-speed-based ho are extensions beyond the source script (which only ever used the flat-roof formula and a fixed manual ho). Preliminary/screening estimate only — final insulation and heat-tracing design should account for solar gain, local weather extremes, ground conduction, and applicable engineering standards.<br>
+    Volume: V = π·(D/2)²·H &nbsp;|&nbsp; Diameter from volume: D = 2·√(V/(π·H)) &nbsp;|&nbsp; Height from volume: H = V/(π·(D/2)²)<br>
+    Areas: A_shell = π·D·H &nbsp;|&nbsp; A_roof (flat) = π·D²/4 &nbsp;|&nbsp; A_roof (conical) = π·r·√(r² + rise²), r = D/2 &nbsp;|&nbsp; A_bottom = π·D²/4<br>
+    Unit conversions: L = V×1000 &nbsp;|&nbsp; US gal = V×264.172052 &nbsp;|&nbsp; Oil barrels = V×6.28981077 &nbsp;|&nbsp; Mass = V×ρ<br>
+    <b>Operating levels:</b> HHLL/HLL/LLL/LLLL are entered as % of shell height H. Each level's volume uses the plain cylinder formula V(h) = π(D/2)²·h. Working volume = V(HLL) − V(LLL); overfill protection volume = V(HHLL) − V(HLL); minimum/dead-stock volume = V(LLLL); vapor space volume = Total capacity − V(HHLL). Total capacity includes the conical roof's own volume ((1/3)·π·r²·rise) when that roof type is selected, since vapor space extends into the roof.<br>
+    These are generic, commonly-used level definitions (matching typical HHLL/HLL/LLL/LLLL terminology from API 2350-style overfill protection practice) — actual level setpoints, freeboard, and minimum draw-off elevation are project- and instrumentation-specific. Confirm against your actual tank datasheet, nozzle elevations, and instrumentation design before use.<br>
+    Converted from tank_sizing.py. The conical roof option and the working/minimum/vapor-space volume breakdown above are extensions beyond the source script — tank_sizing.py itself only computes total shell volume and areas, with no level-based breakdown. Preliminary/screening sizing only — final design must comply with applicable storage tank standards (e.g. API 650, API 2350) and be reviewed by a licensed professional engineer.<br>
     <div class="signature">
       <strong>Shubham Chatterjee</strong> · Process Engineer<br>
       <a href="https://processengonline.github.io/" target="_blank" rel="noopener noreferrer">processengonline.github.io</a> ·
@@ -272,6 +321,19 @@
 </div>
 
 <script>
+function volumeCylinder(D, H){
+  const r = D/2.0;
+  return Math.PI*r*r*H;
+}
+function diameterForVolume(V, H){
+  const radiusSq = V/(Math.PI*H);
+  if(radiusSq < 0) throw new Error("Computed negative radius squared");
+  return 2.0*Math.sqrt(radiusSq);
+}
+function heightForVolume(V, D){
+  const area = Math.PI*Math.pow(D/2.0, 2);
+  return V/area;
+}
 function areaShell(D, H){ return Math.PI*D*H; }
 function areaRoof(D){ return Math.PI*D*D/4.0; }
 function areaRoofConical(D, rise){
@@ -280,20 +342,9 @@ function areaRoofConical(D, rise){
   return Math.PI*r*slant;
 }
 function areaBottom(D, bottomPresent){ return bottomPresent ? Math.PI*D*D/4.0 : 0.0; }
-
-function overallUValue(tIns, kIns, hi, ho){
-  let rTotal;
-  if(tIns <= 0.0){
-    rTotal = (1.0/hi) + (1.0/ho);
-  } else {
-    rTotal = (1.0/hi) + (tIns/kIns) + (1.0/ho);
-  }
-  return 1.0/rTotal;
-}
-
-function heatLoss(U, area, tf, ta){ return U*area*(tf-ta); }
-function energyLossPerDay(qW){ return qW*24.0/1000.0; }
-function heatingDuty(qW, sf){ return qW*sf; }
+function litersFromM3(v){ return v*1000.0; }
+function gallonsFromM3(v){ return v*264.172052; }
+function barrelsFromM3(v){ return v*6.28981077; }
 
 function fmt(num, sig=4){
   if(num===0) return '0';
@@ -302,14 +353,70 @@ function fmt(num, sig=4){
   return num.toPrecision(sig);
 }
 
-function clearError(){
-  const el = document.getElementById('i-err');
-  el.style.display = 'none';
-  el.textContent = '';
+const tabDims = document.getElementById('tab-dims');
+const tabTarget = document.getElementById('tab-target');
+const panelDims = document.getElementById('panel-dims');
+const panelTarget = document.getElementById('panel-target');
+let mode = 'dims';
+
+function setMode(m){
+  mode = m;
+  const isDims = m==='dims';
+  tabDims.classList.toggle('active', isDims);
+  tabTarget.classList.toggle('active', !isDims);
+  tabDims.setAttribute('aria-selected', isDims);
+  tabTarget.setAttribute('aria-selected', !isDims);
+  panelDims.classList.toggle('hidden', !isDims);
+  panelTarget.classList.toggle('hidden', isDims);
+  compute();
+}
+tabDims.addEventListener('click', ()=>setMode('dims'));
+tabTarget.addEventListener('click', ()=>setMode('target'));
+
+const subtabSolveD = document.getElementById('subtab-solveD');
+const subtabSolveH = document.getElementById('subtab-solveH');
+let solveFor = 'diameter';
+
+function setSolveFor(s){
+  solveFor = s;
+  const isD = s==='diameter';
+  subtabSolveD.classList.toggle('active', isD);
+  subtabSolveH.classList.toggle('active', !isD);
+  subtabSolveD.setAttribute('aria-selected', isD);
+  subtabSolveH.setAttribute('aria-selected', !isD);
+  document.getElementById('field-assumeH').classList.toggle('hidden', !isD);
+  document.getElementById('field-assumeD').classList.toggle('hidden', isD);
+  compute();
+}
+subtabSolveD.addEventListener('click', ()=>setSolveFor('diameter'));
+subtabSolveH.addEventListener('click', ()=>setSolveFor('height'));
+
+const ids = ['d-D','d-H','d-rho','d-rise','d-hhll','d-hll','d-lll','d-llll',
+             't-V','t-assumeH','t-assumeD','t-rho','t-rise','t-hhll','t-hll','t-lll','t-llll'];
+ids.forEach(id=>document.getElementById(id).addEventListener('input', compute));
+
+function setRoofType(prefix){
+  const roofType = document.getElementById(prefix+'-roof').value;
+  const isConical = roofType==='conical';
+  document.getElementById(prefix+'-field-rise').classList.toggle('hidden', !isConical);
+  document.getElementById(prefix+'-roof-hint').textContent = isConical
+    ? 'Conical roof area = π·r·√(r² + rise²) — added as an extension; the source script always used the flat formula.'
+    : 'Flat roof area = π D²/4 (matches the source script).';
+  compute();
+}
+document.getElementById('d-roof').addEventListener('change', ()=>setRoofType('d'));
+document.getElementById('t-roof').addEventListener('change', ()=>setRoofType('t'));
+
+function clearErrors(){
+  ['d-err','t-err'].forEach(id=>{
+    const el = document.getElementById(id);
+    el.style.display = 'none';
+    el.textContent = '';
+  });
 }
 
-function showError(msg){
-  const el = document.getElementById('i-err');
+function showError(id, msg){
+  const el = document.getElementById(id);
   el.textContent = msg;
   el.style.display = 'block';
   document.getElementById('out-primary').textContent = '—';
@@ -331,116 +438,144 @@ function renderStats(rows){
   });
 }
 
-function updateDiagram(tIns, roofType){
-  document.getElementById('tank-ins').style.display = tIns > 0 ? '' : 'none';
+function updateDiagram(D, H, roofType){
+  const maxDim = 100;
+  const ld = D>0 ? H/D : 1;
+  const clamped = Math.max(0.3, Math.min(3.5, ld));
+  const bodyW = 70;
+  const bodyH = Math.max(30, Math.min(120, 70*clamped));
+  const x = 75-bodyW/2, y = 85-bodyH/2;
+
+  const body = document.getElementById('tank-body');
+  body.setAttribute('x', x); body.setAttribute('y', y);
+  body.setAttribute('width', bodyW); body.setAttribute('height', bodyH);
+
+  const clipRect = document.getElementById('tank-clip-rect');
+  clipRect.setAttribute('x', x); clipRect.setAttribute('y', y);
+  clipRect.setAttribute('width', bodyW); clipRect.setAttribute('height', bodyH);
+
+  const fill = document.getElementById('tank-fill');
+  fill.setAttribute('x', x); fill.setAttribute('width', bodyW);
+  fill.setAttribute('y', y); fill.setAttribute('height', bodyH);
+
   const roof = document.getElementById('tank-roof');
-  roof.setAttribute('points', roofType==='conical' ? '45,40 80,24 115,40' : '45,40 115,40');
+  const peakY = y - Math.max(10, bodyW*0.22);
+  roof.setAttribute('points', roofType==='conical'
+    ? `${x},${y} ${x+bodyW/2},${peakY} ${x+bodyW},${y}`
+    : `${x},${y} ${x+bodyW},${y}`);
 }
 
 function compute(){
-  clearError();
+  clearErrors();
   const badge = document.getElementById('status-badge');
 
   try{
-    const D = parseFloat(document.getElementById('i-D').value);
-    const H = parseFloat(document.getElementById('i-H').value);
-    const roofType = document.getElementById('i-roof').value;
-    const rise = parseFloat(document.getElementById('i-rise').value);
-    const bottomPresent = document.getElementById('i-bottom').checked;
-    const Tp = parseFloat(document.getElementById('i-Tp').value);
-    const Ta = parseFloat(document.getElementById('i-Ta').value);
-    const tIns = parseFloat(document.getElementById('i-tins').value);
-    const kIns = parseFloat(document.getElementById('i-kins').value);
-    const hi = parseFloat(document.getElementById('i-hi').value);
-    const hoBasis = document.getElementById('i-ho-basis').value;
-    let ho;
-    if(hoBasis==='wind'){
-      const windSpeed = parseFloat(document.getElementById('i-wind').value);
-      if(!(windSpeed>=0)) throw new Error("Wind speed must be ≥ 0");
-      ho = 5.7 + 3.8*windSpeed;
-      document.getElementById('i-ho-computed').textContent = 'Computed ho: ' + ho.toFixed(2) + ' W/m²·K';
+    let D, H, rho, V, roofType, rise;
+
+    if(mode==='dims'){
+      D = parseFloat(document.getElementById('d-D').value);
+      H = parseFloat(document.getElementById('d-H').value);
+      rho = parseFloat(document.getElementById('d-rho').value);
+      roofType = document.getElementById('d-roof').value;
+      rise = parseFloat(document.getElementById('d-rise').value);
+
+      if(!(D>0)) throw new Error("Diameter must be > 0");
+      if(!(H>0)) throw new Error("Height must be > 0");
+      if(!(rho>0)) throw new Error("Product density must be > 0");
+      if(roofType==='conical' && !(rise>=0)) throw new Error("Roof rise must be ≥ 0");
+
+      V = volumeCylinder(D, H);
+
     } else {
-      ho = parseFloat(document.getElementById('i-ho').value);
+      V = parseFloat(document.getElementById('t-V').value);
+      rho = parseFloat(document.getElementById('t-rho').value);
+      roofType = document.getElementById('t-roof').value;
+      rise = parseFloat(document.getElementById('t-rise').value);
+
+      if(!(V>0)) throw new Error("Target volume must be > 0");
+      if(!(rho>0)) throw new Error("Product density must be > 0");
+      if(roofType==='conical' && !(rise>=0)) throw new Error("Roof rise must be ≥ 0");
+
+      if(solveFor==='diameter'){
+        H = parseFloat(document.getElementById('t-assumeH').value);
+        if(!(H>0)) throw new Error("Assumed height must be > 0");
+        D = diameterForVolume(V, H);
+      } else {
+        D = parseFloat(document.getElementById('t-assumeD').value);
+        if(!(D>0)) throw new Error("Assumed diameter must be > 0");
+        H = heightForVolume(V, D);
+      }
     }
-    const sf = parseFloat(document.getElementById('i-sf').value);
 
-    if(!(D>0)) throw new Error("Tank diameter must be > 0");
-    if(!(H>0)) throw new Error("Shell height must be > 0");
-    if(roofType==='conical' && !(rise>=0)) throw new Error("Roof rise must be ≥ 0");
-    if(!(hi>0)) throw new Error("Internal film coefficient must be > 0");
-    if(!(ho>0)) throw new Error("External film coefficient must be > 0");
-    if(tIns>0 && !(kIns>0)) throw new Error("Insulation conductivity must be > 0 when thickness > 0");
-    if(!(sf>0)) throw new Error("Safety factor must be > 0");
+    const shell = areaShell(D, H);
+    const roof = roofType==='conical' ? areaRoofConical(D, rise) : areaRoof(D);
+    const bottom = areaBottom(D, true);
+    const mass = V*rho;
 
-    const Ashell = areaShell(D, H);
-    const Aroof = roofType==='conical' ? areaRoofConical(D, rise) : areaRoof(D);
-    const Abottom = areaBottom(D, bottomPresent);
-    const Atotal = Ashell + Aroof + Abottom;
+    const prefix = mode==='dims' ? 'd' : 't';
+    const hhllPct = parseFloat(document.getElementById(prefix+'-hhll').value);
+    const hllPct = parseFloat(document.getElementById(prefix+'-hll').value);
+    const lllPct = parseFloat(document.getElementById(prefix+'-lll').value);
+    const llllPct = parseFloat(document.getElementById(prefix+'-llll').value);
 
-    const U = overallUValue(tIns, kIns, hi, ho);
+    if(!(hhllPct>=0 && hhllPct<=100)) throw new Error("HHLL must be between 0 and 100%");
+    if(!(hllPct>=0 && hllPct<=100)) throw new Error("HLL must be between 0 and 100%");
+    if(!(lllPct>=0 && lllPct<=100)) throw new Error("LLL must be between 0 and 100%");
+    if(!(llllPct>=0 && llllPct<=100)) throw new Error("LLLL must be between 0 and 100%");
+    if(!(llllPct<=lllPct && lllPct<=hllPct && hllPct<=hhllPct)) throw new Error("Levels must be ordered LLLL ≤ LLL ≤ HLL ≤ HHLL");
 
-    const Qshell = heatLoss(U, Ashell, Tp, Ta);
-    const Qroof = heatLoss(U, Aroof, Tp, Ta);
-    const Qbottom = heatLoss(U, Abottom, Tp, Ta);
-    const Qtotal = Qshell + Qroof + Qbottom;
+    const hHHLL = H*hhllPct/100.0;
+    const hHLL = H*hllPct/100.0;
+    const hLLL = H*lllPct/100.0;
+    const hLLLL = H*llllPct/100.0;
 
-    const energyKwhDay = energyLossPerDay(Qtotal);
-    const dutyW = heatingDuty(Qtotal, sf);
+    const vHHLL = volumeCylinder(D, hHHLL);
+    const vHLL = volumeCylinder(D, hHLL);
+    const vLLL = volumeCylinder(D, hLLL);
+    const vLLLL = volumeCylinder(D, hLLLL);
 
-    document.getElementById('out-primary').textContent = fmt(Qtotal/1000.0);
+    const roofVolume = roofType==='conical' ? (1.0/3.0)*Math.PI*Math.pow(D/2,2)*rise : 0.0;
+    const totalCapacity = V + roofVolume;
+
+    const workingVolume = vHLL - vLLL;
+    const overfillProtectionVolume = vHHLL - vHLL;
+    const minVolume = vLLLL;
+    const vaporSpaceVolume = totalCapacity - vHHLL;
+
+    document.getElementById('out-primary').textContent = fmt(V);
     document.getElementById('out-secondary').textContent =
-      fmt(Qtotal) + ' W · ' + fmt(energyKwhDay) + ' kWh/day';
+      fmt(litersFromM3(V)) + ' L · ' + fmt(gallonsFromM3(V)) + ' US gal · ' + fmt(barrelsFromM3(V)) + ' bbl';
 
-    const rows = [
-      ['Shell area', fmt(Ashell) + ' m²'],
-      ['Roof area', fmt(Aroof) + ' m²'],
-      ['Bottom area', fmt(Abottom) + ' m²'],
-      ['Total area', fmt(Atotal) + ' m²'],
-      ['Overall U-value', fmt(U) + ' W/m²·K'],
-      ['Shell heat loss', fmt(Qshell) + ' W'],
-      ['Roof heat loss', fmt(Qroof) + ' W'],
-      ['Bottom heat loss', fmt(Qbottom) + ' W'],
-      ['Total heat loss', fmt(Qtotal) + ' W'],
-      ['Energy loss', fmt(energyKwhDay) + ' kWh/day'],
-      ['Heating duty (w/ SF)', fmt(dutyW) + ' W (' + fmt(dutyW/1000.0) + ' kW)'],
-    ];
+    const rows = [];
+    if(mode==='target'){
+      rows.push(['Solved diameter', fmt(D) + ' m']);
+      rows.push(['Solved height', fmt(H) + ' m']);
+    } else {
+      rows.push(['Diameter', fmt(D) + ' m']);
+      rows.push(['Height', fmt(H) + ' m']);
+    }
+    rows.push(['Shell area', fmt(shell) + ' m²']);
+    rows.push(['Roof area', fmt(roof) + ' m²']);
+    rows.push(['Bottom area', fmt(bottom) + ' m²']);
+    rows.push(['Mass (at ρ)', fmt(mass) + ' kg']);
+    rows.push(['Total capacity (incl. roof)', fmt(totalCapacity) + ' m³']);
+    rows.push(['Working volume (HLL−LLL)', fmt(workingVolume) + ' m³']);
+    rows.push(['Overfill protection vol. (HHLL−HLL)', fmt(overfillProtectionVolume) + ' m³']);
+    rows.push(['Minimum / dead-stock volume (≤LLLL)', fmt(minVolume) + ' m³']);
+    rows.push(['Vapor space volume (>HHLL)', fmt(vaporSpaceVolume) + ' m³']);
     renderStats(rows);
-    updateDiagram(tIns, roofType);
+    updateDiagram(D, H, roofType);
 
     badge.textContent = 'READY';
     badge.className = 'badge ok';
 
   } catch(e){
-    showError(e.message);
+    showError(mode==='dims' ? 'd-err' : 't-err', e.message);
     return;
   }
 }
 
-const ids = ['i-D','i-H','i-Tp','i-Ta','i-tins','i-kins','i-hi','i-ho','i-sf','i-rise','i-wind'];
-ids.forEach(id=>document.getElementById(id).addEventListener('input', compute));
-document.getElementById('i-bottom').addEventListener('change', compute);
-
-function setHoBasisVisibility(){
-  const isWind = document.getElementById('i-ho-basis').value==='wind';
-  document.getElementById('i-ho-direct-field').classList.toggle('hidden', isWind);
-  document.getElementById('i-wind-field').classList.toggle('hidden', !isWind);
-  compute();
-}
-document.getElementById('i-ho-basis').addEventListener('change', setHoBasisVisibility);
-
-function setRoofType(){
-  const roofType = document.getElementById('i-roof').value;
-  const isConical = roofType==='conical';
-  document.getElementById('field-rise').classList.toggle('hidden', !isConical);
-  document.getElementById('roof-hint').textContent = isConical
-    ? 'Conical roof area = π·r·√(r² + rise²) — added as an extension; the source script always used the flat formula regardless of roof_type.'
-    : 'Flat roof area = π D²/4 (matches the source script).';
-  compute();
-}
-document.getElementById('i-roof').addEventListener('change', setRoofType);
-
-setRoofType();
-setHoBasisVisibility();
+setMode('dims');
 </script>
 </body>
 </html>
