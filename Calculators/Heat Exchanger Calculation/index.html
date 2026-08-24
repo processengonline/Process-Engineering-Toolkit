@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shell & Tube / Air Cooler Duty & LMTD Sizing Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy: #0B1F33;
+    --navy-2: #122A44;
+    --blueprint: #1B4F72;
+    --line: #3E7CB1;
+    --line-dim: #2A5A80;
+    --paper: #EAE6D9;
+    --paper-dim: #B9C4CC;
+    --amber: #E8A33D;
+    --green: #6FA787;
+    --red: #C96A5C;
+    --grid: rgba(62,124,177,0.16);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      linear-gradient(var(--grid) 1px, transparent 1px) 0 0/28px 28px,
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px) 0 0/28px 28px,
+      var(--navy);
+    color:var(--paper);
+    font-family:'Space Grotesk', sans-serif;
+    min-height:100vh;
+  }
+  .wrap{max-width:1080px;margin:0 auto;padding:48px 24px 80px;}
+
+  header{margin-bottom:32px;border-bottom:1px solid var(--line-dim);padding-bottom:24px;}
+  .eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--line);margin:0 0 10px;
+  }
+  h1{
+    font-size:clamp(28px,4vw,42px);
+    margin:0 0 12px;font-weight:700;letter-spacing:-0.01em;
+  }
+  .sub{color:var(--paper-dim);font-size:15px;max-width:680px;line-height:1.55;margin:0 0 16px;}
+
+  .epcnote{
+    font-family:'IBM Plex Mono',monospace;font-size:11.5px;line-height:1.6;color:var(--paper-dim);
+    background:rgba(201,106,92,.08);border:1px solid rgba(201,106,92,.4);border-radius:6px;
+    padding:14px 16px;margin-top:16px;
+  }
+  .epcnote b{color:var(--red);}
+
+  .tabs{display:flex;gap:2px;margin:24px 0 28px;border:1px solid var(--line-dim);width:fit-content;border-radius:6px;overflow:hidden;}
+  .tab{
+    font-family:'IBM Plex Mono',monospace;font-size:13px;letter-spacing:.05em;
+    padding:11px 22px;background:var(--navy-2);color:var(--paper-dim);
+    border:none;cursor:pointer;transition:background .15s, color .15s;
+  }
+  .tab.active{background:var(--line);color:var(--navy);font-weight:600;}
+  .tab:not(.active):hover{background:#17324f;color:var(--paper);}
+  .tab:focus-visible{outline:2px solid var(--amber);outline-offset:-2px;}
+
+  .grid{display:grid;grid-template-columns:1.1fr 1fr;gap:36px;align-items:start;}
+  @media (max-width:820px){.grid{grid-template-columns:1fr;}}
+
+  .panel{
+    background:var(--navy-2);border:1px solid var(--line-dim);border-radius:8px;padding:26px;
+  }
+  .panel h2{
+    font-family:'IBM Plex Mono',monospace;font-size:12px;text-transform:uppercase;
+    letter-spacing:.14em;color:var(--line);margin:0 0 20px;
+  }
+  .panel h3{
+    font-family:'IBM Plex Mono',monospace;font-size:11px;text-transform:uppercase;
+    letter-spacing:.12em;color:var(--paper-dim);margin:22px 0 14px;
+    border-top:1px solid var(--line-dim);padding-top:16px;
+  }
+  .panel h3:first-of-type{margin-top:0;border-top:none;padding-top:0;}
+
+  .field{margin-bottom:16px;}
+  .field:last-child{margin-bottom:0;}
+  label{display:flex;justify-content:space-between;align-items:baseline;font-size:13.5px;color:var(--paper);margin-bottom:6px;}
+  label .unit{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--paper-dim);}
+  input[type=number], select{
+    width:100%;background:var(--navy);border:1px solid var(--line-dim);border-radius:5px;
+    color:var(--paper);font-family:'IBM Plex Mono',monospace;font-size:14px;
+    padding:9px 11px;transition:border-color .15s;
+  }
+  select{cursor:pointer;}
+  input[type=number]:focus, select:focus{outline:none;border-color:var(--line);box-shadow:0 0 0 3px rgba(62,124,177,0.22);}
+  input[type=number]:disabled{opacity:0.65;cursor:not-allowed;color:var(--amber);border-color:var(--amber);}
+  .hint{font-size:11.5px;color:var(--paper-dim);margin-top:5px;line-height:1.4;}
+  .err{font-size:11.5px;color:var(--red);margin-top:5px;display:none;}
+
+  .readout{
+    background:var(--navy-2);border:1px solid var(--line-dim);border-radius:8px;
+    padding:26px;display:flex;flex-direction:column;gap:20px;position:sticky;top:24px;
+  }
+  .readout h2{
+    font-family:'IBM Plex Mono',monospace;font-size:12px;text-transform:uppercase;
+    letter-spacing:.14em;color:var(--line);margin:0;
+  }
+  .big-figure{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;}
+  .big-num{font-size:48px;font-weight:700;line-height:1;letter-spacing:-0.02em;font-variant-numeric:tabular-nums;}
+  .big-unit{font-family:'IBM Plex Mono',monospace;font-size:16px;color:var(--paper-dim);}
+  .subfigure{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--paper-dim);}
+
+  .diagram{display:flex;align-items:center;justify-content:center;padding:6px 0 2px;}
+  .diagram svg{overflow:visible;max-width:100%;height:auto;}
+  .flow-dash{stroke-dasharray:5 6;animation:flowmove 1.1s linear infinite;}
+  @keyframes flowmove{to{stroke-dashoffset:-22;}}
+  @media (prefers-reduced-motion: reduce){.flow-dash{animation:none;}}
+
+  .stat-row{display:flex;justify-content:space-between;gap:12px;font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--paper-dim);border-top:1px solid var(--line-dim);padding-top:12px;}
+  .stat-row span:first-child{flex-shrink:0;}
+  .stat-row span:last-child{color:var(--paper);text-align:right;}
+  #stat-rows{display:flex;flex-direction:column;gap:12px;}
+  .stat-group-label{
+    font-family:'IBM Plex Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.08em;
+    color:var(--line);margin-top:6px;
+  }
+
+  .badge{
+    font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.06em;
+    padding:4px 10px;border-radius:20px;display:inline-block;width:fit-content;
+  }
+  .badge.ok{background:rgba(111,167,135,.15);color:var(--green);border:1px solid rgba(111,167,135,.4);}
+  .badge.warn{background:rgba(232,163,61,.15);color:var(--amber);border:1px solid rgba(232,163,61,.4);}
+  .badge.info{background:rgba(62,124,177,.18);color:var(--line);border:1px solid rgba(62,124,177,.4);}
+  .badge-row{display:flex;gap:8px;flex-wrap:wrap;}
+
+  footer{margin-top:40px;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--paper-dim);line-height:1.6;border-top:1px solid var(--line-dim);padding-top:20px;}
+  .hidden{display:none !important;}
+
+  .signature{
+    margin-top:28px;padding-top:20px;border-top:1px solid var(--line-dim);
+    font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--paper-dim);line-height:1.7;
+  }
+  .signature strong{color:var(--paper);font-weight:600;}
+  .signature a{color:var(--line);text-decoration:none;border-bottom:1px solid var(--line-dim);padding-bottom:1px;transition:color .15s,border-color .15s;}
+  .signature a:hover{color:var(--amber);border-color:var(--amber);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">Heat Exchanger Duty &amp; LMTD Sizing — Screening Tool</p>
+    <h1>Shell &amp; Tube / Air Cooler Duty &amp; LMTD Sizing Calculator</h1>
+    <p class="sub">First-pass thermal sizing: duty from terminal temperatures, LMTD with the Bowman (1940) 1-shell/2-tube-pass F-factor correction for shell-and-tube, and process-side/air-side duty, cross-flow LMTD, face area and fan power for air-cooled exchangers. Order-of-magnitude required-area estimates only.</p>
+    <div class="epcnote">
+      <b>Rough first-pass sizing — not a rating program.</b> This tool computes duty from the flows/temperatures you enter, LMTD (with the classical Bowman TEMA-E F-factor correction where selected), and required heat-transfer area from a user-supplied overall coefficient U. It does <b>not</b> perform tube-side/shell-side or air-side finned-tube film-coefficient correlations, fouling-factor buildup, pressure-drop-driven geometry selection, tube layout/baffle design, vibration checks, or multi-shell/multi-bundle configuration logic. The U values suggested here are order-of-magnitude guidance only — they vary enormously with real fluid properties, velocities, and fouling. For an actual EPC deliverable, run a certified rating program (HTRI, HTFS/Aspen EDR, or vendor air-cooler software) with real fluid property data and confirm mechanical design against TEMA / API 661.
+    </div>
+  </header>
+
+  <div class="tabs" role="tablist" aria-label="Exchanger type">
+    <button class="tab active" id="tab-st" role="tab" aria-selected="true">SHELL &amp; TUBE</button>
+    <button class="tab" id="tab-air" role="tab" aria-selected="false">AIR COOLER</button>
+  </div>
+
+  <div class="grid">
+
+    <!-- SHELL & TUBE PANEL -->
+    <section class="panel" id="panel-st">
+      <h2>Inputs — Shell &amp; Tube</h2>
+
+      <h3>Hot Side (Fluid Being Cooled)</h3>
+      <div class="field">
+        <label for="st-T1">Hot inlet temperature T1 <span class="unit">°C</span></label>
+        <input type="number" id="st-T1" value="150" step="any">
+      </div>
+      <div class="field">
+        <label for="st-T2">Hot outlet temperature T2 <span class="unit">°C</span></label>
+        <input type="number" id="st-T2" value="90" step="any">
+      </div>
+      <div class="field">
+        <label for="st-mh">Hot side mass flow ṁ_h <span class="unit">kg/s</span></label>
+        <input type="number" id="st-mh" value="10" step="any" min="0">
+      </div>
+      <div class="field">
+        <label for="st-Cph">Hot side specific heat Cp_h <span class="unit">kJ/(kg·K)</span></label>
+        <input type="number" id="st-Cph" value="2.20" step="any" min="0">
+      </div>
+
+      <h3>Cold Side (Fluid Being Heated)</h3>
+      <div class="field">
+        <label for="st-t1">Cold inlet temperature t1 <span class="unit">°C</span></label>
+        <input type="number" id="st-t1" value="30" step="any">
+      </div>
+      <div class="field">
+        <label for="st-t2">Cold outlet temperature t2 <span class="unit">°C</span></label>
+        <input type="number" id="st-t2" value="70" step="any">
+      </div>
+      <div class="field">
+        <label for="st-mc">Cold side mass flow ṁ_c <span class="unit">kg/s</span></label>
+        <input type="number" id="st-mc" value="7.9" step="any" min="0">
+      </div>
+      <div class="field">
+        <label for="st-Cpc">Cold side specific heat Cp_c <span class="unit">kJ/(kg·K)</span></label>
+        <input type="number" id="st-Cpc" value="4.18" step="any" min="0">
+      </div>
+
+      <h3>Flow Arrangement &amp; F-Factor</h3>
+      <div class="field">
+        <label for="st-arrangement">Flow arrangement</label>
+        <select id="st-arrangement">
+          <option value="counter" selected>Counter-current</option>
+          <option value="co">Co-current (parallel flow)</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="st-passconfig">Shell/tube pass configuration</label>
+        <select id="st-passconfig">
+          <option value="bowman" selected>1 shell pass, 2+ (even) tube passes — compute F via Bowman equation</option>
+          <option value="other">Other configuration — enter F directly</option>
+        </select>
+        <div class="hint">Pure counter-current single-pass (1 shell / 1 tube pass, "1-1") exchangers have F = 1.0 always — select "Other" and enter 1.0 to model that case.</div>
+      </div>
+      <div class="field hidden" id="st-Fcustom-field">
+        <label for="st-Fcustom">F correction factor (direct entry)</label>
+        <input type="number" id="st-Fcustom" value="1.0" step="any" min="0" max="1.2">
+        <div class="hint">For 2+ shell passes or other TEMA types, take F from the appropriate TEMA/Bowman chart or rating software — not computed here.</div>
+      </div>
+
+      <h3>Overall Heat Transfer Coefficient</h3>
+      <div class="field">
+        <label for="st-U">Overall U <span class="unit">W/(m²·K)</span></label>
+        <input type="number" id="st-U" value="500" step="any" min="0">
+        <div class="hint">Required user input — fluid/service dependent, cannot be computed without detailed correlation work. Typical rough ranges (confirm via detailed rating or vendor software): gas/gas ≈ 50–150 W/m²K, gas/liquid ≈ 100–300, liquid/liquid ≈ 250–750, condensing steam/liquid ≈ 1000–1500, liquid with high viscosity ≈ 100–300.</div>
+        <div class="err" id="st-err"></div>
+      </div>
+    </section>
+
+    <!-- AIR COOLER PANEL -->
+    <section class="panel hidden" id="panel-air">
+      <h2>Inputs — Air Cooler</h2>
+
+      <h3>Process (Hot) Side</h3>
+      <div class="field">
+        <label for="air-T1">Process inlet temperature T1 <span class="unit">°C</span></label>
+        <input type="number" id="air-T1" value="140" step="any">
+      </div>
+      <div class="field">
+        <label for="air-T2">Process outlet temperature T2 <span class="unit">°C</span></label>
+        <input type="number" id="air-T2" value="60" step="any">
+      </div>
+      <div class="field">
+        <label for="air-mh">Process mass flow ṁ <span class="unit">kg/s</span></label>
+        <input type="number" id="air-mh" value="8" step="any" min="0">
+      </div>
+      <div class="field">
+        <label for="air-Cph">Process specific heat Cp <span class="unit">kJ/(kg·K)</span></label>
+        <input type="number" id="air-Cph" value="2.40" step="any" min="0">
+      </div>
+
+      <h3>Air Side</h3>
+      <div class="field">
+        <label for="air-Tin">Design (minimum) ambient air temp <span class="unit">°C</span></label>
+        <input type="number" id="air-Tin" value="43" step="any">
+        <div class="hint">Use the site's design (worst-case / hottest) dry-bulb ambient — this governs sizing, not an average temperature.</div>
+      </div>
+      <div class="field">
+        <label for="air-dTair">Air temperature rise ΔT_air <span class="unit">°C</span></label>
+        <input type="number" id="air-dTair" value="20" step="any" min="0">
+        <div class="hint">Sets air outlet temperature = ambient + ΔT_air. Typical practice targets an approach of at least ~10–15°C between process outlet and air inlet — not a hard rule, check the readout's approach badge.</div>
+      </div>
+      <div class="field">
+        <label>Air specific heat Cp_air <span class="unit">J/(kg·K)</span></label>
+        <input type="text" id="air-Cpair" value="1006" disabled>
+        <div class="hint">Standard dry-air value — fixed, not editable.</div>
+      </div>
+      <div class="field">
+        <label for="air-Patm">Site atmospheric pressure <span class="unit">kPa abs</span></label>
+        <input type="number" id="air-Patm" value="101.325" step="any" min="0">
+        <div class="hint">Used with the design ambient temperature to compute air density via the ideal gas law. Reduce for elevated sites.</div>
+      </div>
+
+      <h3>Thermal Sizing</h3>
+      <div class="field">
+        <label for="air-Fcf">Cross-flow correction factor F_cf</label>
+        <input type="number" id="air-Fcf" value="0.9" step="any" min="0" max="1.2">
+        <div class="hint">Typical range 0.85–0.95 for a well-designed multi-pass air cooler bundle — confirm against API 661 / vendor rating software; not computed from first principles here. LMTD itself is computed with the counter-current formula as a first-pass approximation for the cross-flow bundle.</div>
+      </div>
+      <div class="field">
+        <label for="air-U">Air-side overall U <span class="unit">W/(m²·K)</span></label>
+        <input type="number" id="air-U" value="30" step="any" min="0">
+        <div class="hint">Typical finned-tube air-cooler U, referenced to bare tube OD, is roughly 25–40 W/m²K for a standard finned bundle — highly fin-geometry dependent, confirm against vendor data or API 661 rating.</div>
+        <div class="err" id="air-err"></div>
+      </div>
+
+      <h3>Face Area &amp; Fan</h3>
+      <div class="field">
+        <label for="air-facevel">Required face velocity <span class="unit">m/s</span></label>
+        <input type="number" id="air-facevel" value="3.0" step="any" min="0">
+        <div class="hint">Typical face velocity range per API 661 practice is roughly 2–3.5 m/s — higher velocities reduce bundle face area but increase fan power and noise.</div>
+      </div>
+      <div class="field">
+        <label for="air-dP">Air-side pressure drop <span class="unit">Pa</span></label>
+        <input type="number" id="air-dP" value="125" step="any" min="0">
+        <div class="hint">Typical induced/forced-draft air cooler air-side ΔP is roughly 100–200 Pa for a standard bundle — confirm against vendor fan curve.</div>
+      </div>
+      <div class="field">
+        <label for="air-eta">Fan + motor combined efficiency</label>
+        <input type="number" id="air-eta" value="0.65" step="any" min="0" max="1">
+      </div>
+    </section>
+
+    <!-- READOUT -->
+    <section class="readout">
+      <h2>Required Heat Transfer Area</h2>
+
+      <div class="diagram" id="diagram-st">
+        <svg width="300" height="150" viewBox="0 0 340 170" id="svg-st">
+          <defs>
+            <marker id="arrow-hot" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+              <path d="M0,0 L6,3 L0,6 z" fill="var(--red)"/>
+            </marker>
+            <marker id="arrow-cold" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+              <path d="M0,0 L6,3 L0,6 z" fill="var(--line)"/>
+            </marker>
+          </defs>
+          <rect x="50" y="50" width="240" height="70" rx="35" fill="var(--navy)" stroke="var(--line)" stroke-width="2"/>
+          <line x1="62" y1="60" x2="278" y2="60" stroke="var(--line-dim)" stroke-width="1"/>
+          <line x1="62" y1="70" x2="278" y2="70" stroke="var(--line-dim)" stroke-width="1"/>
+          <line x1="62" y1="80" x2="278" y2="80" stroke="var(--line-dim)" stroke-width="1"/>
+          <line x1="62" y1="90" x2="278" y2="90" stroke="var(--line-dim)" stroke-width="1"/>
+          <line x1="62" y1="100" x2="278" y2="100" stroke="var(--line-dim)" stroke-width="1"/>
+          <line x1="62" y1="110" x2="278" y2="110" stroke="var(--line-dim)" stroke-width="1"/>
+
+          <line x1="8" y1="65" x2="46" y2="65" stroke="var(--red)" stroke-width="2.5" class="flow-dash" marker-end="url(#arrow-hot)"/>
+          <text x="6" y="56" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--red)">T1</text>
+          <line x1="292" y1="65" x2="332" y2="65" stroke="var(--red)" stroke-width="2.5" class="flow-dash" marker-end="url(#arrow-hot)"/>
+          <text x="296" y="56" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--red)">T2</text>
+
+          <line id="st-cold-in" x1="332" y1="105" x2="292" y2="105" stroke="var(--line)" stroke-width="2.5" class="flow-dash" marker-end="url(#arrow-cold)"/>
+          <text id="st-cold-in-label" x="298" y="128" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--line)">t1</text>
+          <line id="st-cold-out" x1="46" y1="105" x2="8" y2="105" stroke="var(--line)" stroke-width="2.5" class="flow-dash" marker-end="url(#arrow-cold)"/>
+          <text id="st-cold-out-label" x="8" y="128" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--line)">t2</text>
+        </svg>
+      </div>
+
+      <div class="diagram hidden" id="diagram-air">
+        <svg width="260" height="200" viewBox="0 0 300 220" id="svg-air">
+          <defs>
+            <marker id="arrow-hot2" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+              <path d="M0,0 L6,3 L0,6 z" fill="var(--red)"/>
+            </marker>
+            <marker id="arrow-air" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+              <path d="M0,0 L6,3 L0,6 z" fill="var(--line)"/>
+            </marker>
+          </defs>
+          <rect x="50" y="30" width="200" height="70" rx="4" fill="var(--navy)" stroke="var(--line)" stroke-width="2"/>
+          <line x1="66" y1="34" x2="66" y2="96" stroke="var(--line-dim)" stroke-width="1"/>
+          <line x1="82" y1="34" x2="82" y2="96" stroke="var(--line-dim)" stroke-width="1"/>
+          <line x1="98" y1="34" x2="98" y2="96" stroke="var(--line-dim)" stroke-width="1"/>
+          <line x1="114" y1="34" x2="114" y2="96" stroke="var(--line-dim)" stroke-width="1"/>
+          <line x1="130" y1="34" x2="130" y2="96" stroke="var(--line-dim)" stroke-width="1"/>
+          <line x1="146" y1="34" x2="146" y2="96" stroke="var(--line-dim)" stroke-width="1"/>
+          <line x1="162" y1="34" x2="162" y2="96" stroke="var(--line-dim)" stroke-width="1"/>
+          <line x1="178" y1="34" x2="178" y2="96" stroke="var(--line-dim)" stroke-width="1"/>
+          <line x1="194" y1="34" x2="194" y2="96" stroke="var(--line-dim)" stroke-width="1"/>
+          <line x1="210" y1="34" x2="210" y2="96" stroke="var(--line-dim)" stroke-width="1"/>
+          <line x1="226" y1="34" x2="226" y2="96" stroke="var(--line-dim)" stroke-width="1"/>
+          <line x1="242" y1="34" x2="242" y2="96" stroke="var(--line-dim)" stroke-width="1"/>
+
+          <line x1="18" y1="65" x2="48" y2="65" stroke="var(--red)" stroke-width="2.5" class="flow-dash" marker-end="url(#arrow-hot2)"/>
+          <text x="6" y="56" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--red)">T1</text>
+          <line x1="50" y1="65" x2="250" y2="65" stroke="var(--red)" stroke-width="1.5" stroke-dasharray="3 4" opacity="0.6"/>
+          <line x1="252" y1="65" x2="282" y2="65" stroke="var(--red)" stroke-width="2.5" class="flow-dash" marker-end="url(#arrow-hot2)"/>
+          <text x="256" y="56" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--red)">T2</text>
+
+          <circle cx="150" cy="165" r="26" fill="var(--navy-2)" stroke="var(--line)" stroke-width="2"/>
+          <line x1="150" y1="145" x2="150" y2="185" stroke="var(--line-dim)" stroke-width="2"/>
+          <line x1="130" y1="150" x2="170" y2="180" stroke="var(--line-dim)" stroke-width="2"/>
+          <line x1="170" y1="150" x2="130" y2="180" stroke="var(--line-dim)" stroke-width="2"/>
+
+          <line x1="110" y1="213" x2="110" y2="192" stroke="var(--line)" stroke-width="2" class="flow-dash" marker-end="url(#arrow-air)" opacity="0.75"/>
+          <line x1="150" y1="213" x2="150" y2="192" stroke="var(--line)" stroke-width="2" class="flow-dash" marker-end="url(#arrow-air)"/>
+          <line x1="190" y1="213" x2="190" y2="192" stroke="var(--line)" stroke-width="2" class="flow-dash" marker-end="url(#arrow-air)" opacity="0.75"/>
+
+          <line x1="150" y1="140" x2="150" y2="103" stroke="var(--line)" stroke-width="2" class="flow-dash" marker-end="url(#arrow-air)"/>
+
+          <line x1="110" y1="28" x2="110" y2="8" stroke="var(--line)" stroke-width="2" class="flow-dash" marker-end="url(#arrow-air)" opacity="0.75"/>
+          <line x1="150" y1="28" x2="150" y2="8" stroke="var(--line)" stroke-width="2" class="flow-dash" marker-end="url(#arrow-air)"/>
+          <line x1="190" y1="28" x2="190" y2="8" stroke="var(--line)" stroke-width="2" class="flow-dash" marker-end="url(#arrow-air)" opacity="0.75"/>
+        </svg>
+      </div>
+
+      <div class="big-figure">
+        <span class="big-num" id="out-area">—</span>
+        <span class="big-unit">m²</span>
+      </div>
+      <span class="subfigure" id="out-area-ft2">≈ — ft²</span>
+
+      <div class="badge-row">
+        <span class="badge ok" id="status-badge">READY</span>
+        <span class="badge warn hidden" id="badge-mismatch"></span>
+        <span class="badge warn hidden" id="badge-fwarn"></span>
+        <span class="badge info hidden" id="badge-approach"></span>
+      </div>
+
+      <div id="stat-rows"></div>
+    </section>
+
+  </div>
+
+  <footer>
+    <b>Duty (both sides):</b> Q = ṁ·Cp·ΔT for the appropriate side; shell &amp; tube shows Q_hot and Q_cold independently and flags a "duty mismatch" badge when they differ by more than ~2% (a real consistency check on the entered flows/temperatures/Cp) — the sizing calc uses their average.<br>
+    <b>LMTD:</b> counter-current pairs ΔT1 = T1−t2 (hot in vs cold out), ΔT2 = T2−t1 (hot out vs cold in); co-current pairs ΔT1 = T1−t1, ΔT2 = T2−t2. LMTD = (ΔT1−ΔT2)/ln(ΔT1/ΔT2), with LMTD = ΔT1 when ΔT1 ≈ ΔT2 (removable singularity). Both ΔT1 and ΔT2 must be &gt; 0 — a non-positive value means the chosen arrangement can't physically achieve those terminal temperatures (a crossing), and the tool shows an explicit error rather than a bogus LMTD.<br>
+    <b>Bowman (1940) F-factor</b> for 1 shell pass / 2 (or even multiples of 2) tube passes, TEMA-E: R = (T1−T2)/(t2−t1), P = (t2−t1)/(T1−t1). General case (R≠1): F = [√(R²+1)/(R−1)]·ln[(1−P)/(1−PR)] / ln[(2/P−1−R+√(R²+1))/(2/P−1−R−√(R²+1))]. Special case R=1 (removable singularity): F = [√2·P/(1−P)] / ln[(2/P−2+√2)/(2/P−2−√2)] (the R→1 limit of the general formula). F is always ≤ 1.0 physically — a computed F that exceeds 1.0 or is undefined (extreme/infeasible P,R) is flagged with a warning badge rather than used to produce a silently wrong area. For other shell/tube pass counts, enter F directly from the applicable TEMA/Bowman chart.<br>
+    <b>Required area (shell &amp; tube):</b> A = Q / (U·LMTD·F), with U a required user input (order-of-magnitude guidance only — see hint).<br>
+    <b>Air cooler duty &amp; air flow:</b> Q = ṁ·Cp·(T1−T2) on the process side; air outlet = ambient + ΔT_air; ṁ_air = Q / (Cp_air·ΔT_air) with Cp_air ≈ 1006 J/(kg·K) fixed.<br>
+    <b>Air cooler LMTD:</b> computed with the counter-current formula (process hot in/out vs air in/out) as a first-pass approximation for the actual cross-flow bundle, then corrected with a user-entered cross-flow factor F_cf (typ. 0.85–0.95, confirm against API 661/vendor software).<br>
+    <b>Air density (ideal gas):</b> ρ_air = P_atm·MW_air / (R·T), MW_air = 28.97 kg/kmol, R = 8314.462618 J/(kmol·K), T = design ambient in K — computed from the entered ambient temperature and site pressure rather than assumed fixed.<br>
+    <b>Face area:</b> = (ṁ_air/ρ_air) / face velocity. <b>Required (finned) area:</b> = Q / (U·LMTD·F_cf), U referenced to bare tube OD (typ. 25–40 W/m²K, highly fin-geometry dependent).<br>
+    <b>Fan power:</b> = (ṁ_air/ρ_air)·ΔP_air / η_fan (volumetric air flow × pressure rise ÷ combined fan/motor efficiency), reported in kW.<br>
+    Screening-level tool only — see the disclaimer at the top of the page. Not a substitute for HTRI/HTFS/Aspen EDR rating or vendor air-cooler software.<br>
+    <div class="signature">
+      <strong>Shubham Chatterjee</strong> · Process Engineer<br>
+      <a href="https://processengonline.github.io/" target="_blank" rel="noopener noreferrer">processengonline.github.io</a> ·
+      <a href="https://github.com/processengonline" target="_blank" rel="noopener noreferrer">GitHub</a>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+const R_UNIVERSAL = 8314.462618; // J/(kmol K)
+const MW_AIR = 28.97; // kg/kmol
+const CP_AIR = 1006; // J/(kg K)
+
+function fmt(num, sig=4){
+  if(num===0) return '0';
+  if(!isFinite(num)) return 'N/A';
+  const abs = Math.abs(num);
+  if(abs < 0.001 || abs >= 100000) return num.toExponential(3);
+  return num.toPrecision(sig);
+}
+
+function renderStats(rows){
+  const container = document.getElementById('stat-rows');
+  container.innerHTML = '';
+  rows.forEach(item=>{
+    if(item.length===1){
+      const label = document.createElement('div');
+      label.className = 'stat-group-label';
+      label.textContent = item[0];
+      container.appendChild(label);
+      return;
+    }
+    const [label, val] = item;
+    const row = document.createElement('div');
+    row.className = 'stat-row';
+    row.innerHTML = `<span>${label}</span><span>${val}</span>`;
+    container.appendChild(row);
+  });
+}
+
+function clearErrors(){
+  ['st-err','air-err'].forEach(id=>{
+    const el = document.getElementById(id);
+    el.style.display = 'none';
+    el.textContent = '';
+  });
+}
+
+// ---- LMTD helper ----
+function lmtdFromDeltas(dT1, dT2){
+  if(!(dT1>0) || !(dT2>0)) throw new Error('Temperature crossing: ΔT1 and ΔT2 must both be > 0 for the selected arrangement — check terminal temperatures.');
+  if(Math.abs(dT1-dT2) < 1e-6*Math.max(dT1,dT2)) return dT1;
+  return (dT1-dT2)/Math.log(dT1/dT2);
+}
+
+// ---- Bowman F-factor ----
+function bowmanF(R, P){
+  if(!(P>0) || !(P<1)) return { F: NaN };
+  let F;
+  if(Math.abs(R-1) < 1e-6){
+    // Note: consistent with the R->1 limit of the general Bowman formula below
+    // (i.e. "2/P - 2 +/- sqrt(2)", not "2/P - 1 +/- sqrt(2)").
+    const num = Math.sqrt(2)*P/(1-P);
+    const a = 2/P - 2 + Math.sqrt(2);
+    const b = 2/P - 2 - Math.sqrt(2);
+    if(!(a>0) || !(b>0)) return { F: NaN };
+    F = num/Math.log(a/b);
+  } else {
+    const sq = Math.sqrt(R*R+1);
+    const arg1 = (1-P)/(1-P*R);
+    if(!(arg1>0)) return { F: NaN };
+    const a = 2/P - 1 - R + sq;
+    const b = 2/P - 1 - R - sq;
+    if(!(a>0) || !(b>0)) return { F: NaN };
+    F = (sq/(R-1)) * Math.log(arg1) / Math.log(a/b);
+  }
+  return { F };
+}
+
+// ---- Tabs ----
+const tabST = document.getElementById('tab-st');
+const tabAir = document.getElementById('tab-air');
+const panelST = document.getElementById('panel-st');
+const panelAir = document.getElementById('panel-air');
+const diagramST = document.getElementById('diagram-st');
+const diagramAir = document.getElementById('diagram-air');
+let mode = 'st';
+
+function setMode(m){
+  mode = m;
+  const isST = m==='st';
+  tabST.classList.toggle('active', isST);
+  tabAir.classList.toggle('active', !isST);
+  tabST.setAttribute('aria-selected', isST);
+  tabAir.setAttribute('aria-selected', !isST);
+  panelST.classList.toggle('hidden', !isST);
+  panelAir.classList.toggle('hidden', isST);
+  diagramST.classList.toggle('hidden', !isST);
+  diagramAir.classList.toggle('hidden', isST);
+  document.getElementById('status-badge').parentElement.previousElementSibling; // no-op, keep structure
+  compute();
+}
+tabST.addEventListener('click', ()=>setMode('st'));
+tabAir.addEventListener('click', ()=>setMode('air'));
+
+function setPassConfigVisibility(){
+  const isOther = document.getElementById('st-passconfig').value==='other';
+  document.getElementById('st-Fcustom-field').classList.toggle('hidden', !isOther);
+  compute();
+}
+document.getElementById('st-passconfig').addEventListener('change', setPassConfigVisibility);
+
+function updateSTDiagram(arrangement){
+  const inLine = document.getElementById('st-cold-in');
+  const outLine = document.getElementById('st-cold-out');
+  const inLabel = document.getElementById('st-cold-in-label');
+  const outLabel = document.getElementById('st-cold-out-label');
+  if(arrangement==='counter'){
+    inLine.setAttribute('x1','332'); inLine.setAttribute('x2','292');
+    outLine.setAttribute('x1','46'); outLine.setAttribute('x2','8');
+    inLabel.setAttribute('x','298'); inLabel.textContent = 't1';
+    outLabel.setAttribute('x','8'); outLabel.textContent = 't2';
+  } else {
+    inLine.setAttribute('x1','8'); inLine.setAttribute('x2','48');
+    outLine.setAttribute('x1','292'); outLine.setAttribute('x2','330');
+    inLabel.setAttribute('x','6'); inLabel.textContent = 't1';
+    outLabel.setAttribute('x','296'); outLabel.textContent = 't2';
+  }
+}
+
+const stIds = ['st-T1','st-T2','st-mh','st-Cph','st-t1','st-t2','st-mc','st-Cpc','st-arrangement','st-passconfig','st-Fcustom','st-U'];
+const airIds = ['air-T1','air-T2','air-mh','air-Cph','air-Tin','air-dTair','air-Patm','air-Fcf','air-U','air-facevel','air-dP','air-eta'];
+[...stIds, ...airIds].forEach(id=>{
+  const el = document.getElementById(id);
+  el.addEventListener('input', compute);
+  el.addEventListener('change', compute);
+});
+
+function computeShellTube(){
+  const badgeMismatch = document.getElementById('badge-mismatch');
+  const badgeFwarn = document.getElementById('badge-fwarn');
+  badgeMismatch.classList.add('hidden');
+  badgeFwarn.classList.add('hidden');
+  document.getElementById('badge-approach').classList.add('hidden');
+
+  const T1 = parseFloat(document.getElementById('st-T1').value);
+  const T2 = parseFloat(document.getElementById('st-T2').value);
+  const mh = parseFloat(document.getElementById('st-mh').value);
+  const Cph = parseFloat(document.getElementById('st-Cph').value);
+  const t1 = parseFloat(document.getElementById('st-t1').value);
+  const t2 = parseFloat(document.getElementById('st-t2').value);
+  const mc = parseFloat(document.getElementById('st-mc').value);
+  const Cpc = parseFloat(document.getElementById('st-Cpc').value);
+  const arrangement = document.getElementById('st-arrangement').value;
+  const passConfig = document.getElementById('st-passconfig').value;
+  const U = parseFloat(document.getElementById('st-U').value);
+
+  updateSTDiagram(arrangement);
+
+  if(!(mh>0)) throw new Error('Hot side mass flow must be > 0');
+  if(!(Cph>0)) throw new Error('Hot side Cp must be > 0');
+  if(!(mc>0)) throw new Error('Cold side mass flow must be > 0');
+  if(!(Cpc>0)) throw new Error('Cold side Cp must be > 0');
+  if(!(T1>T2)) throw new Error('Hot side inlet must exceed outlet (T1 > T2) for a cooling duty');
+  if(!(t2>t1)) throw new Error('Cold side outlet must exceed inlet (t2 > t1) for a heating duty');
+  if(!(U>0)) throw new Error('Overall U must be > 0');
+
+  const Qhot = mh*Cph*(T1-T2);   // kW
+  const Qcold = mc*Cpc*(t2-t1);  // kW
+  const Qavg = (Qhot+Qcold)/2;
+  const mismatchPct = Math.abs(Qhot-Qcold)/Qavg*100;
+
+  let dT1, dT2;
+  if(arrangement==='counter'){ dT1 = T1-t2; dT2 = T2-t1; }
+  else { dT1 = T1-t1; dT2 = T2-t2; }
+  const LMTD = lmtdFromDeltas(dT1, dT2);
+
+  const R = (T1-T2)/(t2-t1);
+  const P = (t2-t1)/(T1-t1);
+
+  let F, fInvalid = false;
+  if(passConfig==='bowman'){
+    const r = bowmanF(R,P);
+    F = r.F;
+    if(!isFinite(F) || F<=0 || F>1.0001) fInvalid = true;
+  } else {
+    F = parseFloat(document.getElementById('st-Fcustom').value);
+    if(!(F>0)) throw new Error('F must be > 0');
+    if(F>1.0001) fInvalid = true;
+  }
+
+  let areaM2 = NaN;
+  if(!fInvalid){
+    areaM2 = (Qavg*1000)/(U*LMTD*F);
+  }
+
+  if(mismatchPct>2){
+    badgeMismatch.textContent = 'DUTY MISMATCH — CHECK FLOWS/TEMPERATURES/Cp (' + mismatchPct.toFixed(1) + '%)';
+    badgeMismatch.classList.remove('hidden');
+  }
+  if(fInvalid){
+    badgeFwarn.textContent = 'F FACTOR INVALID FOR THIS P/R — extreme case, use TEMA chart or rating software';
+    badgeFwarn.classList.remove('hidden');
+  }
+
+  const rows = [
+    ['Q_hot (ṁ_h·Cp_h·ΔT)', fmt(Qhot) + ' kW'],
+    ['Q_cold (ṁ_c·Cp_c·Δt)', fmt(Qcold) + ' kW'],
+    ['Duty mismatch', mismatchPct.toFixed(2) + '%'],
+    ['Q used for sizing (avg)', fmt(Qavg) + ' kW'],
+    ['LMTD'],
+    ['ΔT1', fmt(dT1) + ' °C'],
+    ['ΔT2', fmt(dT2) + ' °C'],
+    ['LMTD', fmt(LMTD) + ' °C'],
+    ['Arrangement', arrangement==='counter' ? 'Counter-current' : 'Co-current (parallel)'],
+    ['BOWMAN F-FACTOR'],
+    ['R = (T1−T2)/(t2−t1)', fmt(R)],
+    ['P = (t2−t1)/(T1−t1)', fmt(P)],
+    ['F correction factor', fInvalid ? 'N/A — invalid' : fmt(F)],
+    ['SIZING'],
+    ['Overall U (input)', fmt(U) + ' W/m²K'],
+    ['Required area A = Q/(U·LMTD·F)', fInvalid ? 'N/A' : fmt(areaM2) + ' m²'],
+  ];
+  renderStats(rows);
+
+  return { areaM2, fInvalid };
+}
+
+function computeAirCooler(){
+  document.getElementById('badge-mismatch').classList.add('hidden');
+  document.getElementById('badge-fwarn').classList.add('hidden');
+  const badgeApproach = document.getElementById('badge-approach');
+  badgeApproach.classList.add('hidden');
+
+  const T1 = parseFloat(document.getElementById('air-T1').value);
+  const T2 = parseFloat(document.getElementById('air-T2').value);
+  const mh = parseFloat(document.getElementById('air-mh').value);
+  const Cph = parseFloat(document.getElementById('air-Cph').value);
+  const Tin = parseFloat(document.getElementById('air-Tin').value);
+  const dTair = parseFloat(document.getElementById('air-dTair').value);
+  const Patm = parseFloat(document.getElementById('air-Patm').value);
+  const Fcf = parseFloat(document.getElementById('air-Fcf').value);
+  const U = parseFloat(document.getElementById('air-U').value);
+  const faceVel = parseFloat(document.getElementById('air-facevel').value);
+  const dP = parseFloat(document.getElementById('air-dP').value);
+  const eta = parseFloat(document.getElementById('air-eta').value);
+
+  if(!(mh>0)) throw new Error('Process mass flow must be > 0');
+  if(!(Cph>0)) throw new Error('Process Cp must be > 0');
+  if(!(T1>T2)) throw new Error('Process inlet must exceed outlet (T1 > T2) for a cooling duty');
+  if(!(dTair>0)) throw new Error('Air temperature rise ΔT_air must be > 0');
+  if(!(Patm>0)) throw new Error('Site atmospheric pressure must be > 0');
+  if(!(Fcf>0)) throw new Error('F_cf must be > 0');
+  if(!(U>0)) throw new Error('Overall U must be > 0');
+  if(!(faceVel>0)) throw new Error('Face velocity must be > 0');
+  if(!(eta>0 && eta<=1)) throw new Error('Fan efficiency must be between 0 and 1');
+
+  const Q = mh*Cph*(T1-T2); // kW
+  const Tout = Tin+dTair;
+
+  const dT1 = T1-Tout;
+  const dT2 = T2-Tin;
+  const LMTD = lmtdFromDeltas(dT1, dT2);
+
+  const mAir = (Q*1000)/(CP_AIR*dTair); // kg/s
+  const rhoAir = (Patm*1000*MW_AIR)/(R_UNIVERSAL*(Tin+273.15)); // kg/m3
+  const faceArea = (mAir/rhoAir)/faceVel; // m2
+  const areaM2 = (Q*1000)/(U*LMTD*Fcf); // m2
+  const fanPowerW = (mAir/rhoAir)*dP/eta;
+  const fanPowerKw = fanPowerW/1000;
+
+  const approach = T2-Tin;
+  if(approach<10){
+    badgeApproach.textContent = 'LOW APPROACH (' + fmt(approach) + '°C) — below typical ~10°C minimum, consider more ΔT_air or area';
+    badgeApproach.className = 'badge warn';
+  } else if(approach<15){
+    badgeApproach.textContent = 'APPROACH ' + fmt(approach) + '°C — tight (10–15°C), verify against vendor rating';
+    badgeApproach.className = 'badge info';
+  } else {
+    badgeApproach.textContent = 'APPROACH ' + fmt(approach) + '°C — comfortable (≥15°C)';
+    badgeApproach.className = 'badge ok';
+  }
+  badgeApproach.classList.remove('hidden');
+
+  const rows = [
+    ['Q (ṁ·Cp·ΔT, process side)', fmt(Q) + ' kW'],
+    ['Air inlet (design ambient)', fmt(Tin) + ' °C'],
+    ['Air outlet (ambient + ΔT_air)', fmt(Tout) + ' °C'],
+    ['Approach (process out − air in)', fmt(approach) + ' °C'],
+    ['LMTD'],
+    ['ΔT1 (T1 − air out)', fmt(dT1) + ' °C'],
+    ['ΔT2 (T2 − air in)', fmt(dT2) + ' °C'],
+    ['LMTD (counter-current basis)', fmt(LMTD) + ' °C'],
+    ['F_cf (cross-flow, input)', fmt(Fcf)],
+    ['AIR FLOW & FACE AREA'],
+    ['Air density ρ_air', fmt(rhoAir) + ' kg/m³'],
+    ['Required air mass flow ṁ_air', fmt(mAir) + ' kg/s'],
+    ['Face velocity (input)', fmt(faceVel) + ' m/s'],
+    ['Required face area', fmt(faceArea) + ' m²'],
+    ['SIZING & FAN'],
+    ['Overall U (input)', fmt(U) + ' W/m²K'],
+    ['Required (finned) area A = Q/(U·LMTD·F_cf)', fmt(areaM2) + ' m²'],
+    ['Air-side ΔP (input)', fmt(dP) + ' Pa'],
+    ['Fan+motor efficiency (input)', fmt(eta)],
+    ['Estimated fan power', fmt(fanPowerKw) + ' kW'],
+  ];
+  renderStats(rows);
+
+  return { areaM2, fInvalid:false };
+}
+
+function compute(){
+  clearErrors();
+  const badge = document.getElementById('status-badge');
+  let result;
+  try{
+    result = mode==='st' ? computeShellTube() : computeAirCooler();
+  } catch(e){
+    const errId = mode==='st' ? 'st-err' : 'air-err';
+    const el = document.getElementById(errId);
+    el.textContent = e.message;
+    el.style.display = 'block';
+    document.getElementById('out-area').textContent = '—';
+    document.getElementById('out-area-ft2').textContent = '≈ — ft²';
+    document.getElementById('stat-rows').innerHTML = '';
+    badge.textContent = 'CHECK INPUTS';
+    badge.className = 'badge warn';
+    document.getElementById('badge-mismatch').classList.add('hidden');
+    document.getElementById('badge-fwarn').classList.add('hidden');
+    document.getElementById('badge-approach').classList.add('hidden');
+    return;
+  }
+
+  if(!isFinite(result.areaM2)){
+    document.getElementById('out-area').textContent = 'N/A';
+    document.getElementById('out-area-ft2').textContent = '≈ — ft²';
+    badge.textContent = 'SEE WARNING';
+    badge.className = 'badge warn';
+  } else {
+    document.getElementById('out-area').textContent = fmt(result.areaM2);
+    document.getElementById('out-area-ft2').textContent = '≈ ' + fmt(result.areaM2*10.7639) + ' ft²';
+    badge.textContent = 'READY';
+    badge.className = 'badge ok';
+  }
+}
+
+setPassConfigVisibility();
+updateSTDiagram('counter');
+setMode('st');
+</script>
+</body>
+</html>

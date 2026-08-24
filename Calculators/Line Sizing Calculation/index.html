@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Line Sizing Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy: #0B1F33;
+    --navy-2: #122A44;
+    --blueprint: #1B4F72;
+    --line: #3E7CB1;
+    --line-dim: #2A5A80;
+    --paper: #EAE6D9;
+    --paper-dim: #B9C4CC;
+    --amber: #E8A33D;
+    --green: #6FA787;
+    --red: #C96A5C;
+    --grid: rgba(62,124,177,0.16);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      linear-gradient(var(--grid) 1px, transparent 1px) 0 0/28px 28px,
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px) 0 0/28px 28px,
+      var(--navy);
+    color:var(--paper);
+    font-family:'Space Grotesk', sans-serif;
+    min-height:100vh;
+  }
+  .wrap{max-width:1080px;margin:0 auto;padding:48px 24px 80px;}
+
+  header{margin-bottom:32px;border-bottom:1px solid var(--line-dim);padding-bottom:24px;}
+  .eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--line);margin:0 0 10px;
+  }
+  h1{
+    font-size:clamp(28px,4vw,42px);
+    margin:0 0 12px;font-weight:700;letter-spacing:-0.01em;
+  }
+  .sub{color:var(--paper-dim);font-size:15px;max-width:700px;line-height:1.55;margin:0 0 16px;}
+
+  .epcnote{
+    font-family:'IBM Plex Mono',monospace;font-size:11.5px;line-height:1.6;color:var(--paper-dim);
+    background:rgba(201,106,92,.08);border:1px solid rgba(201,106,92,.4);border-radius:6px;
+    padding:14px 16px;margin-top:16px;
+  }
+  .epcnote b{color:var(--red);}
+
+  .tabs{display:flex;gap:2px;margin:24px 0 28px;border:1px solid var(--line-dim);width:fit-content;border-radius:6px;overflow:hidden;}
+  .tab{
+    font-family:'IBM Plex Mono',monospace;font-size:13px;letter-spacing:.05em;
+    padding:11px 22px;background:var(--navy-2);color:var(--paper-dim);
+    border:none;cursor:pointer;transition:background .15s, color .15s;
+  }
+  .tab.active{background:var(--line);color:var(--navy);font-weight:600;}
+  .tab:not(.active):hover{background:#17324f;color:var(--paper);}
+  .tab:focus-visible{outline:2px solid var(--amber);outline-offset:-2px;}
+
+  .grid{display:grid;grid-template-columns:1.1fr 1fr;gap:36px;align-items:start;}
+  @media (max-width:820px){.grid{grid-template-columns:1fr;}}
+
+  .panel{
+    background:var(--navy-2);border:1px solid var(--line-dim);border-radius:8px;padding:26px;
+    margin-bottom:22px;
+  }
+  .panel:last-child{margin-bottom:0;}
+  .panel h2{
+    font-family:'IBM Plex Mono',monospace;font-size:12px;text-transform:uppercase;
+    letter-spacing:.14em;color:var(--line);margin:0 0 20px;
+  }
+  .panel h3{
+    font-family:'IBM Plex Mono',monospace;font-size:11px;text-transform:uppercase;
+    letter-spacing:.12em;color:var(--paper-dim);margin:22px 0 14px;
+    border-top:1px solid var(--line-dim);padding-top:16px;
+  }
+  .panel h3:first-of-type{margin-top:0;border-top:none;padding-top:0;}
+
+  .field{margin-bottom:16px;}
+  .field:last-child{margin-bottom:0;}
+  label{display:flex;justify-content:space-between;align-items:baseline;font-size:13.5px;color:var(--paper);margin-bottom:6px;}
+  label .unit{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--paper-dim);}
+  input[type=number], select{
+    width:100%;background:var(--navy);border:1px solid var(--line-dim);border-radius:5px;
+    color:var(--paper);font-family:'IBM Plex Mono',monospace;font-size:14px;
+    padding:9px 11px;transition:border-color .15s;
+  }
+  select{cursor:pointer;}
+  input[type=number]:focus, select:focus{outline:none;border-color:var(--line);box-shadow:0 0 0 3px rgba(62,124,177,0.22);}
+  input[type=number]:disabled{opacity:0.65;cursor:not-allowed;color:var(--amber);border-color:var(--amber);}
+  .hint{font-size:11.5px;color:var(--paper-dim);margin-top:5px;line-height:1.4;}
+  .err{font-size:11.5px;color:var(--red);margin-top:5px;display:none;}
+
+  .readout{
+    background:var(--navy-2);border:1px solid var(--line-dim);border-radius:8px;
+    padding:26px;display:flex;flex-direction:column;gap:18px;position:sticky;top:24px;
+  }
+  .readout h2{
+    font-family:'IBM Plex Mono',monospace;font-size:12px;text-transform:uppercase;
+    letter-spacing:.14em;color:var(--line);margin:0;
+  }
+  .big-figure{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;}
+  .big-num{font-size:44px;font-weight:700;line-height:1;letter-spacing:-0.02em;font-variant-numeric:tabular-nums;}
+  .big-unit{font-family:'IBM Plex Mono',monospace;font-size:16px;color:var(--paper-dim);}
+  .subfigure{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--paper-dim);}
+
+  .figure2-row{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding-top:2px;border-top:1px dashed var(--line-dim);padding-top:14px;flex-wrap:wrap;}
+  .figure2-label{font-family:'IBM Plex Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--paper-dim);}
+  .figure2-val{display:flex;align-items:baseline;gap:6px;}
+  .big-num-2{font-size:24px;font-weight:700;letter-spacing:-0.01em;font-variant-numeric:tabular-nums;}
+  .big-unit-2{font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--paper-dim);}
+
+  .diagram{display:flex;align-items:center;justify-content:center;padding:4px 0 2px;}
+  .diagram svg{overflow:visible;max-width:100%;height:auto;}
+  .flow-dash{stroke-dasharray:5 6;animation:flowmove 1.1s linear infinite;}
+  @keyframes flowmove{to{stroke-dashoffset:-22;}}
+  @media (prefers-reduced-motion: reduce){.flow-dash{animation:none;}}
+
+  .stat-row{display:flex;justify-content:space-between;gap:12px;font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--paper-dim);border-top:1px solid var(--line-dim);padding-top:12px;}
+  .stat-row span:first-child{flex-shrink:0;}
+  .stat-row span:last-child{color:var(--paper);text-align:right;}
+  #stat-rows{display:flex;flex-direction:column;gap:12px;}
+  .stat-group-label{
+    font-family:'IBM Plex Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.08em;
+    color:var(--line);margin-top:6px;
+  }
+
+  .badge{
+    font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.06em;
+    padding:4px 10px;border-radius:20px;display:inline-block;width:fit-content;
+  }
+  .badge.ok{background:rgba(111,167,135,.15);color:var(--green);border:1px solid rgba(111,167,135,.4);}
+  .badge.warn{background:rgba(232,163,61,.15);color:var(--amber);border:1px solid rgba(232,163,61,.4);}
+  .badge.info{background:rgba(62,124,177,.18);color:var(--line);border:1px solid rgba(62,124,177,.4);}
+  .badge.bad{background:rgba(201,106,92,.15);color:var(--red);border:1px solid rgba(201,106,92,.45);}
+  .badge-row{display:flex;gap:8px;flex-wrap:wrap;}
+
+  footer{margin-top:40px;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--paper-dim);line-height:1.6;border-top:1px solid var(--line-dim);padding-top:20px;}
+  .hidden{display:none !important;}
+
+  .signature{
+    margin-top:28px;padding-top:20px;border-top:1px solid var(--line-dim);
+    font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--paper-dim);line-height:1.7;
+  }
+  .signature strong{color:var(--paper);font-weight:600;}
+  .signature a{color:var(--line);text-decoration:none;border-bottom:1px solid var(--line-dim);padding-bottom:1px;transition:color .15s,border-color .15s;}
+  .signature a:hover{color:var(--amber);border-color:var(--amber);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">Process Piping — Line Sizing · Pressure Drop &amp; API RP 14E Erosional Velocity</p>
+    <h1>Line Sizing Calculator</h1>
+    <p class="sub">Pressure drop for a single process line — Darcy&ndash;Weisbach for liquid, isothermal compressible pipe flow with the acceleration (kinetic-energy) term for gas/vapor (Crane TP-410 / GPSA form) — plus the API RP 14E erosional velocity limit for liquid/multiphase service. Enter the pipe's <b>internal diameter directly</b>; this tool does not embed an NPS/schedule lookup table.</p>
+    <div class="epcnote">
+      <b>Pipe internal diameter is a direct input, not looked up.</b> Take it from your project piping class / ASME B36.10 table for the selected NPS and schedule — an embedded NPS→ID table risks a wrong transcribed value for some size/schedule/material combination, so none is built in here. No fitting-K table either: add elbows, tees, valves, etc. as an <b>equivalent length</b> directly (commonly ~20&ndash;40 pipe diameters each — confirm against project piping data or a vendor K-table), same honest-scoping pattern used across this suite. For the gas tab, the isothermal compressible form with the ln(P1/P2) acceleration term is the correct short-line method — <b>Weymouth/Panhandle-type correlations do NOT apply</b>; those are long-distance gas-transmission fits. The API RP 14E erosional velocity check is <b>liquid/multiphase-specific per the standard's own scope</b> — it is not evaluated on the gas tab, which instead carries a Mach-number velocity guideline. Not a substitute for a full line hydraulic study, a project piping specification, or sign-off by a licensed engineer.
+    </div>
+  </header>
+
+  <div class="tabs" role="tablist" aria-label="Fluid phase">
+    <button class="tab active" id="tab-liquid" role="tab" aria-selected="true">LIQUID</button>
+    <button class="tab" id="tab-gas" role="tab" aria-selected="false">GAS / VAPOR</button>
+  </div>
+
+  <div class="grid">
+
+    <!-- LIQUID PANEL -->
+    <div id="panel-liquid">
+
+      <section class="panel">
+        <h2>Flow &amp; Fluid Properties</h2>
+        <div class="field">
+          <label for="l-q">Volumetric flow Q <span class="unit">m&sup3;/h</span></label>
+          <input type="number" id="l-q" value="100" step="any" min="0.0001">
+        </div>
+        <div class="field">
+          <label for="l-rho">Fluid density &rho; <span class="unit">kg/m&sup3;</span></label>
+          <input type="number" id="l-rho" value="850" step="any" min="0.01">
+        </div>
+        <div class="field">
+          <label for="l-mu">Fluid viscosity &mu; <span class="unit">cP</span></label>
+          <input type="number" id="l-mu" value="1.0" step="any" min="0.0001">
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Pipe Geometry &amp; Pipe Data</h2>
+        <div class="field">
+          <label for="l-d">Pipe internal diameter D <span class="unit">mm</span></label>
+          <input type="number" id="l-d" value="150" step="any" min="1">
+          <div class="hint">From your piping class / ASME B36.10 table for the selected NPS and schedule.</div>
+        </div>
+        <div class="field">
+          <label for="l-l">Straight pipe length L <span class="unit">m</span></label>
+          <input type="number" id="l-l" value="100" step="any" min="0">
+        </div>
+        <div class="field">
+          <label for="l-lfit">Additional equivalent length for fittings <span class="unit">m</span></label>
+          <input type="number" id="l-lfit" value="0" step="any" min="0">
+          <div class="hint">No fitting-K table is built in — add elbows/tees directly. Commonly estimated at 20&ndash;40 pipe diameters per elbow/tee; confirm against project piping data.</div>
+        </div>
+        <div class="field">
+          <label for="l-eps">Pipe absolute roughness &epsilon; <span class="unit">mm</span></label>
+          <input type="number" id="l-eps" value="0.045" step="any" min="0">
+          <div class="hint">Default 0.045 mm — commercial steel.</div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>API RP 14E Erosional Velocity</h2>
+        <div class="field">
+          <label for="l-c">Erosional velocity constant C</label>
+          <input type="number" id="l-c" value="100" step="any" min="1">
+          <div class="hint">Default 100 — continuous service, solids-free / non-corrosive per API RP 14E. Use 125 for intermittent/non-continuous service; some project specs allow higher C with corrosion-resistant alloys — confirm against project piping philosophy.</div>
+        </div>
+        <div class="field">
+          <label for="l-service">Service (velocity guideline only)</label>
+          <select id="l-service">
+            <option value="suction">Pump suction (~1&ndash;2 m/s)</option>
+            <option value="discharge" selected>Pump discharge / general process liquid (~2&ndash;3 m/s)</option>
+            <option value="none">No guideline band</option>
+          </select>
+          <div class="hint">Informational only — a commonly cited rule-of-thumb band, not a hard pass/fail limit. Varies by project specification.</div>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- GAS PANEL -->
+    <div id="panel-gas" class="hidden">
+
+      <section class="panel">
+        <h2>Flow &amp; Gas Properties</h2>
+        <div class="field">
+          <label for="g-mdot">Mass flow &#7745; <span class="unit">kg/h</span></label>
+          <input type="number" id="g-mdot" value="5000" step="any" min="0.001">
+        </div>
+        <div class="field">
+          <label for="g-mw">Gas molecular weight <span class="unit">g/mol</span></label>
+          <input type="number" id="g-mw" value="24" step="any" min="2">
+        </div>
+        <div class="field">
+          <label for="g-k">Specific heat ratio k (Cp/Cv)</label>
+          <input type="number" id="g-k" value="1.20" step="any" min="1.001" max="1.8">
+        </div>
+        <div class="field">
+          <label for="g-t1">Upstream temperature T1 <span class="unit">&deg;C</span></label>
+          <input type="number" id="g-t1" value="100" step="any" min="-200">
+          <div class="hint">Assumed constant (isothermal) along the line — the standard simplification for short process piping.</div>
+        </div>
+        <div class="field">
+          <label for="g-mu">Gas dynamic viscosity &mu; <span class="unit">cP</span></label>
+          <input type="number" id="g-mu" value="0.012" step="any" min="0.0001">
+          <div class="hint">Typical range ~0.01&ndash;0.02 cP for light hydrocarbon vapors at process conditions.</div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Z-Factor Basis</h2>
+        <div class="field">
+          <label for="gz-basis">Compressibility treatment</label>
+          <select id="gz-basis">
+            <option value="ideal">Ideal gas (Z = 1.0) — quick screening only</option>
+            <option value="gravity" selected>Real gas — Standing pseudo-criticals from gas gravity (sweet gas)</option>
+            <option value="direct">Real gas — enter Pc/Tc directly (from simulator)</option>
+          </select>
+          <div class="hint">Evaluated once at the known upstream pressure and temperature — Dranchuk&ndash;Abou-Kassem (DAK), valid for 0.2 &le; Ppr &lt; 30 and 1.0 &lt; Tpr &le; 3.0.</div>
+        </div>
+        <div class="field hidden" id="gz-Pc-field">
+          <label for="gz-Pc">Pseudo-critical pressure Pc <span class="unit">bar abs</span></label>
+          <input type="number" id="gz-Pc" value="46.5" step="any" min="1">
+        </div>
+        <div class="field hidden" id="gz-Tc-field">
+          <label for="gz-Tc">Pseudo-critical temperature Tc <span class="unit">K</span></label>
+          <input type="number" id="gz-Tc" value="205" step="any" min="1">
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Pipe Geometry &amp; Pipe Data</h2>
+        <div class="field">
+          <label for="g-p1">Upstream pressure P1 <span class="unit">barg</span></label>
+          <input type="number" id="g-p1" value="10" step="any" min="-1.013">
+          <div class="err" id="g-err"></div>
+        </div>
+        <div class="field">
+          <label for="g-d">Pipe internal diameter D <span class="unit">mm</span></label>
+          <input type="number" id="g-d" value="150" step="any" min="1">
+          <div class="hint">From your piping class / ASME B36.10 table for the selected NPS and schedule.</div>
+        </div>
+        <div class="field">
+          <label for="g-l">Straight pipe length L <span class="unit">m</span></label>
+          <input type="number" id="g-l" value="100" step="any" min="0">
+        </div>
+        <div class="field">
+          <label for="g-lfit">Additional equivalent length for fittings <span class="unit">m</span></label>
+          <input type="number" id="g-lfit" value="0" step="any" min="0">
+          <div class="hint">No fitting-K table is built in — add elbows/tees directly. Commonly estimated at 20&ndash;40 pipe diameters per elbow/tee; confirm against project piping data.</div>
+        </div>
+        <div class="field">
+          <label for="g-eps">Pipe absolute roughness &epsilon; <span class="unit">mm</span></label>
+          <input type="number" id="g-eps" value="0.045" step="any" min="0">
+          <div class="hint">Default 0.045 mm — commercial steel.</div>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- READOUT -->
+    <section class="readout">
+      <h2 id="readout-title">Pressure Drop</h2>
+
+      <div class="diagram">
+        <svg width="280" height="120" viewBox="0 0 280 120" id="pipe-svg">
+          <rect x="14" y="46" width="20" height="28" rx="3" fill="var(--navy)" stroke="var(--line-dim)" stroke-width="1.4"/>
+          <text x="24" y="90" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="var(--paper-dim)">IN</text>
+          <line x1="34" y1="60" x2="246" y2="60" stroke="var(--line-dim)" stroke-width="8" stroke-linecap="round"/>
+          <line x1="34" y1="60" x2="246" y2="60" stroke="var(--line)" stroke-width="2.4" class="flow-dash" stroke-linecap="round"/>
+          <rect x="246" y="46" width="20" height="28" rx="3" fill="var(--navy)" stroke="var(--line-dim)" stroke-width="1.4"/>
+          <text x="256" y="90" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="var(--paper-dim)">OUT</text>
+          <text x="140" y="34" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="var(--line)" letter-spacing="0.04em">D, L, f</text>
+          <text x="24" y="38" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="var(--paper-dim)" id="pipe-p1-lbl">P1</text>
+          <text x="256" y="38" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="var(--amber)" id="pipe-p2-lbl">P2</text>
+        </svg>
+      </div>
+
+      <div class="big-figure">
+        <span class="big-num" id="out-dp">—</span>
+        <span class="big-unit" id="out-dp-unit">bar</span>
+      </div>
+      <span class="subfigure" id="out-dp-sub">pressure drop · —</span>
+
+      <div class="figure2-row">
+        <span class="figure2-label" id="out-v-label">velocity</span>
+        <span class="figure2-val">
+          <span class="big-num-2" id="out-v">—</span>
+          <span class="big-unit-2">m/s</span>
+        </span>
+      </div>
+
+      <div class="badge-row" id="badge-row">
+        <span class="badge ok" id="status-badge">READY</span>
+        <span class="badge bad hidden" id="choke-badge">LINE CHOKED OR NEAR-SONIC</span>
+        <span class="badge info hidden" id="regime-badge"></span>
+        <span class="badge info hidden" id="guide-badge"></span>
+      </div>
+
+      <div id="stat-rows"></div>
+    </section>
+
+  </div>
+
+  <footer>
+    <b>Liquid — Darcy&ndash;Weisbach:</b> v = Q/A, A = &pi;D&sup2;/4; Re = &rho;vD/&mu; (&mu; converted cP&rarr;Pa&middot;s &times;1e-3); Darcy friction factor f = 64/Re for Re &lt; 2300 (laminar), else Swamee&ndash;Jain explicit fit to Colebrook&ndash;White: f = 0.25 / [log&#8320;&#8320;(&epsilon;/(3.7D) + 5.74/Re<sup>0.9</sup>)]&sup2;. &Delta;P = f&middot;(L+L<sub>fit</sub>)/D &middot; (&rho;v&sup2;/2).<br>
+    <b>API RP 14E erosional velocity:</b> imperial form V<sub>e</sub>[ft/s] = C/&radic;&rho;<sub>m</sub>[lb/ft&sup3;]. Converting units (1 ft/s = 0.3048 m/s, 1 lb/ft&sup3; = 16.0185 kg/m&sup3;) gives &rho;<sub>m</sub>[lb/ft&sup3;] = &rho;<sub>m</sub>[kg/m&sup3;]/16.0185, so V<sub>e</sub>[m/s] = 0.3048&middot;&radic;16.0185 &middot; C / &radic;&rho;<sub>m</sub>[kg/m&sup3;]. The leading coefficient (0.3048&times;&radic;16.0185) is computed numerically in code, not hardcoded — see the derived value reported in the console/verification. C = 100 (continuous, solids-free/non-corrosive) or 125 (intermittent) per API RP 14E; higher values require project-specific justification. This check is liquid/multiphase-specific per the standard's own scope — not evaluated on the gas tab.<br>
+    <b>Typical velocity guideline (informational only):</b> ~1&ndash;2 m/s pump suction, ~2&ndash;3 m/s pump discharge/general process liquid — a commonly cited rule of thumb, not a hard limit; varies by project specification.<br>
+    <b>Gas/vapor — isothermal compressible pipe flow with acceleration term</b> (Crane TP-410 / GPSA Engineering Data Book, short process piping — Weymouth/Panhandle do NOT apply): P1&sup2; &minus; P2&sup2; = &#7745;&sup2;&middot;Z&middot;R<sub>spec</sub>&middot;T / A&sup2; &middot; [ f&middot;L/D + 2&middot;ln(P1/P2) ], all pressures absolute (Pa), R<sub>spec</sub> = R/MW, R = 8314.462618 J/(kmol&middot;K), A = pipe cross-sectional area. Here P1 (upstream) is known and the equation is solved forward for P2 (downstream) — the reduced form of the identical equation used in the companion Flare Header Backpressure tool, which instead knows P2 and solves for P1.<br>
+    <b>Solved for P2</b> (P1 known) by fixed-point iteration with 0.5 under-relaxation from the initial guess P2 &asymp; &radic;(P1&sup2; &minus; base&middot;fL/D) (ln term ignored), re-including the 2&middot;ln(P1/P2) correction each pass, to |&Delta;P2| &lt; 1e-6 bar or 100 iterations (capped so it always terminates); a non-positive radicand at any pass is reported as choked/cannot pass this flow.<br>
+    <b>Reynolds number:</b> Re = 4&#7745;/(&pi;&middot;D&middot;&mu;). <b>Darcy friction factor</b> (Swamee&ndash;Jain, no iteration needed): f = 0.25 / [log&#8320;&#8320;(&epsilon;/(3.7D) + 5.74/Re<sup>0.9</sup>)]&sup2;.<br>
+    <b>Gas velocity &amp; Mach:</b> reported at both ends using &rho;1 = P1&middot;MW/(Z&middot;R&middot;T) and &rho;2 = P2&middot;MW/(Z&middot;R&middot;T); v = &#7745;/(&rho;&middot;A). Velocity increases along the line as the gas expands toward the lower-pressure end. Mach number is evaluated at the outlet (lowest pressure, highest velocity, since &#7745; and A are constant along the pipe): Mach = v2/&radic;(k&middot;Z&middot;R<sub>spec</sub>&middot;T). Mach &ge; 0.9, or a non-converging solve, is flagged as choked/near-sonic rather than reporting a falsely-precise number. A separate informational badge bands Mach: &lt;0.3 OK, 0.3&ndash;0.5 CAUTION, &gt;0.5 WARN (same bands as the companion Noise Screening tool, for consistency) — no API RP 14E erosional check is applied here, as that check's scope is liquid/multiphase, not gas.<br>
+    <b>Z-factor:</b> Dranchuk&ndash;Abou-Kassem (DAK) correlation with Standing pseudo-criticals from gas gravity, direct Pc/Tc entry, or ideal gas — same basis as the companion Flare Header Backpressure and BDV Sizing tools, evaluated once at the upstream pressure and temperature.<br>
+    <b>Scope note:</b> single line, steady-state, constant fluid properties along the line (isothermal for the gas case). No NPS/schedule lookup and no fitting-K table are embedded — pipe ID and equivalent lengths are direct, project-sourced inputs. Not a substitute for a full line hydraulic study, a project piping specification, or sign-off by a licensed engineer.<br>
+    References: API Recommended Practice 14E (Design and Installation of Offshore Production Platform Piping Systems), Crane Technical Paper 410 (Flow of Fluids), GPSA Engineering Data Book, Swamee, P.K. &amp; Jain, A.K. (1976) <i>Explicit Equations for Pipe-Flow Problems</i>, ASCE, Standing, M.B. (1977) <i>Volumetric and Phase Behavior of Oil Field Hydrocarbon Systems</i>, Dranchuk, P.M. &amp; Abou-Kassem, J.H. (1975) <i>Calculation of Z Factors for Natural Gases Using Equations of State</i>, JCPT. Not a certified sizing package — see the note at the top of the page.<br>
+    <div class="signature">
+      <strong>Shubham Chatterjee</strong> · Process Engineer<br>
+      <a href="https://processengonline.github.io/" target="_blank" rel="noopener noreferrer">processengonline.github.io</a> ·
+      <a href="https://github.com/processengonline" target="_blank" rel="noopener noreferrer">GitHub</a>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+const R_UNIVERSAL = 8314.462618; // J/(kmol K)
+const ATM = 1.01325; // bar
+
+// ---- API RP 14E erosional velocity SI coefficient, derived (not hardcoded) ----
+// Imperial form: Ve[ft/s] = C / sqrt(rho_m[lb/ft3])
+// 1 ft/s = 0.3048 m/s ; 1 lb/ft3 = 16.0185 kg/m3  =>  rho_m[lb/ft3] = rho_m[kg/m3] / 16.0185
+// Ve[m/s] = 0.3048 * Ve[ft/s] = 0.3048 * C / sqrt( rho_m[kg/m3] / 16.0185 )
+//         = 0.3048 * sqrt(16.0185) * C / sqrt( rho_m[kg/m3] )
+const FT_PER_M = 0.3048;
+const LBFT3_PER_KGM3 = 16.0185;
+const API14E_SI_COEFF = FT_PER_M * Math.sqrt(LBFT3_PER_KGM3); // ~1.2206, compare to commonly quoted ~1.22
+
+function fmt(num, sig=4){
+  if(num===0) return '0';
+  if(!isFinite(num)) return '—';
+  const abs = Math.abs(num);
+  if(abs < 0.001 || abs >= 100000) return num.toExponential(3);
+  return num.toPrecision(sig);
+}
+
+// ---- DAK real-gas Z (reused basis from the Flare Header Backpressure / BDV tools) ----
+function dakZ(Ppr, Tpr){
+  const A1=0.3265,A2=-1.0700,A3=-0.5339,A4=0.01569,A5=-0.05165,
+        A6=0.5475,A7=-0.7361,A8=0.1844,A9=0.1056,A10=0.6134,A11=0.7210;
+  if(!(Ppr>0) || !(Tpr>0)) return { Z:1, rhor:0 };
+  const c1 = A1 + A2/Tpr + A3/Math.pow(Tpr,3) + A4/Math.pow(Tpr,4) + A5/Math.pow(Tpr,5);
+  const c2 = A6 + A7/Tpr + A8/Math.pow(Tpr,2);
+  const c3 = A9*(A7/Tpr + A8/Math.pow(Tpr,2));
+  let rhor = 0.27*Ppr/Tpr;
+  for(let i=0;i<200;i++){
+    const rhor2 = rhor*rhor;
+    const Zc = 1 + c1*rhor + c2*rhor2 - c3*Math.pow(rhor,5) + A10*(1+A11*rhor2)*(rhor2/Math.pow(Tpr,3))*Math.exp(-A11*rhor2);
+    const rhorNew = 0.27*Ppr/(Zc*Tpr);
+    if(Math.abs(rhorNew-rhor) < 1e-9){ rhor = rhorNew; break; }
+    rhor += 0.5*(rhorNew-rhor);
+  }
+  const rhor2 = rhor*rhor;
+  const Z = 1 + c1*rhor + c2*rhor2 - c3*Math.pow(rhor,5) + A10*(1+A11*rhor2)*(rhor2/Math.pow(Tpr,3))*Math.exp(-A11*rhor2);
+  return { Z, rhor };
+}
+
+function pseudoCriticalFromSG(SG){
+  const TpcR = 168 + 325*SG - 12.5*SG*SG;
+  const PpcPsia = 677 + 15.0*SG - 37.5*SG*SG;
+  return { TcK: TpcR/1.8, PcBar: PpcPsia*0.0689476 };
+}
+
+// ---- Pipe hydraulics (shared) ----
+
+function reynoldsNumberMassFlow(mdotKgS, D_m, muPaS){
+  return 4*mdotKgS/(Math.PI*D_m*muPaS);
+}
+function reynoldsNumberVelocity(rho, v, D_m, muPaS){
+  return rho*v*D_m/muPaS;
+}
+
+// Darcy friction factor: laminar f=64/Re below Re=2300, else Swamee-Jain fit to Colebrook-White.
+function darcyFrictionFactor(epsM, D_m, Re){
+  if(!(Re>0)) return NaN;
+  if(Re < 2300){
+    return 64/Re; // laminar
+  }
+  const term = epsM/(3.7*D_m) + 5.74/Math.pow(Re, 0.9);
+  return 0.25/Math.pow(Math.log10(term), 2);
+}
+
+// Solve P2 (Pa abs) given known P1 (Pa abs) from:
+//   P1^2 - P2^2 = base * ( fLoD + 2*ln(P1/P2) ), base = mdot^2 * Z * Rspec * T / A^2
+// This is the reduced form of the identical Crane TP-410/GPSA isothermal compressible
+// pipe flow equation used in the companion Flare Header Backpressure tool (which knows
+// P2 and solves for P1) — here P1 is known and we solve forward for P2.
+function solveP2(P1, base, fLoD){
+  let P2sqGuess = P1*P1 - base*fLoD; // ln term ignored for initial guess
+  if(!(P2sqGuess>0)) return { P2: NaN, iterations: 0, converged: false };
+  let P2 = Math.sqrt(P2sqGuess);
+  const relax = 0.5;
+  const tolPa = 0.1; // 1e-6 bar
+  let iterations = 0, converged = false;
+  for(let i=0;i<100;i++){
+    iterations = i+1;
+    const lnTerm = Math.log(P1/P2);
+    const rhs = base*(fLoD + 2*lnTerm);
+    const P2rawSq = P1*P1 - rhs;
+    if(!(P2rawSq>0) || !isFinite(P2rawSq)){ converged=false; break; }
+    const P2raw = Math.sqrt(P2rawSq);
+    const P2new = P2 + relax*(P2raw - P2);
+    const delta = Math.abs(P2new - P2);
+    P2 = P2new;
+    if(!isFinite(P2) || P2<=0){ converged=false; break; }
+    if(delta < tolPa){ converged = true; break; }
+  }
+  return { P2, iterations, converged };
+}
+
+// ---- UI wiring ----
+
+const tabLiquid = document.getElementById('tab-liquid');
+const tabGas = document.getElementById('tab-gas');
+const panelLiquid = document.getElementById('panel-liquid');
+const panelGas = document.getElementById('panel-gas');
+let mode = 'liquid';
+
+function setMode(m){
+  mode = m;
+  const isLiquid = m==='liquid';
+  tabLiquid.classList.toggle('active', isLiquid);
+  tabGas.classList.toggle('active', !isLiquid);
+  tabLiquid.setAttribute('aria-selected', isLiquid);
+  tabGas.setAttribute('aria-selected', !isLiquid);
+  panelLiquid.classList.toggle('hidden', !isLiquid);
+  panelGas.classList.toggle('hidden', isLiquid);
+  document.getElementById('readout-title').textContent = isLiquid ? 'Pressure Drop' : 'Pressure Drop & Mach';
+  compute();
+}
+tabLiquid.addEventListener('click', ()=>setMode('liquid'));
+tabGas.addEventListener('click', ()=>setMode('gas'));
+
+function setGzBasisVisibility(){
+  const basis = document.getElementById('gz-basis').value;
+  document.getElementById('gz-Pc-field').classList.toggle('hidden', basis!=='direct');
+  document.getElementById('gz-Tc-field').classList.toggle('hidden', basis!=='direct');
+  compute();
+}
+document.getElementById('gz-basis').addEventListener('change', setGzBasisVisibility);
+
+const ids = [
+  'l-q','l-rho','l-mu','l-d','l-l','l-lfit','l-eps','l-c','l-service',
+  'g-mdot','g-mw','g-k','g-t1','g-mu','gz-basis','gz-Pc','gz-Tc','g-p1','g-d','g-l','g-lfit','g-eps'
+];
+ids.forEach(id=>{
+  const el = document.getElementById(id);
+  el.addEventListener('input', compute);
+  el.addEventListener('change', compute);
+});
+
+function renderStats(rows){
+  const container = document.getElementById('stat-rows');
+  container.innerHTML = '';
+  rows.forEach(item=>{
+    if(item.length===1){
+      const label = document.createElement('div');
+      label.className = 'stat-group-label';
+      label.textContent = item[0];
+      container.appendChild(label);
+      return;
+    }
+    const [label, val] = item;
+    const row = document.createElement('div');
+    row.className = 'stat-row';
+    row.innerHTML = `<span>${label}</span><span>${val}</span>`;
+    container.appendChild(row);
+  });
+}
+
+function resetBadges(){
+  ['choke-badge','regime-badge','guide-badge'].forEach(id=>{
+    document.getElementById(id).classList.add('hidden');
+  });
+}
+
+function computeLiquid(){
+  const errEl = document.getElementById('g-err'); // unused in liquid mode
+  const badge = document.getElementById('status-badge');
+  const chokeBadge = document.getElementById('choke-badge');
+  const regimeBadge = document.getElementById('regime-badge');
+  const guideBadge = document.getElementById('guide-badge');
+
+  const Q_m3h = parseFloat(document.getElementById('l-q').value);
+  const rho = parseFloat(document.getElementById('l-rho').value);
+  const muCp = parseFloat(document.getElementById('l-mu').value);
+  const D_mm = parseFloat(document.getElementById('l-d').value);
+  const L = parseFloat(document.getElementById('l-l').value);
+  const Lfit = parseFloat(document.getElementById('l-lfit').value);
+  const eps_mm = parseFloat(document.getElementById('l-eps').value);
+  const C = parseFloat(document.getElementById('l-c').value);
+  const service = document.getElementById('l-service').value;
+
+  if(!(Q_m3h>0)) throw new Error('Volumetric flow must be > 0');
+  if(!(rho>0)) throw new Error('Density must be > 0');
+  if(!(muCp>0)) throw new Error('Viscosity must be > 0');
+  if(!(D_mm>0)) throw new Error('Pipe diameter must be > 0');
+  if(!(L>=0)) throw new Error('Straight length must be ≥ 0');
+  if(!(Lfit>=0)) throw new Error('Additional equivalent length must be ≥ 0');
+  if(!(eps_mm>=0)) throw new Error('Roughness must be ≥ 0');
+  if(!(C>0)) throw new Error('Erosional velocity constant C must be > 0');
+
+  const Q = Q_m3h/3600; // m3/s
+  const D = D_mm/1000; // m
+  const A = Math.PI/4*D*D; // m2
+  const v = Q/A; // m/s
+  const mu = muCp*1e-3; // Pa.s
+  const Re = reynoldsNumberVelocity(rho, v, D, mu);
+  const fD = darcyFrictionFactor(eps_mm/1000, D, Re);
+  const Ltotal = L + Lfit;
+  const LoD = Ltotal/D;
+
+  const dP_Pa = fD*LoD*(rho*v*v/2);
+  const dP_bar = dP_Pa/1e5;
+  const dP_per100 = Ltotal>0 ? dP_bar/Ltotal*100 : 0;
+
+  const Ve = API14E_SI_COEFF*C/Math.sqrt(rho);
+  const ratio = v/Ve;
+  const erosionalPass = v < Ve;
+
+  // ---- hero figure: pressure drop ----
+  document.getElementById('out-dp-unit').textContent = 'bar';
+  document.getElementById('out-dp').textContent = fmt(dP_bar);
+  document.getElementById('out-dp-sub').textContent = 'total pressure drop · ' + fmt(dP_per100) + ' bar / 100 m equivalent';
+
+  document.getElementById('out-v-label').textContent = 'velocity (Ve = ' + fmt(Ve) + ' m/s)';
+  document.getElementById('out-v').textContent = fmt(v);
+
+  // ---- badges ----
+  badge.textContent = erosionalPass ? 'PASS — BELOW EROSIONAL VELOCITY' : 'WARN — EXCEEDS EROSIONAL VELOCITY';
+  badge.className = 'badge ' + (erosionalPass ? 'ok' : 'warn');
+
+  const isLaminar = Re < 2300;
+  regimeBadge.textContent = (isLaminar ? 'LAMINAR' : 'TURBULENT') + ' · Re ' + fmt(Re,3);
+  regimeBadge.className = 'badge info';
+  regimeBadge.classList.remove('hidden');
+
+  if(service!=='none'){
+    const band = service==='suction' ? [1,2,'pump suction'] : [2,3,'pump discharge / general process liquid'];
+    const within = v>=band[0] && v<=band[1];
+    guideBadge.textContent = (within ? 'WITHIN' : 'OUTSIDE') + ' TYPICAL RANGE (' + band[0] + '–' + band[1] + ' m/s, ' + band[2] + ')';
+    guideBadge.className = 'badge ' + (within ? 'ok' : 'info');
+    guideBadge.classList.remove('hidden');
+  }
+
+  // ---- stat rows ----
+  const rows = [];
+  rows.push(['FLOW & FLUID']);
+  rows.push(['Velocity v', fmt(v) + ' m/s']);
+  rows.push(['Cross-sectional area A', fmt(A*1e6) + ' mm²']);
+  rows.push(['Reynolds number Re', fmt(Re)]);
+  rows.push(['Flow regime', isLaminar ? 'Laminar (f = 64/Re)' : 'Turbulent (Swamee–Jain)']);
+  rows.push(['Darcy friction factor f', fmt(fD)]);
+  rows.push(['PRESSURE DROP']);
+  rows.push(['Total L/D (straight + fittings)', fmt(LoD)]);
+  rows.push(['Pressure drop, total', fmt(dP_bar) + ' bar (' + fmt(dP_bar*100) + ' kPa)']);
+  rows.push(['Pressure drop, per 100 m', fmt(dP_per100) + ' bar / 100 m']);
+  rows.push(['EROSIONAL VELOCITY — API RP 14E']);
+  rows.push(['SI coefficient (derived)', fmt(API14E_SI_COEFF,5) + ' (0.3048×√16.0185)']);
+  rows.push(['Erosional velocity Ve', fmt(Ve) + ' m/s']);
+  rows.push(['v / Ve ratio', fmt(ratio,3)]);
+  rows.push(['VELOCITY GUIDELINE (INFO ONLY)']);
+  rows.push(['Service selected', service==='suction' ? 'Pump suction' : (service==='discharge' ? 'Pump discharge / general process' : 'None')]);
+  renderStats(rows);
+}
+
+function computeGas(){
+  const errEl = document.getElementById('g-err');
+  errEl.style.display = 'none'; errEl.textContent = '';
+  const badge = document.getElementById('status-badge');
+  const chokeBadge = document.getElementById('choke-badge');
+  const regimeBadge = document.getElementById('regime-badge');
+  const guideBadge = document.getElementById('guide-badge');
+
+  const mdotKgH = parseFloat(document.getElementById('g-mdot').value);
+  const MW = parseFloat(document.getElementById('g-mw').value);
+  const k = parseFloat(document.getElementById('g-k').value);
+  const T1C = parseFloat(document.getElementById('g-t1').value);
+  const muCp = parseFloat(document.getElementById('g-mu').value);
+  const D_mm = parseFloat(document.getElementById('g-d').value);
+  const L = parseFloat(document.getElementById('g-l').value);
+  const Lfit = parseFloat(document.getElementById('g-lfit').value);
+  const eps_mm = parseFloat(document.getElementById('g-eps').value);
+  const P1barg = parseFloat(document.getElementById('g-p1').value);
+
+  if(!(mdotKgH>0)) throw new Error('Mass flow must be > 0');
+  if(!(MW>2)) throw new Error('Molecular weight must be > 2 g/mol');
+  if(!(k>1.001)) throw new Error('k (Cp/Cv) must be > 1.001');
+  const T1K = T1C + 273.15;
+  if(!(T1K>0)) throw new Error('Upstream temperature must be > absolute zero');
+  if(!(muCp>0)) throw new Error('Viscosity must be > 0');
+  if(!(D_mm>0)) throw new Error('Pipe diameter must be > 0');
+  if(!(L>=0)) throw new Error('Straight length must be ≥ 0');
+  if(!(Lfit>=0)) throw new Error('Additional equivalent length must be ≥ 0');
+  if(!(eps_mm>=0)) throw new Error('Roughness must be ≥ 0');
+  if(!(P1barg > -ATM)) throw new Error('Upstream pressure must be above absolute zero pressure');
+
+  const mdot = mdotKgH/3600; // kg/s
+  const D = D_mm/1000; // m
+  const A = Math.PI/4*D*D; // m2
+  const Ltotal = L + Lfit;
+  const eps = eps_mm/1000;
+  const mu = muCp*1e-3; // Pa.s
+  const P1abs_bar = P1barg + ATM;
+  const P1abs = P1abs_bar*1e5; // Pa
+
+  // Z-factor basis (evaluated at known upstream pressure & temperature)
+  const basis = document.getElementById('gz-basis').value;
+  let PcBar=null, TcK=null, SG=null, Z=1.0, outOfRange=false;
+  if(basis==='ideal'){
+    Z = 1.0;
+  } else {
+    if(basis==='gravity'){
+      SG = MW/28.9647;
+      const pc = pseudoCriticalFromSG(SG);
+      PcBar = pc.PcBar; TcK = pc.TcK;
+    } else {
+      PcBar = parseFloat(document.getElementById('gz-Pc').value);
+      TcK = parseFloat(document.getElementById('gz-Tc').value);
+      if(!(PcBar>0)) throw new Error('Pc must be > 0');
+      if(!(TcK>0)) throw new Error('Tc must be > 0');
+    }
+    const Ppr = P1abs_bar/PcBar, Tpr = T1K/TcK;
+    if(Ppr>30 || Tpr<1.0 || Tpr>3.0 || Ppr<0.2) outOfRange = true;
+    Z = dakZ(Ppr, Tpr).Z;
+  }
+
+  const Rspec = R_UNIVERSAL/MW; // J/(kg K)
+
+  const Re = reynoldsNumberMassFlow(mdot, D, mu);
+  const fD = darcyFrictionFactor(eps, D, Re);
+  const LoD = Ltotal/D;
+
+  const base = mdot*mdot*Z*Rspec*T1K/(A*A); // Pa^2 per unit (fLoD or 2ln term)
+  const { P2, iterations, converged } = solveP2(P1abs, base, fD*LoD);
+
+  const rho1 = P1abs*MW/(Z*R_UNIVERSAL*T1K);
+  const v1 = mdot/(rho1*A);
+  const a2 = Math.sqrt(k*Z*Rspec*T1K);
+
+  let rho2=NaN, v2=NaN, Mach2=NaN, dP_bar=NaN, dP_per100=NaN;
+  const solvedOk = converged && isFinite(P2) && P2>0 && P2<P1abs;
+  if(solvedOk){
+    rho2 = P2*MW/(Z*R_UNIVERSAL*T1K);
+    v2 = mdot/(rho2*A);
+    Mach2 = v2/a2;
+    dP_bar = (P1abs-P2)/1e5;
+    dP_per100 = Ltotal>0 ? dP_bar/Ltotal*100 : 0;
+  }
+
+  const isChoked = !solvedOk || Mach2>=0.9;
+
+  // ---- hero figure ----
+  document.getElementById('out-dp-unit').textContent = 'bar';
+  if(isChoked){
+    document.getElementById('out-dp').textContent = '—';
+    document.getElementById('out-dp-sub').textContent = 'line choked or near-sonic — result not reliable at this size';
+    document.getElementById('out-v-label').textContent = 'outlet velocity';
+    document.getElementById('out-v').textContent = '—';
+  } else {
+    document.getElementById('out-dp').textContent = fmt(dP_bar);
+    document.getElementById('out-dp-sub').textContent = 'pressure drop P1−P2 · ' + fmt(dP_per100) + ' bar / 100 m equivalent';
+    document.getElementById('out-v-label').textContent = 'outlet velocity (inlet ' + fmt(v1) + ' m/s)';
+    document.getElementById('out-v').textContent = fmt(v2);
+  }
+
+  // ---- badges ----
+  if(isChoked){
+    badge.textContent = 'CANNOT RELIABLY PASS THIS FLOW';
+    badge.className = 'badge bad';
+    chokeBadge.textContent = 'LINE CHOKED OR NEAR-SONIC — increase pipe diameter';
+    chokeBadge.classList.remove('hidden');
+  } else {
+    badge.textContent = 'SOLVED — P2 CONVERGED';
+    badge.className = 'badge ok';
+  }
+
+  regimeBadge.textContent = 'Re ' + fmt(Re,3) + ' · f ' + fmt(fD);
+  regimeBadge.className = 'badge info';
+  regimeBadge.classList.remove('hidden');
+
+  if(!isChoked){
+    let label, cls;
+    if(Mach2 < 0.3){ label = 'OK — LOW VELOCITY REGIME'; cls='ok'; }
+    else if(Mach2 < 0.5){ label = 'CAUTION — MODERATE VELOCITY'; cls='warn'; }
+    else { label = 'WARN — HIGH VELOCITY / APPROACHING CHOKE'; cls='bad'; }
+    guideBadge.textContent = 'MACH ' + fmt(Mach2,3) + ' AT OUTLET — ' + label;
+    guideBadge.className = 'badge ' + cls;
+    guideBadge.classList.remove('hidden');
+  }
+
+  if(outOfRange){
+    const rangeNote = document.createElement('span'); // not used, kept for structure symmetry
+  }
+
+  // ---- stat rows ----
+  const rows = [];
+  rows.push(['Z-FACTOR']);
+  rows.push(['Basis', basis==='ideal' ? 'Ideal gas (Z=1)' : (basis==='gravity' ? 'Gravity-estimated Pc/Tc' : 'Direct Pc/Tc entry')]);
+  rows.push(['Z used', fmt(Z) + (outOfRange ? ' (DAK range exceeded — verify)' : '')]);
+  if(basis!=='ideal'){
+    rows.push(['Pc / Tc used', fmt(PcBar) + ' bar a / ' + fmt(TcK) + ' K']);
+    if(SG!==null) rows.push(['Gas gravity (SG vs air)', fmt(SG)]);
+  }
+  rows.push(['PIPE FLOW']);
+  rows.push(['Reynolds number Re', fmt(Re)]);
+  rows.push(['Darcy friction factor f', fmt(fD)]);
+  rows.push(['Total L/D (straight + fittings)', fmt(LoD)]);
+  rows.push(['Cross-sectional area A', fmt(A*1e6) + ' mm²']);
+  rows.push(['PRESSURE DROP']);
+  rows.push(['Upstream pressure P1', fmt(P1barg) + ' barg (' + fmt(P1abs_bar) + ' bar a)']);
+  rows.push(['Downstream pressure P2', isChoked ? '— (not reliable)' : fmt(P2/1e5-ATM) + ' barg (' + fmt(P2/1e5) + ' bar a)']);
+  rows.push(['Pressure drop ΔP', isChoked ? '—' : fmt(dP_bar) + ' bar (' + fmt(dP_per100) + ' bar/100 m)']);
+  rows.push(['VELOCITY & MACH']);
+  rows.push(['Inlet velocity v1 (at ρ1)', fmt(v1) + ' m/s']);
+  rows.push(['Outlet velocity v2 (at ρ2)', isChoked ? '—' : fmt(v2) + ' m/s']);
+  rows.push(['Speed of sound a', fmt(a2) + ' m/s']);
+  rows.push(['Mach number at outlet', isChoked ? '—' : fmt(Mach2,3)]);
+  rows.push(['Iterations to converge', String(iterations) + (converged ? '' : ' (did not converge)')]);
+  rows.push(['Erosional velocity check (API 14E)', 'Not applicable — liquid/multiphase scope only']);
+  renderStats(rows);
+}
+
+function compute(){
+  resetBadges();
+  document.getElementById('g-err').style.display='none';
+  try{
+    if(mode==='liquid'){
+      computeLiquid();
+    } else {
+      computeGas();
+    }
+  } catch(e){
+    const errEl = document.getElementById('g-err');
+    errEl.textContent = e.message;
+    errEl.style.display = 'block';
+    document.getElementById('out-dp').textContent = '—';
+    document.getElementById('out-dp-sub').textContent = 'pressure drop · —';
+    document.getElementById('out-v').textContent = '—';
+    document.getElementById('stat-rows').innerHTML = '';
+    document.getElementById('status-badge').textContent = 'CHECK INPUTS';
+    document.getElementById('status-badge').className = 'badge warn';
+  }
+}
+
+setGzBasisVisibility();
+setMode('liquid');
+</script>
+</body>
+</html>

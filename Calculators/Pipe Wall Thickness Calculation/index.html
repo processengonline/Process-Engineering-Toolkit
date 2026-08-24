@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pipe Wall Thickness Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy: #0B1F33;
+    --navy-2: #122A44;
+    --blueprint: #1B4F72;
+    --line: #3E7CB1;
+    --line-dim: #2A5A80;
+    --paper: #EAE6D9;
+    --paper-dim: #B9C4CC;
+    --amber: #E8A33D;
+    --green: #6FA787;
+    --red: #C96A5C;
+    --grid: rgba(62,124,177,0.16);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      linear-gradient(var(--grid) 1px, transparent 1px) 0 0/28px 28px,
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px) 0 0/28px 28px,
+      var(--navy);
+    color:var(--paper);
+    font-family:'Space Grotesk', sans-serif;
+    min-height:100vh;
+  }
+  .wrap{max-width:1080px;margin:0 auto;padding:48px 24px 80px;}
+
+  header{margin-bottom:32px;border-bottom:1px solid var(--line-dim);padding-bottom:24px;}
+  .eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--line);margin:0 0 10px;
+  }
+  h1{
+    font-size:clamp(28px,4vw,42px);
+    margin:0 0 12px;font-weight:700;letter-spacing:-0.01em;
+  }
+  .sub{color:var(--paper-dim);font-size:15px;max-width:680px;line-height:1.55;margin:0 0 16px;}
+
+  .epcnote{
+    font-family:'IBM Plex Mono',monospace;font-size:11.5px;line-height:1.6;color:var(--paper-dim);
+    background:rgba(201,106,92,.08);border:1px solid rgba(201,106,92,.4);border-radius:6px;
+    padding:14px 16px;margin-top:16px;
+  }
+  .epcnote b{color:var(--red);}
+
+  .tabs{display:flex;gap:2px;margin:24px 0 28px;border:1px solid var(--line-dim);width:fit-content;border-radius:6px;overflow:hidden;}
+  .tab{
+    font-family:'IBM Plex Mono',monospace;font-size:13px;letter-spacing:.05em;
+    padding:11px 22px;background:var(--navy-2);color:var(--paper-dim);
+    border:none;cursor:pointer;transition:background .15s, color .15s;
+  }
+  .tab.active{background:var(--line);color:var(--navy);font-weight:600;}
+  .tab:not(.active):hover{background:#17324f;color:var(--paper);}
+  .tab:focus-visible{outline:2px solid var(--amber);outline-offset:-2px;}
+
+  .grid{display:grid;grid-template-columns:1.1fr 1fr;gap:36px;align-items:start;}
+  @media (max-width:820px){.grid{grid-template-columns:1fr;}}
+
+  .panel{
+    background:var(--navy-2);border:1px solid var(--line-dim);border-radius:8px;padding:26px;
+  }
+  .panel h2{
+    font-family:'IBM Plex Mono',monospace;font-size:12px;text-transform:uppercase;
+    letter-spacing:.14em;color:var(--line);margin:0 0 20px;
+  }
+  .panel h3{
+    font-family:'IBM Plex Mono',monospace;font-size:11px;text-transform:uppercase;
+    letter-spacing:.12em;color:var(--paper-dim);margin:22px 0 14px;
+    border-top:1px solid var(--line-dim);padding-top:16px;
+  }
+  .panel h3:first-of-type{margin-top:0;border-top:none;padding-top:0;}
+
+  .field{margin-bottom:16px;}
+  .field:last-child{margin-bottom:0;}
+  label{display:flex;justify-content:space-between;align-items:baseline;font-size:13.5px;color:var(--paper);margin-bottom:6px;gap:10px;}
+  label .unit{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--paper-dim);flex-shrink:0;text-align:right;}
+  input[type=number], select{
+    width:100%;background:var(--navy);border:1px solid var(--line-dim);border-radius:5px;
+    color:var(--paper);font-family:'IBM Plex Mono',monospace;font-size:14px;
+    padding:9px 11px;transition:border-color .15s;
+  }
+  select{cursor:pointer;}
+  input[type=number]:focus, select:focus{outline:none;border-color:var(--line);box-shadow:0 0 0 3px rgba(62,124,177,0.22);}
+  .hint{font-size:11.5px;color:var(--paper-dim);margin-top:5px;line-height:1.4;}
+  .hint.placeholder{color:var(--amber);}
+  .err{font-size:11.5px;color:var(--red);margin-top:5px;display:none;}
+
+  .readout{
+    background:var(--navy-2);border:1px solid var(--line-dim);border-radius:8px;
+    padding:26px;display:flex;flex-direction:column;gap:20px;position:sticky;top:24px;
+  }
+  .readout h2{
+    font-family:'IBM Plex Mono',monospace;font-size:12px;text-transform:uppercase;
+    letter-spacing:.14em;color:var(--line);margin:0;
+  }
+  .big-figure{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;}
+  .big-num{font-size:48px;font-weight:700;line-height:1;letter-spacing:-0.02em;font-variant-numeric:tabular-nums;}
+  .big-unit{font-family:'IBM Plex Mono',monospace;font-size:16px;color:var(--paper-dim);}
+  .subfigure{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--paper-dim);}
+
+  .diagram{display:flex;align-items:center;justify-content:center;padding:6px 0 2px;}
+  .diagram svg{overflow:visible;max-width:100%;height:auto;}
+  .dim-label{font-family:'IBM Plex Mono',monospace;font-size:11px;}
+
+  .stat-row{display:flex;justify-content:space-between;gap:12px;font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--paper-dim);border-top:1px solid var(--line-dim);padding-top:12px;}
+  .stat-row span:first-child{flex-shrink:0;}
+  .stat-row span:last-child{color:var(--paper);text-align:right;}
+  #stat-rows{display:flex;flex-direction:column;gap:12px;}
+  .stat-group-label{
+    font-family:'IBM Plex Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.08em;
+    color:var(--line);margin-top:6px;
+  }
+
+  .badge{
+    font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.06em;
+    padding:4px 10px;border-radius:20px;display:inline-block;width:fit-content;
+  }
+  .badge.ok{background:rgba(111,167,135,.15);color:var(--green);border:1px solid rgba(111,167,135,.4);}
+  .badge.warn{background:rgba(232,163,61,.15);color:var(--amber);border:1px solid rgba(232,163,61,.4);}
+  .badge.info{background:rgba(62,124,177,.18);color:var(--line);border:1px solid rgba(62,124,177,.4);}
+  .badge-row{display:flex;gap:8px;flex-wrap:wrap;}
+
+  footer{margin-top:40px;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--paper-dim);line-height:1.6;border-top:1px solid var(--line-dim);padding-top:20px;}
+  .hidden{display:none !important;}
+
+  .signature{
+    margin-top:28px;padding-top:20px;border-top:1px solid var(--line-dim);
+    font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--paper-dim);line-height:1.7;
+  }
+  .signature strong{color:var(--paper);font-weight:600;}
+  .signature a{color:var(--line);text-decoration:none;border-bottom:1px solid var(--line-dim);padding-bottom:1px;transition:color .15s,border-color .15s;}
+  .signature a:hover{color:var(--amber);border-color:var(--amber);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">Pipe Wall Thickness — ASME B31.3 Process Piping · Rev. 1</p>
+    <h1>Pipe Wall Thickness Calculator</h1>
+    <p class="sub">Sizes straight-pipe wall thickness under internal pressure per ASME B31.3 Eq. 3a (the "Barlow's formula" variant used throughout process piping), then layers on corrosion allowance and pipe-mill manufacturing under-tolerance to get a required nominal thickness — or runs the same equation in reverse to check the maximum allowable working pressure (MAWP) for a known actual wall thickness.</p>
+    <div class="epcnote">
+      <b>No NPS/schedule table and no material stress table are embedded in this tool — on purpose.</b> Outside diameter (OD) for a given NPS is fixed per ASME B36.10 regardless of schedule — only the wall thickness changes between schedules for the same NPS — so enter the actual OD from B36.10 (or the vendor's mill certificate) directly; transcribing a schedule-to-thickness table here risked a copy error on some size, so it was left out deliberately. Likewise, allowable stress S is material-grade- and temperature-specific per ASME B31.3 Table A-1 — it is <b>not</b> computed or looked up by this tool; enter the actual Table A-1 value for your selected material at design temperature. The S field below defaults to a round <b>placeholder</b> value only, clearly labeled as such. This screens/pre-sizes the straight-pipe wall — it does not cover branch reinforcement, bends, fittings, flanges, or code-required minimum thickness rounding to a purchasable schedule; a licensed engineer must review the final specification.
+    </div>
+  </header>
+
+  <div class="tabs" role="tablist" aria-label="Calculation mode">
+    <button class="tab active" id="tab-a" role="tab" aria-selected="true">SIZE THICKNESS</button>
+    <button class="tab" id="tab-b" role="tab" aria-selected="false">CHECK MAWP</button>
+  </div>
+
+  <div class="grid">
+
+    <!-- MODE A: SIZE THICKNESS -->
+    <section class="panel" id="panel-a">
+      <h2>Inputs — Size Wall Thickness for Design Pressure</h2>
+
+      <h3>Design Conditions</h3>
+      <div class="field">
+        <label for="a-P">Internal design pressure P <span class="unit">barg</span></label>
+        <input type="number" id="a-P" value="20" step="any" min="0">
+      </div>
+      <div class="field">
+        <label for="a-Do"><span>Outside diameter D<sub>o</sub> (NOT internal diameter)</span> <span class="unit">mm</span></label>
+        <input type="number" id="a-Do" value="219.1" step="any" min="0">
+        <div class="hint">OD for a given NPS is fixed per ASME B36.10 regardless of schedule — only wall thickness varies between schedules. Take D<sub>o</sub> from B36.10 or the mill certificate, never the nominal/bore size.</div>
+      </div>
+
+      <h3>Material &amp; Joint (ASME B31.3 Table A-1 / A-1B / 304.1.1)</h3>
+      <div class="field">
+        <label for="a-S">Allowable stress S <span class="unit">MPa</span></label>
+        <input type="number" id="a-S" value="137.9" step="any" min="0">
+        <div class="hint placeholder">Placeholder only — round ballpark for carbon steel A106 Gr B at moderate temperature. REPLACE with the actual ASME B31.3 Table A-1 allowable stress for your material at design temperature; this is never computed by this tool.</div>
+      </div>
+      <div class="field">
+        <label for="a-E">Weld joint efficiency E</label>
+        <input type="number" id="a-E" value="1.0" step="any" min="0" max="1.2">
+        <div class="hint">1.0 seamless; 0.85 typical ERW/EFW without full radiography; confirm against ASME B31.3 Table A-1B for the actual pipe specification.</div>
+      </div>
+      <div class="field">
+        <label for="a-W">Weld strength reduction factor W</label>
+        <input type="number" id="a-W" value="1.0" step="any" min="0" max="1.2">
+        <div class="hint">1.0 for standard service; reduced values apply only for certain elevated-temperature/specific weld conditions per B31.3 Table 302.3.5 — confirm if applicable, otherwise leave at 1.0.</div>
+      </div>
+      <div class="field">
+        <label for="a-Y">Coefficient Y (Table 304.1.1)</label>
+        <input type="number" id="a-Y" value="0.4" step="any" min="0" max="0.7">
+        <div class="hint">0.4 is the standard default for most carbon/stainless steel piping below ~480°C with t &lt; D/6; confirm against Table 304.1.1 for other materials, higher temperatures, or thick-wall (t ≥ D/6) cases where a different equation form applies.</div>
+      </div>
+
+      <h3>Corrosion &amp; Manufacturing Allowances</h3>
+      <div class="field">
+        <label for="a-c">Corrosion allowance c <span class="unit">mm</span></label>
+        <input type="number" id="a-c" value="3.0" step="any" min="0">
+        <div class="hint">0 for stainless/CRA piping; 1.5–3+ mm typical for carbon steel depending on service corrosivity — confirm against project piping class.</div>
+      </div>
+      <div class="field">
+        <label for="a-mill">Mill under-tolerance <span class="unit">%</span></label>
+        <input type="number" id="a-mill" value="12.5" step="any" min="0" max="90">
+        <div class="hint">12.5% is standard for seamless pipe per API 5L / ASME B36.10; welded pipe specs may differ — confirm against the actual pipe specification.</div>
+      </div>
+      <div class="err" id="a-err"></div>
+    </section>
+
+    <!-- MODE B: CHECK MAWP -->
+    <section class="panel hidden" id="panel-b">
+      <h2>Inputs — Check MAWP for Actual Wall Thickness</h2>
+
+      <h3>Actual Pipe</h3>
+      <div class="field">
+        <label for="b-tact"><span>Actual / nominal wall thickness t<sub>actual</sub></span> <span class="unit">mm</span></label>
+        <input type="number" id="b-tact" value="8.18" step="any" min="0">
+        <div class="hint">The as-ordered nominal wall thickness (e.g. from a mill certificate or pipe spec) to check, before mill under-tolerance and corrosion allowance are removed below.</div>
+      </div>
+      <div class="field">
+        <label for="b-Do"><span>Outside diameter D<sub>o</sub> (NOT internal diameter)</span> <span class="unit">mm</span></label>
+        <input type="number" id="b-Do" value="219.1" step="any" min="0">
+        <div class="hint">OD for a given NPS is fixed per ASME B36.10 regardless of schedule. Take D<sub>o</sub> from B36.10 or the mill certificate, never the nominal/bore size.</div>
+      </div>
+
+      <h3>Material &amp; Joint (ASME B31.3 Table A-1 / A-1B / 304.1.1)</h3>
+      <div class="field">
+        <label for="b-S">Allowable stress S <span class="unit">MPa</span></label>
+        <input type="number" id="b-S" value="137.9" step="any" min="0">
+        <div class="hint placeholder">Placeholder only — round ballpark for carbon steel A106 Gr B at moderate temperature. REPLACE with the actual ASME B31.3 Table A-1 allowable stress for your material at design temperature; this is never computed by this tool.</div>
+      </div>
+      <div class="field">
+        <label for="b-E">Weld joint efficiency E</label>
+        <input type="number" id="b-E" value="1.0" step="any" min="0" max="1.2">
+        <div class="hint">1.0 seamless; 0.85 typical ERW/EFW without full radiography; confirm against ASME B31.3 Table A-1B for the actual pipe specification.</div>
+      </div>
+      <div class="field">
+        <label for="b-W">Weld strength reduction factor W</label>
+        <input type="number" id="b-W" value="1.0" step="any" min="0" max="1.2">
+        <div class="hint">1.0 for standard service; reduced values apply only for certain elevated-temperature/specific weld conditions per B31.3 Table 302.3.5 — confirm if applicable, otherwise leave at 1.0.</div>
+      </div>
+      <div class="field">
+        <label for="b-Y">Coefficient Y (Table 304.1.1)</label>
+        <input type="number" id="b-Y" value="0.4" step="any" min="0" max="0.7">
+        <div class="hint">0.4 is the standard default for most carbon/stainless steel piping below ~480°C with t &lt; D/6; confirm against Table 304.1.1 for other materials, higher temperatures, or thick-wall (t ≥ D/6) cases where a different equation form applies.</div>
+      </div>
+
+      <h3>Corrosion &amp; Manufacturing Allowances</h3>
+      <div class="field">
+        <label for="b-c">Corrosion allowance c <span class="unit">mm</span></label>
+        <input type="number" id="b-c" value="3.0" step="any" min="0">
+        <div class="hint">0 for stainless/CRA piping; 1.5–3+ mm typical for carbon steel depending on service corrosivity — confirm against project piping class.</div>
+      </div>
+      <div class="field">
+        <label for="b-mill">Mill under-tolerance <span class="unit">%</span></label>
+        <input type="number" id="b-mill" value="12.5" step="any" min="0" max="90">
+        <div class="hint">12.5% is standard for seamless pipe per API 5L / ASME B36.10; welded pipe specs may differ — confirm against the actual pipe specification.</div>
+      </div>
+      <div class="err" id="b-err"></div>
+    </section>
+
+    <!-- READOUT -->
+    <section class="readout">
+      <h2 id="readout-title">Required Nominal Thickness</h2>
+
+      <div class="diagram">
+        <svg width="240" height="220" viewBox="0 0 240 220" id="pipe-svg" aria-label="Pipe cross-section schematic">
+          <circle cx="120" cy="108" r="60" fill="var(--line)" id="od-circle"/>
+          <circle cx="120" cy="108" r="46" fill="var(--red)" id="ca-circle"/>
+          <circle cx="120" cy="108" r="40" fill="var(--navy-2)" id="bore-circle"/>
+          <line id="od-leader" stroke="var(--line-dim)" stroke-width="1"/>
+          <text id="od-label" class="dim-label" fill="var(--paper-dim)" text-anchor="middle"></text>
+          <line id="t-leader" stroke="var(--line-dim)" stroke-width="1"/>
+          <text id="t-label" class="dim-label" fill="var(--paper-dim)" text-anchor="start"></text>
+          <line id="ca-leader" stroke="var(--line-dim)" stroke-width="1"/>
+          <text id="ca-label" class="dim-label" fill="var(--red)" text-anchor="end"></text>
+        </svg>
+      </div>
+
+      <div class="big-figure">
+        <span class="big-num" id="out-value">—</span>
+        <span class="big-unit" id="out-unit">mm</span>
+      </div>
+      <span class="subfigure" id="out-sub">≈ —</span>
+
+      <div class="badge-row">
+        <span class="badge ok" id="status-badge">READY</span>
+        <span class="badge info hidden" id="thinwall-badge"></span>
+        <span class="badge info hidden" id="weld-badge"></span>
+      </div>
+
+      <div id="stat-rows"></div>
+    </section>
+
+  </div>
+
+  <footer>
+    <b>Pressure-design thickness (ASME B31.3 Eq. 3a, straight pipe under internal pressure):</b> t = (P·D<sub>o</sub>) / (2·(S·E·W + P·Y)), with P and S in consistent stress units (MPa here) and D<sub>o</sub>/t in mm. Valid for the common case t &lt; D<sub>o</sub>/6 — the thin-wall badge flags whether this holds for the current inputs; thicker-wall geometries require the Eq. 1b/3b form per B31.3.<br>
+    <b>Required minimum thickness:</b> t<sub>min</sub> = t + c, where c is the corrosion allowance.<br>
+    <b>Required nominal thickness:</b> t<sub>nom</sub> = t<sub>min</sub> / (1 − mill under-tolerance fraction), accounting for the pipe mill's permitted manufacturing under-thickness (12.5% standard for seamless pipe per API 5L).<br>
+    <b>MAWP mode — same equation solved algebraically for P:</b> starting from t = (P·D<sub>o</sub>)/(2·(S·E·W+P·Y)), cross-multiply: 2t(SEW+PY) = P·D<sub>o</sub> → 2t·SEW + 2t·PY = P·D<sub>o</sub> → 2t·SEW = P·(D<sub>o</sub> − 2tY) → P = 2·S·E·W·t / (D<sub>o</sub> − 2·Y·t), equivalently written P = S·E·W·t / (D<sub>o</sub>/2 − Y·t). Here t is the pressure-design thickness still available after removing the mill under-tolerance and the corrosion allowance from the actual wall: t<sub>avail</sub> = t<sub>actual</sub>·(1 − mill fraction) − c.<br>
+    <b>Hydrostatic test pressure:</b> P<sub>test</sub> = 1.5 × design/MAWP pressure, the standard ASME B31.3 multiplier — shown as a reference figure only; the actual required test pressure and procedure must follow B31.3 Chapter VI and the governing piping class.<br>
+    <b>What this tool deliberately does not do:</b> look up OD or wall thickness from an NPS/schedule table (ASME B36.10 — use the actual OD from the spec/mill cert), or look up allowable stress S from a material/temperature table (ASME B31.3 Table A-1 — enter the actual value). Both were left as explicit, clearly-labeled user inputs rather than baked-in tables, to avoid a transcription error going unnoticed for some size or material grade.<br>
+    Not a substitute for a stamped piping design calculation. Confirm E, W, Y, S, corrosion allowance, and mill tolerance against the project piping class and material specification before use.<br>
+    <div class="signature">
+      <strong>Shubham Chatterjee</strong> · Process Engineer<br>
+      <a href="https://processengonline.github.io/" target="_blank" rel="noopener noreferrer">processengonline.github.io</a> ·
+      <a href="https://github.com/processengonline" target="_blank" rel="noopener noreferrer">GitHub</a>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+function barToMPa(bar){ return bar * 0.1; }
+function MPaToBar(mpa){ return mpa * 10; }
+function mmToIn(mm){ return mm / 25.4; }
+function barToPsi(bar){ return bar * 14.5037738; }
+function clamp(v, lo, hi){ return Math.max(lo, Math.min(hi, v)); }
+
+// ASME B31.3 Eq. 3a: t = (P*Do) / (2*(S*E*W + P*Y))
+// P, S in MPa (consistent stress units); Do, t in mm.
+function tPressureDesign(P_MPa, Do_mm, S_MPa, E, W, Y){
+  if(!(Do_mm>0)) throw new Error("Outside diameter D_o must be > 0");
+  if(!(S_MPa>0)) throw new Error("Allowable stress S must be > 0");
+  if(!(E>0)) throw new Error("Weld joint efficiency E must be > 0");
+  if(!(W>0)) throw new Error("Weld strength reduction factor W must be > 0");
+  if(!(Y>=0)) throw new Error("Coefficient Y must be ≥ 0");
+  if(!(P_MPa>=0)) throw new Error("Design pressure must be ≥ 0");
+  const denom = 2*(S_MPa*E*W + P_MPa*Y);
+  if(!(denom>0)) throw new Error("S·E·W + P·Y must be > 0 — check inputs");
+  return (P_MPa*Do_mm)/denom;
+}
+
+// Eq. 3a solved algebraically for P (derivation in footer):
+// t = (P*Do)/(2*(SEW+PY))  =>  P = 2*S*E*W*t / (Do - 2*Y*t)  =  S*E*W*t / (Do/2 - Y*t)
+function mawpFromThickness(t_avail_mm, Do_mm, S_MPa, E, W, Y){
+  if(!(Do_mm>0)) throw new Error("Outside diameter D_o must be > 0");
+  if(!(S_MPa>0)) throw new Error("Allowable stress S must be > 0");
+  if(!(E>0)) throw new Error("Weld joint efficiency E must be > 0");
+  if(!(W>0)) throw new Error("Weld strength reduction factor W must be > 0");
+  if(!(Y>=0)) throw new Error("Coefficient Y must be ≥ 0");
+  if(!(t_avail_mm>0)) throw new Error("Actual thickness, after mill under-tolerance and corrosion allowance are removed, must be > 0 — increase t_actual or reduce allowances");
+  const denom = Do_mm/2 - Y*t_avail_mm;
+  if(!(denom>0)) throw new Error("Y·t_avail ≥ D_o/2 — this thickness/diameter combination is outside the valid range for Eq. 3a (very thick wall); check inputs");
+  return (S_MPa*E*W*t_avail_mm)/denom;
+}
+
+const tabA = document.getElementById('tab-a');
+const tabB = document.getElementById('tab-b');
+const panelA = document.getElementById('panel-a');
+const panelB = document.getElementById('panel-b');
+let mode = 'a';
+
+function setMode(m){
+  mode = m;
+  const isA = m==='a';
+  tabA.classList.toggle('active', isA);
+  tabB.classList.toggle('active', !isA);
+  tabA.setAttribute('aria-selected', isA);
+  tabB.setAttribute('aria-selected', !isA);
+  panelA.classList.toggle('hidden', !isA);
+  panelB.classList.toggle('hidden', isA);
+  document.getElementById('readout-title').textContent = isA ? 'Required Nominal Thickness' : 'Maximum Allowable Working Pressure';
+  document.getElementById('out-unit').textContent = isA ? 'mm' : 'barg';
+  compute();
+}
+tabA.addEventListener('click', ()=>setMode('a'));
+tabB.addEventListener('click', ()=>setMode('b'));
+
+const ids = ['a-P','a-Do','a-S','a-E','a-W','a-Y','a-c','a-mill',
+             'b-tact','b-Do','b-S','b-E','b-W','b-Y','b-c','b-mill'];
+ids.forEach(id=>{
+  const el = document.getElementById(id);
+  el.addEventListener('input', compute);
+  el.addEventListener('change', compute);
+});
+
+function fmt(num, sig=4){
+  if(num===0) return '0';
+  const abs = Math.abs(num);
+  if(abs < 0.001 || abs >= 100000) return num.toExponential(3);
+  return num.toPrecision(sig);
+}
+
+function clearErrors(){
+  ['a-err','b-err'].forEach(id=>{
+    const el = document.getElementById(id);
+    el.style.display = 'none';
+    el.textContent = '';
+  });
+}
+
+function renderStats(rows){
+  const container = document.getElementById('stat-rows');
+  container.innerHTML = '';
+  rows.forEach(item=>{
+    if(item.length===1){
+      const label = document.createElement('div');
+      label.className = 'stat-group-label';
+      label.textContent = item[0];
+      container.appendChild(label);
+      return;
+    }
+    const [label, val] = item;
+    const row = document.createElement('div');
+    row.className = 'stat-row';
+    row.innerHTML = `<span>${label}</span><span>${val}</span>`;
+    container.appendChild(row);
+  });
+}
+
+function updateDiagram(Do_mm, totalMetal_mm, ca_mm){
+  const cx=120, cy=108, Ro=60;
+  const ratio = clamp(totalMetal_mm/Do_mm, 0, 1);
+  const wallFrac = clamp(ratio*3.5, 0.08, 0.46);
+  const rBore = Ro*(1-wallFrac);
+  const caRatio = clamp(ca_mm/Do_mm, 0, 1);
+  let caFrac = clamp(caRatio*3.5, 0, wallFrac*0.9);
+  const rCaBoundary = rBore + caFrac*Ro;
+
+  document.getElementById('od-circle').setAttribute('r', Ro.toFixed(1));
+  document.getElementById('ca-circle').setAttribute('r', rCaBoundary.toFixed(1));
+  document.getElementById('bore-circle').setAttribute('r', rBore.toFixed(1));
+
+  // OD leader: straight up from the OD edge
+  {
+    const x1=cx, y1=cy-Ro, x2=cx, y2=cy-Ro-24;
+    document.getElementById('od-leader').setAttribute('x1',x1); document.getElementById('od-leader').setAttribute('y1',y1);
+    document.getElementById('od-leader').setAttribute('x2',x2); document.getElementById('od-leader').setAttribute('y2',y2);
+    const lbl = document.getElementById('od-label');
+    lbl.setAttribute('x', x2); lbl.setAttribute('y', y2-6);
+    lbl.textContent = 'OD = ' + fmt(Do_mm,4) + ' mm';
+  }
+  // t leader: from the middle of the structural (blue) band, to the right
+  {
+    const rMid = (Ro+rCaBoundary)/2;
+    const x1=cx+rMid, y1=cy, x2=cx+Ro+30, y2=cy-2;
+    document.getElementById('t-leader').setAttribute('x1',x1); document.getElementById('t-leader').setAttribute('y1',y1);
+    document.getElementById('t-leader').setAttribute('x2',x2); document.getElementById('t-leader').setAttribute('y2',y2);
+    const lbl = document.getElementById('t-label');
+    lbl.setAttribute('x', x2+4); lbl.setAttribute('y', y2+4);
+    lbl.textContent = 't = ' + fmt(totalMetal_mm,4) + ' mm';
+  }
+  // corrosion allowance leader: from the middle of the red band, to the lower-left
+  {
+    const rMid = (rCaBoundary+rBore)/2;
+    const dx=-0.82, dy=0.62;
+    const x1=cx+dx*rMid, y1=cy+dy*rMid, x2=cx+dx*(Ro+34), y2=cy+dy*(Ro+34);
+    document.getElementById('ca-leader').setAttribute('x1',x1); document.getElementById('ca-leader').setAttribute('y1',y1);
+    document.getElementById('ca-leader').setAttribute('x2',x2); document.getElementById('ca-leader').setAttribute('y2',y2);
+    const lbl = document.getElementById('ca-label');
+    lbl.setAttribute('x', x2-4); lbl.setAttribute('y', y2+4);
+    lbl.textContent = 'c.a. = ' + fmt(ca_mm,4) + ' mm';
+  }
+}
+
+function compute(){
+  clearErrors();
+  const badge = document.getElementById('status-badge');
+  const thinBadge = document.getElementById('thinwall-badge');
+  const weldBadge = document.getElementById('weld-badge');
+  thinBadge.classList.add('hidden');
+  weldBadge.classList.add('hidden');
+
+  const prefix = mode;
+  let S,E,W,Y,c,millPct,mill,Do;
+
+  try{
+    Do = parseFloat(document.getElementById(prefix+'-Do').value);
+    S = parseFloat(document.getElementById(prefix+'-S').value);
+    E = parseFloat(document.getElementById(prefix+'-E').value);
+    W = parseFloat(document.getElementById(prefix+'-W').value);
+    Y = parseFloat(document.getElementById(prefix+'-Y').value);
+    c = parseFloat(document.getElementById(prefix+'-c').value);
+    millPct = parseFloat(document.getElementById(prefix+'-mill').value);
+    if(!(c>=0)) throw new Error("Corrosion allowance must be ≥ 0");
+    if(!(millPct>=0 && millPct<95)) throw new Error("Mill under-tolerance must be between 0% and 95%");
+    mill = millPct/100;
+
+    let rows, bigVal, bigUnit, subText, tCheck, totalMetalForDiagram;
+
+    if(mode==='a'){
+      const Pbar = parseFloat(document.getElementById('a-P').value);
+      if(!(Pbar>=0)) throw new Error("Design pressure must be ≥ 0");
+      const P_MPa = barToMPa(Pbar);
+
+      const t = tPressureDesign(P_MPa, Do, S, E, W, Y);
+      const tMin = t + c;
+      const tNom = tMin/(1-mill);
+      const Ptest = 1.5*Pbar;
+
+      bigVal = tNom;
+      bigUnit = 'mm';
+      subText = '≈ ' + fmt(mmToIn(tNom)) + ' in · select the next available commercial wall thickness ≥ this value';
+      tCheck = t;
+      totalMetalForDiagram = tNom;
+
+      rows = [
+        ['DESIGN INPUTS'],
+        ['Design pressure P', fmt(Pbar) + ' barg (' + fmt(P_MPa) + ' MPa)'],
+        ['Outside diameter D₀', fmt(Do) + ' mm'],
+        ['PRESSURE-DESIGN THICKNESS'],
+        ['t, pressure design (Eq. 3a)', fmt(t) + ' mm'],
+        ['Corrosion allowance c', fmt(c) + ' mm'],
+        ['t_min = t + c', fmt(tMin) + ' mm'],
+        ['Mill under-tolerance applied', fmt(millPct) + '% (factor ' + fmt(1-mill) + ')'],
+        ['Required nominal thickness t_nom', fmt(tNom) + ' mm'],
+        ['t / D₀ ratio', fmt((t/Do)*100) + '% (D/6 = ' + fmt(100/6) + '%)'],
+        ['Hydrostatic test pressure (1.5×P)', fmt(Ptest) + ' barg — ref. only, see B31.3 Ch. VI'],
+        ['MATERIAL & JOINT FACTORS'],
+        ['Allowable stress S', fmt(S) + ' MPa'],
+        ['Weld joint efficiency E', fmt(E)],
+        ['Weld strength reduction W', fmt(W)],
+        ['Coefficient Y', fmt(Y)],
+      ];
+    } else {
+      const tActual = parseFloat(document.getElementById('b-tact').value);
+      if(!(tActual>0)) throw new Error("Actual wall thickness must be > 0");
+
+      const tAfterMill = tActual*(1-mill);
+      const tAvail = tAfterMill - c;
+      const P_MAWP_MPa = mawpFromThickness(tAvail, Do, S, E, W, Y);
+      const P_MAWP_bar = MPaToBar(P_MAWP_MPa);
+      const Ptest = 1.5*P_MAWP_bar;
+
+      bigVal = P_MAWP_bar;
+      bigUnit = 'barg';
+      subText = '≈ ' + fmt(barToPsi(P_MAWP_bar)) + ' psig';
+      tCheck = tAvail;
+      totalMetalForDiagram = tActual;
+
+      rows = [
+        ['ACTUAL PIPE'],
+        ['Actual / nominal wall thickness', fmt(tActual) + ' mm'],
+        ['Outside diameter D₀', fmt(Do) + ' mm'],
+        ['AVAILABLE THICKNESS (reverse of Eq. 3a)'],
+        ['Mill under-tolerance applied', fmt(millPct) + '% (factor ' + fmt(1-mill) + ')'],
+        ['Thickness after mill under-tolerance', fmt(tAfterMill) + ' mm'],
+        ['Corrosion allowance c', fmt(c) + ' mm'],
+        ['Pressure-design thickness available t_avail', fmt(tAvail) + ' mm'],
+        ['t_avail / D₀ ratio', fmt((tAvail/Do)*100) + '% (D/6 = ' + fmt(100/6) + '%)'],
+        ['Hydrostatic test reference (1.5×MAWP)', fmt(Ptest) + ' barg — ref. only, see B31.3 Ch. VI'],
+        ['MATERIAL & JOINT FACTORS'],
+        ['Allowable stress S', fmt(S) + ' MPa'],
+        ['Weld joint efficiency E', fmt(E)],
+        ['Weld strength reduction W', fmt(W)],
+        ['Coefficient Y', fmt(Y)],
+      ];
+    }
+
+    document.getElementById('out-value').textContent = fmt(bigVal);
+    document.getElementById('out-sub').textContent = subText;
+    renderStats(rows);
+
+    badge.textContent = 'READY';
+    badge.className = 'badge ok';
+
+    const thinOk = tCheck < Do/6;
+    thinBadge.textContent = thinOk ? 'THIN WALL — EQ. 3a VALID (t<D/6)' : 'THICK WALL — CONFIRM EQ. 1b/3b (t≥D/6)';
+    thinBadge.className = 'badge ' + (thinOk ? 'ok' : 'warn');
+    thinBadge.classList.remove('hidden');
+
+    weldBadge.textContent = (E>=0.999) ? 'SEAMLESS (E=' + fmt(E) + ')' : 'WELDED JOINT (E=' + fmt(E) + ')';
+    weldBadge.className = 'badge info';
+    weldBadge.classList.remove('hidden');
+
+    updateDiagram(Do, totalMetalForDiagram, c);
+
+  } catch(e){
+    const errId = mode==='a' ? 'a-err' : 'b-err';
+    const el = document.getElementById(errId);
+    el.textContent = e.message;
+    el.style.display = 'block';
+    document.getElementById('out-value').textContent = '—';
+    document.getElementById('out-sub').textContent = '≈ —';
+    document.getElementById('stat-rows').innerHTML = '';
+    badge.textContent = 'CHECK INPUTS';
+    badge.className = 'badge warn';
+  }
+}
+
+setMode('a');
+</script>
+</body>
+</html>

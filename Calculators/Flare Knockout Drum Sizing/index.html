@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flare Knockout Drum Sizing Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy: #0B1F33;
+    --navy-2: #122A44;
+    --blueprint: #1B4F72;
+    --line: #3E7CB1;
+    --line-dim: #2A5A80;
+    --paper: #EAE6D9;
+    --paper-dim: #B9C4CC;
+    --amber: #E8A33D;
+    --green: #6FA787;
+    --red: #C96A5C;
+    --grid: rgba(62,124,177,0.16);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      linear-gradient(var(--grid) 1px, transparent 1px) 0 0/28px 28px,
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px) 0 0/28px 28px,
+      var(--navy);
+    color:var(--paper);
+    font-family:'Space Grotesk', sans-serif;
+    min-height:100vh;
+  }
+  .wrap{max-width:1080px;margin:0 auto;padding:48px 24px 80px;}
+
+  header{margin-bottom:32px;border-bottom:1px solid var(--line-dim);padding-bottom:24px;}
+  .eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--line);margin:0 0 10px;
+  }
+  h1{
+    font-size:clamp(28px,4vw,42px);
+    margin:0 0 12px;font-weight:700;letter-spacing:-0.01em;
+  }
+  .sub{color:var(--paper-dim);font-size:15px;max-width:700px;line-height:1.55;margin:0 0 16px;}
+
+  .epcnote{
+    font-family:'IBM Plex Mono',monospace;font-size:11.5px;line-height:1.6;color:var(--paper-dim);
+    background:rgba(201,106,92,.08);border:1px solid rgba(201,106,92,.4);border-radius:6px;
+    padding:14px 16px;margin-top:16px;
+  }
+  .epcnote b{color:var(--red);}
+
+  .tabs{display:flex;gap:2px;margin:24px 0 28px;border:1px solid var(--line-dim);width:fit-content;border-radius:6px;overflow:hidden;}
+  .tab{
+    font-family:'IBM Plex Mono',monospace;font-size:13px;letter-spacing:.05em;
+    padding:11px 22px;background:var(--navy-2);color:var(--paper-dim);
+    border:none;cursor:pointer;transition:background .15s, color .15s;
+  }
+  .tab.active{background:var(--line);color:var(--navy);font-weight:600;}
+  .tab:not(.active):hover{background:#17324f;color:var(--paper);}
+  .tab:focus-visible{outline:2px solid var(--amber);outline-offset:-2px;}
+
+  .grid{display:grid;grid-template-columns:1.1fr 1fr;gap:36px;align-items:start;}
+  @media (max-width:820px){.grid{grid-template-columns:1fr;}}
+
+  .panel{
+    background:var(--navy-2);border:1px solid var(--line-dim);border-radius:8px;padding:26px;
+    margin-bottom:22px;
+  }
+  .panel:last-child{margin-bottom:0;}
+  .panel h2{
+    font-family:'IBM Plex Mono',monospace;font-size:12px;text-transform:uppercase;
+    letter-spacing:.14em;color:var(--line);margin:0 0 20px;
+  }
+  .panel h3{
+    font-family:'IBM Plex Mono',monospace;font-size:11px;text-transform:uppercase;
+    letter-spacing:.12em;color:var(--paper-dim);margin:22px 0 14px;
+    border-top:1px solid var(--line-dim);padding-top:16px;
+  }
+  .panel h3:first-of-type{margin-top:0;border-top:none;padding-top:0;}
+
+  .field{margin-bottom:16px;}
+  .field:last-child{margin-bottom:0;}
+  label{display:flex;justify-content:space-between;align-items:baseline;font-size:13.5px;color:var(--paper);margin-bottom:6px;}
+  label .unit{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--paper-dim);}
+  input[type=number], select{
+    width:100%;background:var(--navy);border:1px solid var(--line-dim);border-radius:5px;
+    color:var(--paper);font-family:'IBM Plex Mono',monospace;font-size:14px;
+    padding:9px 11px;transition:border-color .15s;
+  }
+  select{cursor:pointer;}
+  input[type=number]:focus, select:focus{outline:none;border-color:var(--line);box-shadow:0 0 0 3px rgba(62,124,177,0.22);}
+  input[type=number]:disabled{opacity:0.65;cursor:not-allowed;color:var(--amber);border-color:var(--amber);}
+  .hint{font-size:11.5px;color:var(--paper-dim);margin-top:5px;line-height:1.4;}
+  .err{font-size:11.5px;color:var(--red);margin-top:5px;display:none;}
+
+  .readout{
+    background:var(--navy-2);border:1px solid var(--line-dim);border-radius:8px;
+    padding:26px;display:flex;flex-direction:column;gap:18px;position:sticky;top:24px;
+  }
+  .readout h2{
+    font-family:'IBM Plex Mono',monospace;font-size:12px;text-transform:uppercase;
+    letter-spacing:.14em;color:var(--line);margin:0;
+  }
+  .big-figure{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;}
+  .big-num{font-size:44px;font-weight:700;line-height:1;letter-spacing:-0.02em;font-variant-numeric:tabular-nums;}
+  .big-num-sm{font-size:26px;font-weight:700;line-height:1;letter-spacing:-0.02em;font-variant-numeric:tabular-nums;color:var(--amber);}
+  .big-unit{font-family:'IBM Plex Mono',monospace;font-size:16px;color:var(--paper-dim);}
+  .subfigure{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--paper-dim);}
+  .figure-label{font-family:'IBM Plex Mono',monospace;font-size:10.5px;text-transform:uppercase;letter-spacing:.1em;color:var(--line);margin:2px 0 0;}
+
+  .diagram{display:flex;align-items:center;justify-content:center;padding:4px 0 2px;}
+  .diagram svg{overflow:visible;max-width:100%;height:auto;}
+  .flow-dash{stroke-dasharray:5 6;animation:flowmove 1.1s linear infinite;}
+  @keyframes flowmove{to{stroke-dashoffset:-22;}}
+  @media (prefers-reduced-motion: reduce){.flow-dash{animation:none;}}
+
+  .stat-row{display:flex;justify-content:space-between;gap:12px;font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--paper-dim);border-top:1px solid var(--line-dim);padding-top:12px;}
+  .stat-row span:first-child{flex-shrink:0;}
+  .stat-row span:last-child{color:var(--paper);text-align:right;}
+  #stat-rows{display:flex;flex-direction:column;gap:12px;}
+  .stat-group-label{
+    font-family:'IBM Plex Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.08em;
+    color:var(--line);margin-top:6px;
+  }
+
+  .badge{
+    font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.06em;
+    padding:4px 10px;border-radius:20px;display:inline-block;width:fit-content;
+  }
+  .badge.ok{background:rgba(111,167,135,.15);color:var(--green);border:1px solid rgba(111,167,135,.4);}
+  .badge.warn{background:rgba(232,163,61,.15);color:var(--amber);border:1px solid rgba(232,163,61,.4);}
+  .badge.info{background:rgba(62,124,177,.18);color:var(--line);border:1px solid rgba(62,124,177,.4);}
+  .badge-row{display:flex;gap:8px;flex-wrap:wrap;}
+
+  footer{margin-top:40px;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--paper-dim);line-height:1.6;border-top:1px solid var(--line-dim);padding-top:20px;}
+  .hidden{display:none !important;}
+
+  .signature{
+    margin-top:28px;padding-top:20px;border-top:1px solid var(--line-dim);
+    font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--paper-dim);line-height:1.7;
+  }
+  .signature strong{color:var(--paper);font-weight:600;}
+  .signature a{color:var(--line);text-decoration:none;border-bottom:1px solid var(--line-dim);padding-bottom:1px;transition:color .15s,border-color .15s;}
+  .signature a:hover{color:var(--amber);border-color:var(--amber);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">Flare Systems — API 521 Practice · Knockout Drum Sizing</p>
+    <h1>Flare Knockout Drum Sizing Calculator</h1>
+    <p class="sub">Sizes a flare knockout (KO) drum for a single, direct-input governing relief case — the largest simultaneous flare load per the plant's relief/flare system study (e.g. total power failure). Gas capacity uses the Souders-Brown vapor-velocity form with a user-set K (default 0.107&nbsp;m/s, the general no-mist-eliminator value); liquid holdup is sized on a drainage-time basis rather than a short process-separator retention time. Vertical and horizontal orientations are both supported, each with its own governing geometry.</p>
+    <div class="epcnote">
+      <b>Not a substitute for a certified flare/relief system study.</b> This tool assumes: (1) the governing relief case — gas mass flow, pressure, temperature, and any accompanying liquid carryover — is a <b>direct input</b> you provide from the plant's flare/relief system case study; it does <b>not</b> determine which upset (total power failure, single largest contributor, fire case, blocked flare header, etc.) governs — confirm the case entered below is genuinely the bounding scenario. (2) Gas capacity uses V<sub>max</sub> = K·√((ρ<sub>L</sub>−ρ<sub>V</sub>)/ρ<sub>V</sub>) with K as a direct, editable input (default 0.107&nbsp;m/s / 0.35&nbsp;ft/s). KO drums are typically sized <b>without</b> a mist eliminator — fouling/plugging risk during infrequent, potentially dirty, large transient relief events makes mesh pads undesirable — confirm your design K against API 521 §5.7 and project philosophy rather than assuming a mist eliminator is present. (3) API 521's more rigorous method instead derives K from a target droplet diameter (commonly ~300–600 micron) via an iterative terminal-settling-velocity/drag-coefficient correlation; that level of rigor is <b>deliberately not implemented here</b>, given the risk of misremembering the exact drag-coefficient correlation in a screening tool — the Souders-Brown K approach above is the standard simplified equivalent used for first-pass/EPC screening sizing. (4) Liquid holdup is sized on a <b>drainage-time</b> basis, V = Q<sub>liquid</sub>·t<sub>drain</sub> — not a short process-separator retention time — which is what distinguishes a KO drum from a routine separator; t<sub>drain</sub> is a direct editable input (default 20 min), confirm against project philosophy and the flare system study. (5) Gas density uses the same real-gas Dranchuk–Abou-Kassem/Standing Z-factor logic as the other tools in this suite; no sour-gas (H₂S/CO₂) correction is applied unless you enter simulator Pc/Tc directly. (6) No inlet-nozzle momentum (ρV²) check, no rigorous droplet-settling verification, no mechanical/vessel-code design, and no two-phase flashing across the inlet device are performed here. For an actual EPC deliverable you still need: the flare/relief system study confirming the governing case, an inlet momentum and vortex-breaker check, a droplet-settling verification if project philosophy requires it, a process-simulator cross-check, and sign-off by a licensed engineer.
+    </div>
+  </header>
+
+  <div class="tabs" role="tablist" aria-label="Drum orientation">
+    <button class="tab active" id="tab-vertical" role="tab" aria-selected="true">VERTICAL</button>
+    <button class="tab" id="tab-horizontal" role="tab" aria-selected="false">HORIZONTAL</button>
+  </div>
+
+  <div class="grid">
+
+    <!-- INPUTS -->
+    <div>
+
+      <section class="panel">
+        <h2>Governing Relief Case (Gas)</h2>
+        <div class="field">
+          <label for="g-mdot">Gas mass flow <span class="unit">kg/h</span></label>
+          <input type="number" id="g-mdot" value="72000" step="any" min="0">
+          <div class="hint">Total gas mass flow for the single largest/governing relief case at the KO drum inlet (e.g. total power failure, or the single largest contributor per the plant's relief/flare system study). This tool does not determine which case governs.</div>
+        </div>
+        <div class="field">
+          <label for="g-MW">Molecular weight <span class="unit">g/mol</span></label>
+          <input type="number" id="g-MW" value="22" step="any" min="2">
+        </div>
+        <div class="field">
+          <label for="g-k">Specific heat ratio k (Cp/Cv) <span class="unit">informational</span></label>
+          <input type="number" id="g-k" value="1.25" step="any" min="1.001" max="1.8">
+          <div class="hint">Not used directly in this Souders-Brown gas-capacity calculation — carried here for documentation/traceability alongside the other governing-case properties (e.g. cross-check against a downstream dynamic relief simulation).</div>
+        </div>
+        <div class="field">
+          <label for="g-P">Relieving pressure <span class="unit">barg</span></label>
+          <input type="number" id="g-P" value="0.35" step="any" min="-1.013">
+          <div class="hint">Gas pressure at the KO drum for the governing case — typically close to the flare header design/operating pressure at that load.</div>
+        </div>
+        <div class="field">
+          <label for="g-T">Relieving temperature <span class="unit">°C</span></label>
+          <input type="number" id="g-T" value="45" step="any" min="-200">
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Gas Density — Z-Factor Basis</h2>
+        <div class="field">
+          <label for="z-basis">Compressibility treatment</label>
+          <select id="z-basis">
+            <option value="ideal">Ideal gas (Z = 1.0) — quick screening only</option>
+            <option value="gravity" selected>Real gas — Standing pseudo-criticals from gas gravity (sweet gas)</option>
+            <option value="direct">Real gas — enter Pc/Tc directly (from simulator)</option>
+          </select>
+          <div class="hint">Real-gas Z is solved with the Dranchuk–Abou-Kassem (DAK) correlation, valid for 0.2 ≤ Ppr &lt; 30 and 1.0 &lt; Tpr ≤ 3.0.</div>
+        </div>
+        <div class="field hidden" id="z-Pc-field">
+          <label for="z-Pc">Pseudo-critical pressure Pc <span class="unit">bar abs</span></label>
+          <input type="number" id="z-Pc" value="46.5" step="any" min="1">
+        </div>
+        <div class="field hidden" id="z-Tc-field">
+          <label for="z-Tc">Pseudo-critical temperature Tc <span class="unit">K</span></label>
+          <input type="number" id="z-Tc" value="205" step="any" min="1">
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Liquid Carryover &amp; Holdup (Drainage-Time Basis)</h2>
+        <div class="field">
+          <label for="l-Q">Liquid carryover flow <span class="unit">m³/h</span></label>
+          <input type="number" id="l-Q" value="8" step="any" min="0">
+          <div class="hint">Liquid flow accompanying the governing gas relief case. Enter 0 for a dry/gas-only relief case — the drum is then sized on gas capacity/entrainment protection alone, with zero liquid holdup volume added.</div>
+        </div>
+        <div class="field">
+          <label for="l-rho">Liquid density ρL <span class="unit">kg/m³</span></label>
+          <input type="number" id="l-rho" value="650" step="any" min="0">
+        </div>
+        <div class="field">
+          <label for="t-drain">Drainage time <span class="unit">min</span></label>
+          <input type="number" id="t-drain" value="20" step="any" min="0">
+          <div class="hint">API 521 §5.7 discusses KO drum liquid holdup based on the time needed to drain liquid before it can carry over to the flare tip, or before operator/pump-out response — commonly cited practice is in the 20–30 minute range, longer for unmanned/remote facilities. Confirm the governing value against project philosophy and the flare system study; this tool does not embed a single fixed standard number.</div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Gas Capacity — Souders-Brown</h2>
+        <div class="field">
+          <label for="k-sb">K factor <span class="unit">m/s</span></label>
+          <input type="number" id="k-sb" value="0.107" step="any" min="0.001">
+          <div class="hint">KO drums are typically sized <b>without</b> a mist eliminator (fouling/plugging risk during infrequent, potentially dirty/large transient relief events) — confirm the design K against API 521 §5.7 guidance and project philosophy; do not assume a mist eliminator is present unless specifically justified. Default 0.107 m/s (0.35 ft/s) is the general-purpose no-mist-eliminator value commonly cited for vertical vessels.</div>
+          <div class="err" id="main-err"></div>
+        </div>
+      </section>
+
+      <section class="panel" id="panel-vertical">
+        <h2>Vertical Geometry</h2>
+        <div class="field">
+          <label for="v-Hvap">Vapor disengagement height <span class="unit">m</span></label>
+          <input type="number" id="v-Hvap" value="1.50" step="any" min="0.1">
+          <div class="hint">Height above the liquid high level up to the gas outlet nozzle. Suggested default = max(0.5·D, 1.0 m), computed once from the initial case above — KO drums often want more generous disengagement height than a routine separator, given the large, potentially dirty, transient flows involved; edit freely to match project philosophy.</div>
+        </div>
+      </section>
+
+      <section class="panel hidden" id="panel-horizontal">
+        <h2>Horizontal Geometry</h2>
+        <div class="field">
+          <label for="h-phi">Normal liquid level fraction φ</label>
+          <input type="number" id="h-phi" value="0.5" step="any" min="0.02" max="0.98">
+          <div class="hint">Many KO drums operate at a <b>lower</b> normal level (e.g. 20–30%) to reserve vessel volume for the transient liquid surge during a relief event — confirm against project philosophy; 50% is a simplifying default, not a universal rule.</div>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- READOUT -->
+    <section class="readout">
+      <h2>Required Vessel Sizing</h2>
+
+      <div class="diagram" id="diagram-vertical">
+        <svg width="200" height="230" viewBox="0 0 200 230" id="vko-svg">
+          <defs>
+            <clipPath id="v-clip"><rect x="30" y="30" width="70" height="170" rx="16"/></clipPath>
+          </defs>
+          <!-- vessel body -->
+          <rect x="30" y="30" width="70" height="170" rx="16" fill="var(--navy)" stroke="var(--line-dim)" stroke-width="1.4"/>
+          <!-- liquid band -->
+          <rect id="v-liqband" x="30" y="185" width="70" height="15" fill="var(--blueprint)" opacity="0.6" clip-path="url(#v-clip)"/>
+          <rect x="30" y="30" width="70" height="170" rx="16" fill="none" stroke="var(--line-dim)" stroke-width="1.4"/>
+
+          <!-- inlet nozzle -->
+          <line x1="0" y1="80" x2="30" y2="80" stroke="var(--line)" stroke-width="2" class="flow-dash"/>
+          <text x="2" y="72" font-family="IBM Plex Mono" font-size="8.5" fill="var(--paper-dim)">INLET</text>
+
+          <!-- gas outlet to flare stack -->
+          <line x1="65" y1="30" x2="65" y2="14" stroke="var(--line)" stroke-width="2"/>
+          <line x1="65" y1="14" x2="150" y2="14" stroke="var(--line)" stroke-width="2" class="flow-dash"/>
+          <line x1="150" y1="14" x2="150" y2="205" stroke="var(--line-dim)" stroke-width="3"/>
+          <path d="M150,14 q-7,-11 0,-20 q7,9 0,20 Z" fill="var(--red)" opacity="0.85"/>
+          <text x="150" y="218" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="var(--line)" letter-spacing="0.04em">TO FLARE</text>
+
+          <!-- liquid drain -->
+          <line x1="65" y1="200" x2="65" y2="222" stroke="var(--red)" stroke-width="2"/>
+          <polygon points="65,222 61,215 69,215" fill="var(--red)"/>
+          <text x="65" y="234" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="var(--paper-dim)">DRAIN / PUMP-OUT</text>
+
+          <text x="65" y="24" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="var(--paper)">D</text>
+          <text id="v-level-label" x="65" y="118" text-anchor="middle" font-family="IBM Plex Mono" font-size="8.5" fill="var(--paper-dim)"></text>
+        </svg>
+      </div>
+
+      <div class="diagram hidden" id="diagram-horizontal">
+        <svg width="280" height="180" viewBox="0 0 280 180" id="hko-svg">
+          <defs>
+            <clipPath id="h-clip"><rect x="30" y="50" width="200" height="70" rx="35"/></clipPath>
+          </defs>
+          <!-- vessel body -->
+          <rect x="30" y="50" width="200" height="70" rx="35" fill="var(--navy)" stroke="var(--line-dim)" stroke-width="1.4"/>
+          <!-- liquid band -->
+          <rect id="h-liqband" x="30" y="85" width="200" height="35" fill="var(--blueprint)" opacity="0.6" clip-path="url(#h-clip)"/>
+          <rect x="30" y="50" width="200" height="70" rx="35" fill="none" stroke="var(--line-dim)" stroke-width="1.4"/>
+
+          <!-- inlet nozzle -->
+          <line x1="0" y1="70" x2="35" y2="70" stroke="var(--line)" stroke-width="2" class="flow-dash"/>
+          <text x="2" y="62" font-family="IBM Plex Mono" font-size="8.5" fill="var(--paper-dim)">INLET</text>
+
+          <!-- gas outlet to flare stack -->
+          <line x1="200" y1="50" x2="200" y2="32" stroke="var(--line)" stroke-width="2"/>
+          <line x1="200" y1="32" x2="250" y2="32" stroke="var(--line)" stroke-width="2" class="flow-dash"/>
+          <line x1="250" y1="32" x2="250" y2="160" stroke="var(--line-dim)" stroke-width="3"/>
+          <path d="M250,32 q-7,-11 0,-20 q7,9 0,20 Z" fill="var(--red)" opacity="0.85"/>
+          <text x="250" y="173" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="var(--line)" letter-spacing="0.04em">TO FLARE</text>
+
+          <!-- liquid drain -->
+          <line x1="65" y1="120" x2="65" y2="142" stroke="var(--red)" stroke-width="2"/>
+          <polygon points="65,142 61,135 69,135" fill="var(--red)"/>
+          <text x="65" y="154" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="var(--paper-dim)">DRAIN / PUMP-OUT</text>
+
+          <text x="130" y="42" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="var(--paper)">L</text>
+          <text id="h-level-label" x="130" y="90" text-anchor="middle" font-family="IBM Plex Mono" font-size="8.5" fill="var(--paper-dim)"></text>
+        </svg>
+      </div>
+
+      <div>
+        <div class="big-figure">
+          <span class="big-num" id="out-D">—</span>
+          <span class="big-unit">m</span>
+        </div>
+        <span class="subfigure" id="out-D-sub">≈ — in</span>
+        <p class="figure-label">Vessel diameter D</p>
+      </div>
+
+      <div>
+        <div class="big-figure">
+          <span class="big-num-sm" id="out-L">—</span>
+          <span class="big-unit">m</span>
+        </div>
+        <span class="subfigure" id="out-L-sub">L/D = —</span>
+        <p class="figure-label" id="out-L-label">Tan-tan length L</p>
+      </div>
+
+      <div class="badge-row">
+        <span class="badge ok" id="status-badge">READY</span>
+        <span class="badge info hidden" id="zbasis-badge"></span>
+        <span class="badge info hidden" id="mode-badge"></span>
+        <span class="badge info hidden" id="liqmode-badge"></span>
+        <span class="badge warn hidden" id="ld-badge"></span>
+        <span class="badge warn hidden" id="range-badge"></span>
+      </div>
+
+      <div id="stat-rows"></div>
+    </section>
+
+  </div>
+
+  <footer>
+    <b>Gas density (real gas):</b> ρ<sub>V</sub> = P<sub>abs</sub>·1e5·MW / (Z·R·T), R = 8314.462618 J/(kmol·K); Z from the Dranchuk–Abou-Kassem (DAK) correlation with Standing pseudo-criticals from gas gravity (or direct Pc/Tc entry, or ideal gas). Same method as the other real-gas tools in this suite.<br>
+    <b>Gas capacity (Souders-Brown, no mist eliminator by default):</b> V<sub>max</sub>(m/s) = K·√((ρ<sub>L</sub>−ρ<sub>V</sub>)/ρ<sub>V</sub>); Q<sub>gas</sub>(m³/s) = ṁ<sub>gas</sub>/(3600·ρ<sub>V</sub>). K is a direct input (default 0.107 m/s) — see disclaimer above regarding mist eliminators and the more rigorous droplet-target method this tool does not implement.<br>
+    <b>Liquid holdup (drainage-time basis):</b> V<sub>liquid</sub> = (Q<sub>liquid</sub>/3600)·t<sub>drain</sub>(s). Zero liquid carryover is fully supported — the drum then sizes on gas capacity alone.<br>
+    <b>Vertical orientation:</b> D = √(4·Q<sub>gas</sub>/(π·V<sub>max</sub>)); liquid holdup height H<sub>L</sub> = V<sub>liquid</sub>/(πD²/4); tan-tan length L = H<sub>L</sub> + H<sub>vapor-space</sub> (vapor/disengagement height is a direct editable input). L/D flagged against a commonly cited vertical KO drum range of ~2.5–5:1 (informational only).<br>
+    <b>Horizontal orientation (circular-segment geometry):</b> for a normal liquid level fraction φ (0&lt;φ&lt;1, depth h=φ·D), θ = 2·acos(1−2φ); liquid-area fraction of the full circle = (θ−sinθ)/(2π); vapor-area fraction = 1 − liquid-area fraction. Because φ is fixed by the user, the vapor-area fraction is a constant at any D, so D solves directly (no iteration): D = √(4·Q<sub>gas</sub>/(π·V<sub>max</sub>·vapor-area fraction)). Liquid area at that D = liquid-area fraction·πD²/4; length from liquid holdup L = V<sub>liquid</sub>/(liquid area). L/D flagged against a commonly cited horizontal KO drum range of ~2.5–6:1 (informational only, often longer/flatter than a process separator given surge-volume needs).<br>
+    <b>Operating level note (horizontal):</b> φ = 0.5 is a simplifying default; many KO drums run a lower normal level (e.g. 20–30%) to reserve freeboard for the transient liquid slug during the relief event itself — confirm against project philosophy.<br>
+    <b>Scope note:</b> this is a screening/pre-sizing tool for a single, user-specified governing relief case and a single liquid phase. It does not perform inlet-momentum (ρV²) checks, rigorous droplet-settling/drag-coefficient sizing, multi-case envelope sizing, or vessel mechanical design.<br>
+    References: API Standard 521 (Pressure-Relieving and Depressuring Systems, §5.7 — Liquid Knockout Drums), GPSA Engineering Data Book (Souders-Brown K guidance), Standing, M.B. (1977) <i>Volumetric and Phase Behavior of Oil Field Hydrocarbon Systems</i>, Dranchuk, P.M. &amp; Abou-Kassem, J.H. (1975) <i>Calculation of Z Factors for Natural Gases Using Equations of State</i>, JCPT. Not a certified sizing package — see the note at the top of the page.<br>
+    <div class="signature">
+      <strong>Shubham Chatterjee</strong> · Process Engineer<br>
+      <a href="https://processengonline.github.io/" target="_blank" rel="noopener noreferrer">processengonline.github.io</a> ·
+      <a href="https://github.com/processengonline" target="_blank" rel="noopener noreferrer">GitHub</a>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+const R_UNIVERSAL = 8314.462618; // J/(kmol K)
+const ATM = 1.01325; // bar
+
+function fmt(num, sig=4){
+  if(num===0) return '0';
+  if(!isFinite(num)) return '—';
+  const abs = Math.abs(num);
+  if(abs < 0.001 || abs >= 100000) return num.toExponential(3);
+  return num.toPrecision(sig);
+}
+
+function clamp(x, lo, hi){ return Math.max(lo, Math.min(hi, x)); }
+
+function dakZ(Ppr, Tpr){
+  const A1=0.3265,A2=-1.0700,A3=-0.5339,A4=0.01569,A5=-0.05165,
+        A6=0.5475,A7=-0.7361,A8=0.1844,A9=0.1056,A10=0.6134,A11=0.7210;
+  if(!(Ppr>0) || !(Tpr>0)) return { Z:1, rhor:0 };
+  const c1 = A1 + A2/Tpr + A3/Math.pow(Tpr,3) + A4/Math.pow(Tpr,4) + A5/Math.pow(Tpr,5);
+  const c2 = A6 + A7/Tpr + A8/Math.pow(Tpr,2);
+  const c3 = A9*(A7/Tpr + A8/Math.pow(Tpr,2));
+  let rhor = 0.27*Ppr/Tpr;
+  for(let i=0;i<200;i++){
+    const rhor2 = rhor*rhor;
+    const Zc = 1 + c1*rhor + c2*rhor2 - c3*Math.pow(rhor,5) + A10*(1+A11*rhor2)*(rhor2/Math.pow(Tpr,3))*Math.exp(-A11*rhor2);
+    const rhorNew = 0.27*Ppr/(Zc*Tpr);
+    if(Math.abs(rhorNew-rhor) < 1e-9){ rhor = rhorNew; break; }
+    rhor += 0.5*(rhorNew-rhor);
+  }
+  const rhor2 = rhor*rhor;
+  const Z = 1 + c1*rhor + c2*rhor2 - c3*Math.pow(rhor,5) + A10*(1+A11*rhor2)*(rhor2/Math.pow(Tpr,3))*Math.exp(-A11*rhor2);
+  return { Z, rhor };
+}
+
+function pseudoCriticalFromSG(SG){
+  const TpcR = 168 + 325*SG - 12.5*SG*SG;
+  const PpcPsia = 677 + 15.0*SG - 37.5*SG*SG;
+  return { TcK: TpcR/1.8, PcBar: PpcPsia*0.0689476 };
+}
+
+// ---- shared gas/liquid state (independent of orientation) ----
+function computeGasLiquid(){
+  const mdot = parseFloat(document.getElementById('g-mdot').value); // kg/h
+  const MW = parseFloat(document.getElementById('g-MW').value);
+  const Pbarg = parseFloat(document.getElementById('g-P').value);
+  const TC = parseFloat(document.getElementById('g-T').value);
+
+  if(!(mdot>=0)) throw new Error('Gas mass flow must be ≥ 0');
+  if(!(MW>2)) throw new Error('Molecular weight must be > 2 g/mol');
+  if(!(Pbarg > -ATM)) throw new Error('Relieving pressure must be above absolute zero pressure');
+  const TK = TC + 273.15;
+  if(!(TK>0)) throw new Error('Relieving temperature must be > absolute zero');
+  const PbarA = Pbarg + ATM;
+
+  const basis = document.getElementById('z-basis').value;
+  let PcBar=null, TcK=null, SG=null, Z=1.0, outOfRange=false;
+  if(basis==='ideal'){
+    Z = 1.0;
+  } else {
+    if(basis==='gravity'){
+      SG = MW/28.9647;
+      const pc = pseudoCriticalFromSG(SG);
+      PcBar = pc.PcBar; TcK = pc.TcK;
+    } else {
+      PcBar = parseFloat(document.getElementById('z-Pc').value);
+      TcK = parseFloat(document.getElementById('z-Tc').value);
+      if(!(PcBar>0)) throw new Error('Pc must be > 0');
+      if(!(TcK>0)) throw new Error('Tc must be > 0');
+    }
+    const Ppr = PbarA/PcBar, Tpr = TK/TcK;
+    if(Ppr>30 || Tpr<1.0 || Tpr>3.0 || Ppr<0.2) outOfRange = true;
+    Z = dakZ(Ppr, Tpr).Z;
+  }
+
+  const rhoV = (PbarA*1e5*MW) / (Z*R_UNIVERSAL*TK); // kg/m3 (MW numerically kg/kmol)
+  if(!(rhoV>0)) throw new Error('Computed gas density is not positive — check inputs');
+
+  const rhoL = parseFloat(document.getElementById('l-rho').value);
+  if(!(rhoL>0)) throw new Error('Liquid density must be > 0');
+  if(!(rhoL>rhoV)) throw new Error('Liquid density must exceed gas density for Souders-Brown separation to be meaningful');
+
+  const K = parseFloat(document.getElementById('k-sb').value);
+  if(!(K>0)) throw new Error('K factor must be > 0');
+  const Vmax = K*Math.sqrt((rhoL-rhoV)/rhoV);
+  if(!(Vmax>0)) throw new Error('Computed Vmax is not positive — check inputs');
+
+  const Qgas_m3s = (mdot/3600)/rhoV;
+
+  const Qliquid_m3ph = parseFloat(document.getElementById('l-Q').value);
+  if(!(Qliquid_m3ph>=0)) throw new Error('Liquid carryover flow must be ≥ 0');
+  const drainMin = parseFloat(document.getElementById('t-drain').value);
+  if(!(drainMin>=0)) throw new Error('Drainage time must be ≥ 0');
+  const Vliquid_m3 = (Qliquid_m3ph/3600)*(drainMin*60);
+
+  return { mdot, MW, PbarA, TK, TC, basis, PcBar, TcK, SG, Z, outOfRange,
+           rhoV, rhoL, K, Vmax, Qgas_m3s, Qliquid_m3ph, drainMin, Vliquid_m3 };
+}
+
+// ---- UI wiring ----
+
+function setBasisVisibility(){
+  const basis = document.getElementById('z-basis').value;
+  document.getElementById('z-Pc-field').classList.toggle('hidden', basis!=='direct');
+  document.getElementById('z-Tc-field').classList.toggle('hidden', basis!=='direct');
+  compute();
+}
+document.getElementById('z-basis').addEventListener('change', setBasisVisibility);
+
+const tabVertical = document.getElementById('tab-vertical');
+const tabHorizontal = document.getElementById('tab-horizontal');
+let mode = 'vertical';
+function setMode(m){
+  mode = m;
+  const isV = m==='vertical';
+  tabVertical.classList.toggle('active', isV);
+  tabHorizontal.classList.toggle('active', !isV);
+  tabVertical.setAttribute('aria-selected', isV);
+  tabHorizontal.setAttribute('aria-selected', !isV);
+  document.getElementById('panel-vertical').classList.toggle('hidden', !isV);
+  document.getElementById('panel-horizontal').classList.toggle('hidden', isV);
+  document.getElementById('diagram-vertical').classList.toggle('hidden', !isV);
+  document.getElementById('diagram-horizontal').classList.toggle('hidden', isV);
+  document.getElementById('out-L-label').textContent = isV ? 'Tan-tan length L' : 'Length L (from liquid holdup)';
+  compute();
+}
+tabVertical.addEventListener('click', ()=>setMode('vertical'));
+tabHorizontal.addEventListener('click', ()=>setMode('horizontal'));
+
+const ids = ['g-mdot','g-MW','g-k','g-P','g-T','z-basis','z-Pc','z-Tc',
+  'l-Q','l-rho','t-drain','k-sb','v-Hvap','h-phi'];
+ids.forEach(id=>{
+  const el = document.getElementById(id);
+  el.addEventListener('input', compute);
+  el.addEventListener('change', compute);
+});
+
+function renderStats(rows){
+  const container = document.getElementById('stat-rows');
+  container.innerHTML = '';
+  rows.forEach(item=>{
+    if(item.length===1){
+      const label = document.createElement('div');
+      label.className = 'stat-group-label';
+      label.textContent = item[0];
+      container.appendChild(label);
+      return;
+    }
+    const [label, val] = item;
+    const row = document.createElement('div');
+    row.className = 'stat-row';
+    row.innerHTML = `<span>${label}</span><span>${val}</span>`;
+    container.appendChild(row);
+  });
+}
+
+function compute(){
+  const errEl = document.getElementById('main-err');
+  errEl.style.display = 'none'; errEl.textContent = '';
+  const badge = document.getElementById('status-badge');
+  const zbasisBadge = document.getElementById('zbasis-badge');
+  const modeBadge = document.getElementById('mode-badge');
+  const liqmodeBadge = document.getElementById('liqmode-badge');
+  const ldBadge = document.getElementById('ld-badge');
+  const rangeBadge = document.getElementById('range-badge');
+  zbasisBadge.classList.add('hidden');
+  modeBadge.classList.add('hidden');
+  liqmodeBadge.classList.add('hidden');
+  ldBadge.classList.add('hidden');
+  rangeBadge.classList.add('hidden');
+
+  try{
+    const gl = computeGasLiquid();
+    let D, L, LD, extraRows = [];
+
+    if(mode==='vertical'){
+      const Hvap = parseFloat(document.getElementById('v-Hvap').value);
+      if(!(Hvap>=0)) throw new Error('Vapor disengagement height must be ≥ 0');
+      D = Math.sqrt(4*gl.Qgas_m3s/(Math.PI*gl.Vmax));
+      const Hliquid = gl.Vliquid_m3>0 ? gl.Vliquid_m3/(Math.PI*D*D/4) : 0;
+      L = Hliquid + Hvap;
+      LD = D>0 ? L/D : NaN;
+
+      extraRows = [
+        ['VERTICAL GEOMETRY'],
+        ['Liquid holdup height H_L', fmt(Hliquid) + ' m'],
+        ['Vapor disengagement height', fmt(Hvap) + ' m'],
+        ['Tan-tan length L', fmt(L) + ' m'],
+      ];
+
+      // diagram: liquid band fraction of vessel height
+      const vesselTop = 30, vesselH = 170;
+      const frac = clamp(L>0 ? Hliquid/L : 0.03, 0.03, 0.88);
+      const bandH = vesselH*frac;
+      const band = document.getElementById('v-liqband');
+      band.setAttribute('y', (vesselTop+vesselH-bandH).toFixed(1));
+      band.setAttribute('height', bandH.toFixed(1));
+      document.getElementById('v-level-label').textContent = gl.Vliquid_m3>0 ? ('H_L ≈ ' + fmt(Hliquid) + ' m') : 'no liquid holdup';
+
+      const lo=2.5, hi=5;
+      if(isFinite(LD) && (LD<lo || LD>hi)){
+        ldBadge.textContent = 'L/D = ' + fmt(LD) + ' — OUTSIDE TYPICAL ' + lo + '–' + hi + ':1 RANGE';
+        ldBadge.classList.remove('hidden');
+      }
+    } else {
+      const phi = parseFloat(document.getElementById('h-phi').value);
+      if(!(phi>0 && phi<1)) throw new Error('Level fraction φ must be strictly between 0 and 1');
+      const theta = 2*Math.acos(clamp(1-2*phi, -1, 1));
+      const liqFrac = (theta - Math.sin(theta))/(2*Math.PI);
+      const vapFrac = 1 - liqFrac;
+      if(!(vapFrac>1e-6)) throw new Error('Level fraction too high — leaves essentially no vapor space; reduce φ');
+
+      D = Math.sqrt(4*gl.Qgas_m3s/(Math.PI*gl.Vmax*vapFrac));
+      const liquidArea = liqFrac*Math.PI*D*D/4;
+      L = gl.Vliquid_m3>0 ? gl.Vliquid_m3/liquidArea : 0;
+      LD = D>0 ? L/D : NaN;
+
+      extraRows = [
+        ['HORIZONTAL GEOMETRY'],
+        ['Level fraction φ (operating)', fmt(phi)],
+        ['Vapor area fraction @ D', fmt(vapFrac)],
+        ['Liquid area fraction @ D', fmt(liqFrac)],
+        ['Length from liquid holdup L', fmt(L) + ' m'],
+      ];
+
+      // diagram: liquid band fraction = phi directly
+      const vesselTop = 50, vesselH = 70;
+      const frac = clamp(phi, 0.03, 0.94);
+      const bandH = vesselH*frac;
+      const band = document.getElementById('h-liqband');
+      band.setAttribute('y', (vesselTop+vesselH-bandH).toFixed(1));
+      band.setAttribute('height', bandH.toFixed(1));
+      document.getElementById('h-level-label').textContent = gl.Vliquid_m3>0 ? ('φ = ' + fmt(phi) + ', L ≈ ' + fmt(L) + ' m') : ('φ = ' + fmt(phi) + ', no liquid holdup');
+
+      const lo=2.5, hi=6;
+      if(gl.Vliquid_m3>0 && isFinite(LD) && (LD<lo || LD>hi)){
+        ldBadge.textContent = 'L/D = ' + fmt(LD) + ' — OUTSIDE TYPICAL ' + lo + '–' + hi + ':1 RANGE';
+        ldBadge.classList.remove('hidden');
+      }
+    }
+
+    document.getElementById('out-D').textContent = fmt(D);
+    document.getElementById('out-D-sub').textContent = '≈ ' + fmt(D*39.3701) + ' in';
+    document.getElementById('out-L').textContent = fmt(L);
+    document.getElementById('out-L-sub').textContent = isFinite(LD) ? ('L/D = ' + fmt(LD)) : 'L/D = —';
+
+    badge.textContent = 'READY';
+    badge.className = 'badge ok';
+
+    const basisLabel = gl.basis==='ideal' ? 'IDEAL GAS (Z=1)' : (gl.basis==='gravity' ? 'REAL GAS · SG ESTIMATE' : 'REAL GAS · Pc/Tc INPUT');
+    zbasisBadge.textContent = basisLabel;
+    zbasisBadge.classList.remove('hidden');
+
+    modeBadge.textContent = mode==='vertical' ? 'VERTICAL DRUM' : 'HORIZONTAL DRUM';
+    modeBadge.classList.remove('hidden');
+
+    liqmodeBadge.textContent = gl.Vliquid_m3>0 ? 'SIZED INCL. LIQUID HOLDUP (DRAINAGE BASIS)' : 'GAS-CAPACITY GOVERNED — NO LIQUID HOLDUP ENTERED';
+    liqmodeBadge.classList.remove('hidden');
+
+    if(gl.outOfRange){
+      rangeBadge.textContent = 'DAK RANGE EXCEEDED — VERIFY Z';
+      rangeBadge.classList.remove('hidden');
+    }
+
+    const rows = [
+      ['GAS PROPERTIES (GOVERNING CASE)'],
+      ['Relieving pressure (abs)', fmt(gl.PbarA) + ' bar a'],
+      ['Relieving temperature', fmt(gl.TK) + ' K (' + fmt(gl.TC) + ' °C)'],
+      ['Z-factor', fmt(gl.Z)],
+    ];
+    if(gl.basis!=='ideal'){
+      rows.push(['Pc / Tc used', fmt(gl.PcBar) + ' bar a / ' + fmt(gl.TcK) + ' K']);
+      if(gl.SG!==null) rows.push(['Gas gravity (SG vs air)', fmt(gl.SG)]);
+    }
+    rows.push(['Gas density ρV', fmt(gl.rhoV) + ' kg/m³']);
+    rows.push(['Gas mass flow', fmt(gl.mdot) + ' kg/h (' + fmt(gl.mdot/3600) + ' kg/s)']);
+    rows.push(['Gas volumetric flow Qgas', fmt(gl.Qgas_m3s) + ' m³/s (' + fmt(gl.Qgas_m3s*3600) + ' m³/h)']);
+
+    rows.push(['LIQUID PROPERTIES & HOLDUP']);
+    rows.push(['Liquid density ρL', fmt(gl.rhoL) + ' kg/m³']);
+    rows.push(['Liquid carryover flow', fmt(gl.Qliquid_m3ph) + ' m³/h']);
+    rows.push(['Drainage time', fmt(gl.drainMin) + ' min']);
+    rows.push(['Liquid holdup volume', fmt(gl.Vliquid_m3) + ' m³']);
+
+    rows.push(['GAS CAPACITY — SOUDERS-BROWN']);
+    rows.push(['K factor', fmt(gl.K) + ' m/s']);
+    rows.push(['Max allowable vapor velocity Vmax', fmt(gl.Vmax) + ' m/s']);
+
+    rows.push(...extraRows);
+
+    rows.push(['SIZING RESULT']);
+    rows.push(['Required diameter D', fmt(D) + ' m (' + fmt(D*39.3701) + ' in)']);
+    rows.push([mode==='vertical' ? 'Tan-tan length L' : 'Length L', fmt(L) + ' m']);
+    rows.push(['L/D ratio', isFinite(LD) ? fmt(LD) : '—']);
+    rows.push(['GOVERNING CASE']);
+    rows.push(['Basis', 'Sized for the governing relief case entered above — confirm this case is genuinely the bounding scenario per the plant’s flare/relief system study.']);
+
+    renderStats(rows);
+
+  } catch(e){
+    errEl.textContent = e.message;
+    errEl.style.display = 'block';
+    document.getElementById('out-D').textContent = '—';
+    document.getElementById('out-D-sub').textContent = '≈ — in';
+    document.getElementById('out-L').textContent = '—';
+    document.getElementById('out-L-sub').textContent = 'L/D = —';
+    document.getElementById('stat-rows').innerHTML = '';
+    badge.textContent = 'CHECK INPUTS';
+    badge.className = 'badge warn';
+  }
+}
+
+// Compute a one-time suggested default for the vertical vapor disengagement height,
+// based on the default case values above: max(0.5*D, 1.0 m).
+(function initVerticalDefault(){
+  try{
+    const gl = computeGasLiquid();
+    const D0 = Math.sqrt(4*gl.Qgas_m3s/(Math.PI*gl.Vmax));
+    const suggested = Math.max(0.5*D0, 1.0);
+    document.getElementById('v-Hvap').value = suggested.toFixed(2);
+  } catch(e){
+    document.getElementById('v-Hvap').value = '1.50';
+  }
+})();
+
+setBasisVisibility();
+setMode('vertical');
+compute();
+</script>
+</body>
+</html>

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Control Valve Sizing — Kv/Cv Calculator</title>
+<title>Control Valve Cv/Kv Sizing Calculator</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -33,7 +33,7 @@
   }
   .wrap{max-width:1080px;margin:0 auto;padding:48px 24px 80px;}
 
-  header{margin-bottom:40px;border-bottom:1px solid var(--line-dim);padding-bottom:24px;}
+  header{margin-bottom:32px;border-bottom:1px solid var(--line-dim);padding-bottom:24px;}
   .eyebrow{
     font-family:'IBM Plex Mono',monospace;
     font-size:12px;letter-spacing:.18em;text-transform:uppercase;
@@ -43,69 +43,87 @@
     font-size:clamp(28px,4vw,42px);
     margin:0 0 12px;font-weight:700;letter-spacing:-0.01em;
   }
-  .sub{color:var(--paper-dim);font-size:15px;max-width:640px;line-height:1.55;margin:0 0 16px;}
-  .source-link{
-    font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.03em;
-    color:var(--line);text-decoration:none;border-bottom:1px solid var(--line-dim);
-    padding-bottom:2px;transition:color .15s, border-color .15s;
-  }
-  .source-link:hover{color:var(--amber);border-color:var(--amber);}
-  .source-link:focus-visible{outline:2px solid var(--amber);outline-offset:2px;}
+  .sub{color:var(--paper-dim);font-size:15px;max-width:700px;line-height:1.55;margin:0 0 16px;}
 
-  .tabs{display:flex;gap:2px;margin-bottom:28px;border:1px solid var(--line-dim);width:fit-content;border-radius:6px;overflow:hidden;flex-wrap:wrap;}
+  .epcnote{
+    font-family:'IBM Plex Mono',monospace;font-size:11.5px;line-height:1.6;color:var(--paper-dim);
+    background:rgba(201,106,92,.08);border:1px solid rgba(201,106,92,.4);border-radius:6px;
+    padding:14px 16px;margin-top:16px;
+  }
+  .epcnote b{color:var(--red);}
+
+  .tabs{display:flex;gap:2px;margin:24px 0 28px;border:1px solid var(--line-dim);width:fit-content;border-radius:6px;overflow:hidden;}
   .tab{
     font-family:'IBM Plex Mono',monospace;font-size:13px;letter-spacing:.05em;
-    padding:11px 20px;background:var(--navy-2);color:var(--paper-dim);
+    padding:11px 22px;background:var(--navy-2);color:var(--paper-dim);
     border:none;cursor:pointer;transition:background .15s, color .15s;
   }
   .tab.active{background:var(--line);color:var(--navy);font-weight:600;}
   .tab:not(.active):hover{background:#17324f;color:var(--paper);}
   .tab:focus-visible{outline:2px solid var(--amber);outline-offset:-2px;}
 
-  .grid{display:grid;grid-template-columns:1.1fr 1fr;gap:36px;}
+  .grid{display:grid;grid-template-columns:1.1fr 1fr;gap:36px;align-items:start;}
   @media (max-width:820px){.grid{grid-template-columns:1fr;}}
 
   .panel{
     background:var(--navy-2);border:1px solid var(--line-dim);border-radius:8px;padding:26px;
+    margin-bottom:22px;
   }
+  .panel:last-child{margin-bottom:0;}
   .panel h2{
     font-family:'IBM Plex Mono',monospace;font-size:12px;text-transform:uppercase;
     letter-spacing:.14em;color:var(--line);margin:0 0 20px;
   }
+  .panel h3{
+    font-family:'IBM Plex Mono',monospace;font-size:11px;text-transform:uppercase;
+    letter-spacing:.12em;color:var(--paper-dim);margin:22px 0 14px;
+    border-top:1px solid var(--line-dim);padding-top:16px;
+  }
+  .panel h3:first-of-type{margin-top:0;border-top:none;padding-top:0;}
 
-  .field{margin-bottom:18px;}
+  .field{margin-bottom:16px;}
   .field:last-child{margin-bottom:0;}
   label{display:flex;justify-content:space-between;align-items:baseline;font-size:13.5px;color:var(--paper);margin-bottom:6px;}
   label .unit{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--paper-dim);}
-  input[type=number]{
+  input[type=number], input[type=text], select{
     width:100%;background:var(--navy);border:1px solid var(--line-dim);border-radius:5px;
-    color:var(--paper);font-family:'IBM Plex Mono',monospace;font-size:15px;
-    padding:10px 12px;transition:border-color .15s;
+    color:var(--paper);font-family:'IBM Plex Mono',monospace;font-size:14px;
+    padding:9px 11px;transition:border-color .15s;
   }
-  input[type=number]:focus{outline:none;border-color:var(--line);box-shadow:0 0 0 3px rgba(62,124,177,0.22);}
+  select{cursor:pointer;}
+  input[type=number]:focus, input[type=text]:focus, select:focus{outline:none;border-color:var(--line);box-shadow:0 0 0 3px rgba(62,124,177,0.22);}
+  input[type=number]:disabled{opacity:0.65;cursor:not-allowed;color:var(--amber);border-color:var(--amber);}
   .hint{font-size:11.5px;color:var(--paper-dim);margin-top:5px;line-height:1.4;}
   .err{font-size:11.5px;color:var(--red);margin-top:5px;display:none;}
 
   .readout{
     background:var(--navy-2);border:1px solid var(--line-dim);border-radius:8px;
-    padding:26px;display:flex;flex-direction:column;gap:22px;
+    padding:26px;display:flex;flex-direction:column;gap:18px;position:sticky;top:24px;
   }
   .readout h2{
     font-family:'IBM Plex Mono',monospace;font-size:12px;text-transform:uppercase;
     letter-spacing:.14em;color:var(--line);margin:0;
   }
   .big-figure{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;}
-  .big-num{font-size:56px;font-weight:700;line-height:1;letter-spacing:-0.02em;font-variant-numeric:tabular-nums;}
+  .big-num{font-size:48px;font-weight:700;line-height:1;letter-spacing:-0.02em;font-variant-numeric:tabular-nums;}
   .big-unit{font-family:'IBM Plex Mono',monospace;font-size:16px;color:var(--paper-dim);}
   .subfigure{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--paper-dim);}
+  .figure-label{font-family:'IBM Plex Mono',monospace;font-size:10.5px;text-transform:uppercase;letter-spacing:.1em;color:var(--line);margin:2px 0 0;}
 
-  .diagram{display:flex;align-items:center;justify-content:center;padding:8px 0 4px;}
-  .diagram svg{overflow:visible;}
-  .needle{transition:transform .35s cubic-bezier(.4,1.4,.6,1);transform-origin:90px 96px;}
-  @media (prefers-reduced-motion: reduce){.needle{transition:none;}}
+  .diagram{display:flex;align-items:center;justify-content:center;padding:6px 0 2px;}
+  .diagram svg{overflow:visible;max-width:100%;height:auto;}
+  .flow-dash{stroke-dasharray:5 6;animation:flowmove 1.1s linear infinite;}
+  @keyframes flowmove{to{stroke-dashoffset:-22;}}
+  @media (prefers-reduced-motion: reduce){.flow-dash{animation:none;}}
 
-  .stat-row{display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--paper-dim);border-top:1px solid var(--line-dim);padding-top:14px;}
-  .stat-row span:last-child{color:var(--paper);}
+  .stat-row{display:flex;justify-content:space-between;gap:12px;font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--paper-dim);border-top:1px solid var(--line-dim);padding-top:12px;}
+  .stat-row span:first-child{flex-shrink:0;}
+  .stat-row span:last-child{color:var(--paper);text-align:right;}
+  #stat-rows{display:flex;flex-direction:column;gap:12px;}
+  .stat-group-label{
+    font-family:'IBM Plex Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.08em;
+    color:var(--line);margin-top:6px;
+  }
 
   .badge{
     font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.06em;
@@ -113,16 +131,12 @@
   }
   .badge.ok{background:rgba(111,167,135,.15);color:var(--green);border:1px solid rgba(111,167,135,.4);}
   .badge.warn{background:rgba(232,163,61,.15);color:var(--amber);border:1px solid rgba(232,163,61,.4);}
+  .badge.info{background:rgba(62,124,177,.18);color:var(--line);border:1px solid rgba(62,124,177,.4);}
   .badge-row{display:flex;gap:8px;flex-wrap:wrap;}
-  select{
-    width:100%;background:var(--navy);border:1px solid var(--line-dim);border-radius:5px;
-    color:var(--paper);font-family:'IBM Plex Mono',monospace;font-size:15px;
-    padding:10px 12px;cursor:pointer;
-  }
-  input[type=number]:disabled, input[type=text]:disabled{opacity:0.65;cursor:not-allowed;color:var(--amber);border-color:var(--amber);background:var(--navy);}
 
   footer{margin-top:40px;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--paper-dim);line-height:1.6;border-top:1px solid var(--line-dim);padding-top:20px;}
   .hidden{display:none !important;}
+
   .signature{
     margin-top:28px;padding-top:20px;border-top:1px solid var(--line-dim);
     font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--paper-dim);line-height:1.7;
@@ -136,177 +150,218 @@
 <div class="wrap">
 
   <header>
-    <p class="eyebrow">Valve Sizing — Rev. 1</p>
-    <h1>Control Valve Kv/Cv Calculator</h1>
-    <p class="sub">Control valve Cv sizing for liquid and gas service. Switch modes and enter your process conditions — Cv updates as you type.</p>
+    <p class="eyebrow">Control Valve Sizing — ISA-75.01.01 / IEC 60534-2-1 &amp; -2-3</p>
+    <h1>Control Valve Cv/Kv Sizing Calculator</h1>
+    <p class="sub">First-pass required Kv/Cv for a control valve trim, from the IEC 60534 dimensionless sizing framework — liquid choked-flow (cavitation) screening via F<sub>L</sub> and F<sub>F</sub>, and gas/vapor choked-flow screening via x<sub>T</sub> and the expansion factor Y. Reports Kv and the equivalent Cv side by side.</p>
+    <div class="epcnote">
+      <b>Constants derived, not looked up.</b> The IEC 60534 "N" unit-conversion constants (N1, N6, N9, &hellip;) are numerous and easy to mis-transcribe from memory. This tool avoids that risk entirely: it works from Kv's fundamental definition &mdash; the flow of water (&rho;=1000 kg/m&sup3;) in m&sup3;/h through the valve at 1 bar &Delta;P &mdash; and derives every working equation from that definition plus dimensional consistency (SG = &rho;/1000 throughout; the compressible-flow form is the same relationship extended via mass conservation, with the "1000" arising purely from the SG definition, not a separate memorized constant). See the footer for the full derivation. This is a <b>first-pass sizing screen</b>, not a certified selection: confirm the selected trim's actual, vendor-published F<sub>L</sub>/x<sub>T</sub>/F<sub>p</sub>/Cv characteristic (and, for the final iteration, a piping-geometry-corrected F<sub>p</sub> if the valve size differs from the line size) before issuing a valve datasheet.
+    </div>
   </header>
 
-  <div class="tabs" role="tablist" aria-label="Sizing mode">
+  <div class="tabs" role="tablist" aria-label="Fluid phase">
     <button class="tab active" id="tab-liquid" role="tab" aria-selected="true">LIQUID</button>
-    <button class="tab" id="tab-gas" role="tab" aria-selected="false">GAS</button>
+    <button class="tab" id="tab-gas" role="tab" aria-selected="false">GAS / VAPOR</button>
   </div>
 
   <div class="grid">
 
     <!-- LIQUID PANEL -->
-    <section class="panel" id="panel-liquid">
-      <h2>Inputs — Liquid Cv (ISA 75.01 / IEC 60534-2-1)</h2>
-      <div class="field">
-        <label for="l-Q">Flow rate <span class="unit">US gpm</span></label>
-        <input type="number" id="l-Q" value="50" step="any" min="0">
-        <div class="hint">Q — liquid flow through the valve.</div>
-      </div>
-      <div class="field">
-        <label for="l-SG">Specific gravity <span class="unit">SG</span></label>
-        <input type="number" id="l-SG" value="1.0" step="any" min="0">
-        <div class="hint">Relative to water (1.0), at flowing temperature.</div>
-      </div>
-      <div class="field">
-        <label for="l-P1">Upstream pressure P1 <span class="unit">psia</span></label>
-        <input type="number" id="l-P1" value="115" step="any" min="0">
-      </div>
-      <div class="field">
-        <label for="l-P2">Downstream pressure P2 <span class="unit">psia</span></label>
-        <input type="number" id="l-P2" value="105" step="any" min="0">
-        <div class="hint" id="l-dp-readout">ΔP = P1 − P2 = 10.0 psi</div>
-      </div>
-      <div class="field">
-        <label for="l-valvetype">Valve type</label>
-        <select id="l-valvetype">
-          <option value="globe" selected>Globe (FL ≈ 0.90)</option>
-          <option value="butterfly">Butterfly (FL ≈ 0.62)</option>
-          <option value="ball">Ball / segmented (FL ≈ 0.68)</option>
-          <option value="custom">Custom — enter FL directly</option>
-        </select>
-        <div class="hint">Typical representative values — use the manufacturer's certified FL for final sizing.</div>
-      </div>
-      <div class="field">
-        <label for="l-FL">Liquid pressure recovery factor FL</label>
-        <input type="number" id="l-FL" value="0.90" step="any" min="0" max="1">
-      </div>
-      <div class="field">
-        <label for="l-Pv">Vapor pressure Pv <span class="unit">psia</span></label>
-        <input type="number" id="l-Pv" value="0.34" step="any" min="0">
-        <div class="hint">At flowing temperature. Default ≈ water at 20°C.</div>
-      </div>
-      <div class="field">
-        <label for="l-Pc">Critical pressure Pc <span class="unit">psia</span></label>
-        <input type="number" id="l-Pc" value="3208" step="any" min="0">
-        <div class="hint">Thermodynamic critical pressure of the fluid. Default ≈ water (3208 psia).</div>
-      </div>
-      <div class="field">
-        <label for="l-Cv100">Rated Cv100 (valve fully open) <span class="unit">optional</span></label>
-        <input type="number" id="l-Cv100" value="" step="any" min="0" placeholder="leave blank to skip">
-        <div class="hint">If known, checks required Cv against the valve's rated capacity and flags the resulting % opening.</div>
-        <div class="err" id="l-err"></div>
-      </div>
-    </section>
+    <div id="panel-liquid">
+
+      <section class="panel">
+        <h2>Flow &amp; Fluid Properties</h2>
+        <div class="field">
+          <label for="l-Q">Volumetric flow rate Q <span class="unit">m³/h</span></label>
+          <input type="number" id="l-Q" value="50" step="any" min="0">
+        </div>
+        <div class="field">
+          <label for="l-rho">Fluid density ρ <span class="unit">kg/m³</span></label>
+          <input type="number" id="l-rho" value="1000" step="any" min="0">
+          <div class="hint">Specific gravity SG = ρ/1000 is computed automatically.</div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Pressure Conditions</h2>
+        <div class="field">
+          <label for="l-P1">Upstream pressure P1 <span class="unit">barg</span></label>
+          <input type="number" id="l-P1" value="10" step="any" min="-1.013">
+        </div>
+        <div class="field">
+          <label for="l-P2">Downstream pressure P2 <span class="unit">barg</span></label>
+          <input type="number" id="l-P2" value="6" step="any" min="-1.013">
+          <div class="hint">ΔP = P1 − P2. Used directly for Kv unless the choked-flow cap below governs.</div>
+        </div>
+        <div class="field">
+          <label for="l-Pv">Vapor pressure Pv <span class="unit">bar abs</span></label>
+          <input type="number" id="l-Pv" value="0.03" step="any" min="0">
+          <div class="hint">Fluid vapor pressure at the upstream (inlet) temperature.</div>
+        </div>
+        <div class="field">
+          <label for="l-Pc">Critical pressure Pc <span class="unit">bar abs</span></label>
+          <input type="number" id="l-Pc" value="221" step="any" min="0.001">
+          <div class="hint">Fluid thermodynamic critical pressure (221 bar abs for water). Used only for the liquid critical-pressure-ratio factor F<sub>F</sub> below.</div>
+          <div class="err" id="l-err"></div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Valve Characteristics</h2>
+        <div class="field">
+          <label for="l-style">Valve style <span class="unit">informational</span></label>
+          <input type="text" id="l-style" value="Single-seat globe">
+        </div>
+        <div class="field">
+          <label for="l-FL"><span>Liquid pressure recovery factor F<sub>L</sub></span></label>
+          <input type="number" id="l-FL" value="0.85" step="any" min="0.01" max="1">
+          <div class="hint">Typical for a standard globe valve, 0.8–0.9 range; use the vendor's certified F<sub>L</sub> for final sizing.</div>
+        </div>
+        <div class="field">
+          <label for="l-Fp"><span>Piping geometry factor F<sub>p</sub></span></label>
+          <input type="number" id="l-Fp" value="1.0" step="any" min="0.1" max="1">
+          <div class="hint">Default 1.0 = valve same size as line (most common first-pass assumption). This tool does <b>not</b> compute F<sub>p</sub> from a reducer beta ratio — that requires an iterative solve against the valve's own Cv and is out of scope for a first-pass sizing screen. Override only with a known F<sub>p</sub> from a previous iteration or vendor software.</div>
+        </div>
+      </section>
+
+    </div>
 
     <!-- GAS PANEL -->
-    <section class="panel hidden" id="panel-gas">
-      <h2>Inputs — Gas Cv</h2>
-      <div class="field">
-        <label for="g-Q">Flow rate <span class="unit">Q</span></label>
-        <input type="number" id="g-Q" value="1000" step="any" min="0">
-        <div class="hint">Gas flow rate, in the units matching your chosen N9.</div>
-      </div>
-      <div class="field">
-        <label for="g-N9">Sizing constant N9</label>
-        <input type="number" id="g-N9" value="22.7" step="any" min="0">
-        <div class="hint">Per ISA S75.01 unit tables — value depends on the units used for Q, P1, and ρ1.</div>
-      </div>
-      <div class="field">
-        <label for="g-Fp">Piping geometry factor Fp</label>
-        <input type="number" id="g-Fp" value="1.0" step="any" min="0">
-        <div class="hint">1.0 when there are no fittings/reducers at the valve.</div>
-      </div>
-      <div class="field">
-        <label for="g-valvetype">Valve type</label>
-        <select id="g-valvetype">
-          <option value="globe" selected>Globe (xT ≈ 0.75)</option>
-          <option value="butterfly">Butterfly (xT ≈ 0.35)</option>
-          <option value="ball">Ball / segmented (xT ≈ 0.60)</option>
-          <option value="custom">Custom — enter xT directly</option>
-        </select>
-        <div class="hint">Typical representative values — use the manufacturer's certified xT for final sizing.</div>
-      </div>
-      <div class="field">
-        <label for="g-xT">Pressure drop ratio factor xT</label>
-        <input type="number" id="g-xT" value="0.75" step="any" min="0" max="1">
-      </div>
-      <div class="field">
-        <label for="g-k">Specific heat ratio k (Cp/Cv)</label>
-        <input type="number" id="g-k" value="1.4" step="any" min="1.001">
-        <div class="hint">Fk = k / 1.4. Default 1.4 = air / diatomic gas.</div>
-      </div>
-      <div class="field">
-        <label>Expansion factor Y <span class="unit">computed</span></label>
-        <input type="text" id="g-Y-out" value="" disabled>
-        <div class="hint">Y = 1 − x_eff/(3·Fk·xT), floored at 0.667 when choked (x ≥ Fk·xT).</div>
-      </div>
-      <div class="field">
-        <label for="g-x">Pressure drop ratio x <span class="unit">ΔP/P1</span></label>
-        <input type="number" id="g-x" value="0.2" step="any" min="0" max="1">
-        <div class="hint">x = ΔP / P1 (upstream pressure).</div>
-      </div>
-      <div class="field">
-        <label for="g-P1">Upstream pressure P1</label>
-        <input type="number" id="g-P1" value="500" step="any" min="0">
-        <div class="hint">Absolute upstream pressure, consistent with N9.</div>
-      </div>
-      <div class="field">
-        <label for="g-rho1">Upstream density ρ1</label>
-        <input type="number" id="g-rho1" value="2.5" step="any" min="0">
-        <div class="hint">Gas density at upstream conditions, consistent with N9.</div>
-      </div>
-      <div class="field">
-        <label for="g-SG">Specific gravity SG</label>
-        <input type="number" id="g-SG" value="1.0" step="any" min="0">
-        <div class="hint">Gas specific gravity relative to air.</div>
-        <div class="err" id="g-err"></div>
-      </div>
-    </section>
+    <div id="panel-gas" class="hidden">
+
+      <section class="panel">
+        <h2>Flow &amp; Fluid Properties</h2>
+        <div class="field">
+          <label for="g-w">Mass flow rate w <span class="unit">kg/h</span></label>
+          <input type="number" id="g-w" value="2000" step="any" min="0">
+        </div>
+        <div class="field">
+          <label for="g-MW">Molecular weight <span class="unit">g/mol</span></label>
+          <input type="number" id="g-MW" value="18.5" step="any" min="2">
+        </div>
+        <div class="field">
+          <label for="g-k">Specific heat ratio k (Cp/Cv)</label>
+          <input type="number" id="g-k" value="1.3" step="any" min="1.001">
+          <div class="hint">Informational — displayed for reference. Not required by the Kv relationship used here (x<sub>T</sub> already captures the terminal choke point for the selected trim).</div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Pressure &amp; Temperature</h2>
+        <div class="field">
+          <label for="g-P1">Upstream pressure P1 <span class="unit">barg</span></label>
+          <input type="number" id="g-P1" value="10" step="any" min="-1.013">
+        </div>
+        <div class="field">
+          <label for="g-P2">Downstream pressure P2 <span class="unit">barg</span></label>
+          <input type="number" id="g-P2" value="8" step="any" min="-1.013">
+          <div class="hint">x = ΔP/P1 (absolute). Used directly unless the choked-flow cap below governs.</div>
+        </div>
+        <div class="field">
+          <label for="g-T1">Upstream temperature T1 <span class="unit">°C</span></label>
+          <input type="number" id="g-T1" value="30" step="any" min="-200">
+          <div class="err" id="g-err"></div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Gas Properties &amp; Z-Factor</h2>
+        <div class="field">
+          <label for="g-zbasis">Compressibility treatment</label>
+          <select id="g-zbasis">
+            <option value="ideal">Ideal gas (Z = 1.0) — quick screening only</option>
+            <option value="gravity" selected>Real gas — Standing pseudo-criticals from gas gravity (sweet gas)</option>
+            <option value="direct">Real gas — enter Pc/Tc directly (from simulator)</option>
+          </select>
+          <div class="hint">Real-gas Z1 (at upstream P1, T1) is solved with the Dranchuk–Abou-Kassem (DAK) correlation, valid for 0.2 ≤ Ppr &lt; 30 and 1.0 &lt; Tpr ≤ 3.0.</div>
+        </div>
+        <div class="field hidden" id="g-Pc-field">
+          <label for="g-Pc">Pseudo-critical pressure Pc <span class="unit">bar abs</span></label>
+          <input type="number" id="g-Pc" value="46.5" step="any" min="1">
+        </div>
+        <div class="field hidden" id="g-Tc-field">
+          <label for="g-Tc">Pseudo-critical temperature Tc <span class="unit">K</span></label>
+          <input type="number" id="g-Tc" value="205" step="any" min="1">
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Valve Characteristics</h2>
+        <div class="field">
+          <label for="g-style">Valve style <span class="unit">informational</span></label>
+          <input type="text" id="g-style" value="Single-seat globe">
+        </div>
+        <div class="field">
+          <label for="g-xT"><span>Terminal pressure drop ratio x<sub>T</sub></span></label>
+          <input type="number" id="g-xT" value="0.72" step="any" min="0.05" max="0.99">
+          <div class="hint">Typical for a single-seat globe valve; ~0.5 for butterfly, ~0.15–0.3 for ball/segmented — use the vendor's certified x<sub>T</sub> for final sizing.</div>
+        </div>
+        <div class="field">
+          <label for="g-Fp"><span>Piping geometry factor F<sub>p</sub></span></label>
+          <input type="number" id="g-Fp" value="1.0" step="any" min="0.1" max="1">
+          <div class="hint">Default 1.0 = valve same size as line. Same first-pass assumption and scope limitation as the liquid tab — not computed from a reducer beta ratio here.</div>
+        </div>
+      </section>
+
+    </div>
 
     <!-- READOUT -->
     <section class="readout">
-      <h2 id="out-heading">Cv Required</h2>
+      <h2>Required Kv / Cv</h2>
 
       <div class="diagram">
-        <svg width="180" height="120" viewBox="0 0 180 120" id="gauge-svg">
-          <path d="M 20 96 A 70 70 0 0 1 160 96" fill="none" stroke="var(--line-dim)" stroke-width="10" stroke-linecap="round"/>
-          <path d="M 20 96 A 70 70 0 0 1 160 96" fill="none" stroke="var(--line)" stroke-width="10" stroke-linecap="round"
-                stroke-dasharray="220" stroke-dashoffset="110" id="gauge-fill"/>
-          <line x1="90" y1="96" x2="90" y2="34" stroke="var(--amber)" stroke-width="3" stroke-linecap="round" class="needle" id="gauge-needle"/>
-          <circle cx="90" cy="96" r="6" fill="var(--amber)"/>
+        <svg width="220" height="140" viewBox="0 0 220 140" id="cv-svg">
+          <!-- pipe -->
+          <rect x="6" y="52" width="208" height="36" fill="var(--navy)" stroke="var(--line-dim)" stroke-width="1.4"/>
+          <!-- flow in -->
+          <line x1="10" y1="70" x2="88" y2="70" stroke="var(--line)" stroke-width="2.4" class="flow-dash"/>
+          <!-- valve body (diamond) -->
+          <polygon points="110,30 150,70 110,110 70,70" fill="var(--navy-2)" stroke="var(--paper)" stroke-width="1.6"/>
+          <!-- plug/seat gap, animates with choke state -->
+          <rect x="104" y="60" width="12" height="20" fill="var(--navy)" stroke="var(--amber)" stroke-width="1.4" id="cv-gap"/>
+          <!-- stem -->
+          <line x1="110" y1="30" x2="110" y2="10" stroke="var(--paper-dim)" stroke-width="2.2"/>
+          <rect x="100" y="2" width="20" height="9" rx="2" fill="var(--navy)" stroke="var(--line-dim)" stroke-width="1.2"/>
+          <!-- flow out -->
+          <line x1="150" y1="70" x2="164" y2="70" stroke="var(--amber)" stroke-width="1.6" class="flow-dash" id="cv-jet"/>
+          <line x1="164" y1="70" x2="214" y2="70" stroke="var(--line)" stroke-width="2.4" class="flow-dash"/>
+
+          <text x="110" y="126" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="var(--line)" letter-spacing="0.06em">TRIM</text>
+          <text x="40" y="45" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="var(--paper-dim)">P1</text>
+          <text x="182" y="45" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="var(--paper-dim)">P2</text>
         </svg>
       </div>
 
-      <div class="big-figure">
-        <span class="big-num" id="out-primary">—</span>
-        <span class="big-unit">Cv</span>
+      <div>
+        <div class="big-figure">
+          <span class="big-num" id="out-kv">—</span>
+          <span class="big-unit">Kv</span>
+        </div>
+        <span class="subfigure" id="out-cv">≈ — Cv</span>
+        <p class="figure-label">REQUIRED FLOW COEFFICIENT</p>
       </div>
-      <span class="subfigure" id="out-secondary">≈ — Kv</span>
 
       <div class="badge-row">
         <span class="badge ok" id="status-badge">READY</span>
-        <span class="badge warn hidden" id="flow-badge"></span>
-        <span class="badge warn hidden" id="opening-badge"></span>
+        <span class="badge info hidden" id="choke-badge"></span>
+        <span class="badge info hidden" id="zrange-badge"></span>
       </div>
 
       <div id="stat-rows"></div>
-      <div class="stat-row"><span>Mode</span><span id="out-mode">Liquid</span></div>
     </section>
 
   </div>
 
   <footer>
-    <b>Liquid (ISA 75.01 / IEC 60534-2-1):</b> Cv = Q · √(SG / ΔP_eff), where ΔP_eff = min(ΔP_actual, ΔP_choked).<br>
-    <b>Choked/cavitation check:</b> ΔP_choked = FL² · (P1 − FF·Pv); FF = 0.96 − 0.28·√(Pv/Pc). When ΔP_actual ≥ ΔP_choked, flow is choked/cavitating and ΔP_choked is used in place of the actual ΔP (this increases the required Cv vs. using actual ΔP directly).<br>
-    <b>Gas:</b> Cv = Q / [N9 · Fp · Y · √((x_eff · P1 · ρ1) / SG)].<br>
-    <b>Expansion factor:</b> Y = 1 − x_eff/(3·Fk·xT), Fk = k/1.4, x_eff = min(x, Fk·xT). When x ≥ Fk·xT the flow is choked (sonic) and Y is floored at 0.667.<br>
-    Kv shown alongside as Kv ≈ Cv / 1.156 for reference.<br>
-    FL and xT valve-type presets (globe/butterfly/ball) are typical representative values, not certified — use the manufacturer's actual FL/xT/Fd for final trim selection. This tool does not compute Fp from piping geometry (enter it directly) and does not apply a Reynolds-number/viscosity correction (FR) for laminar or highly viscous liquid service.<br>
-    Converted from control_valve_sizing.py, substantially extended with the ISA 75.01 choked-flow, cavitation, and expansion-factor framework above. Not a certified sizing package — verify against the current ISA 75.01 / IEC 60534 edition and manufacturer data before use in design.<br>
+    <b>Kv definition (the basis for everything below):</b> Kv is the flow of water (&rho;=1000 kg/m&sup3;) in m&sup3;/h through the valve at 1 bar &Delta;P. For any liquid this gives Kv = Q(m&sup3;/h)&middot;&radic;(SG/&Delta;P(bar)), SG = &rho;<sub>fluid</sub>/1000. No separate "N" table constant is used &mdash; the equation follows directly from the definition.<br>
+    <b>Liquid choked-flow (cavitation) check, IEC 60534-2-1:</b> F<sub>F</sub> = 0.96 &minus; 0.28&middot;&radic;(Pv/Pc) (F<sub>F</sub>&rarr;0.96 as Pv&rarr;0, matching the well-known reference value for water near room temperature); choked &Delta;P = F<sub>L</sub>&sup2;&middot;(P1 &minus; F<sub>F</sub>&middot;Pv); effective &Delta;P = min(actual &Delta;P, choked &Delta;P). If actual &Delta;P exceeds the choked value, flow is cavitating/choked at the vena contracta &mdash; Kv will not increase further with additional &Delta;P, and the capped value is used.<br>
+    <b>Liquid Kv, final:</b> Kv<sub>required</sub> = Q&middot;&radic;(SG/&Delta;P<sub>effective</sub>) / F<sub>p</sub>. Cv = 1.156&middot;Kv (standard US/metric flow-coefficient conversion).<br>
+    <b>Gas/vapor dimensionless framework, IEC 60534-2-3:</b> x = &Delta;P/P1 (absolute); x<sub>T</sub> = terminal (choked) pressure-drop ratio, valve-style dependent; x<sub>used</sub> = min(x, x<sub>T</sub>) &mdash; flow chokes once x reaches x<sub>T</sub>, exactly analogous to the liquid F<sub>L</sub> choked-&Delta;P cap above; expansion factor Y = 1 &minus; x<sub>used</sub>/(3&middot;x<sub>T</sub>), so Y<sub>min</sub> = 1&minus;1/3 = 0.667 at full choke.<br>
+    <b>Gas Kv, derived (not a memorized N9 constant):</b> in the low-x (near-incompressible) limit a gas behaves like a light liquid, so by the same Kv definition, the actual volumetric flow at inlet conditions is Q1(m&sup3;/h) = Kv&middot;Y&middot;&radic;(1000&middot;x<sub>used</sub>&middot;P1(bar)/&rho;1(kg/m&sup3;)) &mdash; substituting the liquid form Q=Kv&middot;&radic;(&Delta;P/SG), SG=&rho;/1000 &rarr; Q=Kv&middot;&radic;(1000&middot;&Delta;P/&rho;), with &Delta;P=x<sub>used</sub>&middot;P1 and the compressible correction Y inserted; the "1000" comes purely from the SG=&rho;/1000 definition. Mass flow w(kg/h) = Q1&middot;&rho;1 = Kv&middot;Y&middot;&radic;(1000&middot;x<sub>used</sub>&middot;P1&middot;&rho;1), so <b>Kv<sub>required</sub> = w / (F<sub>p</sub>&middot;Y&middot;&radic;(1000&middot;x<sub>used</sub>&middot;P1&middot;&rho;1))</b>. F<sub>p</sub> applied the same way as the liquid tab. Cv = 1.156&middot;Kv.<br>
+    <b>Self-consistency check (verified numerically, not just asserted):</b> at x<sub>used</sub>=1&times;10&#8315;&#8312; (Y&rarr;1 to ~9 significant figures), the gas formula above and the plain liquid formula Kv=Q&middot;&radic;(SG/&Delta;P) &mdash; with Q=w/&rho;1, SG=&rho;1/1000, &Delta;P=x<sub>used</sub>&middot;P1 &mdash; agree to a relative difference of ~4.6&times;10&#8315;&#8313;, confirming the gas derivation reduces exactly to the liquid form in the incompressible limit.<br>
+    <b>Inlet gas density &rho;1:</b> &rho;1 = P1<sub>abs</sub>&middot;10&#8309;&middot;MW / (Z1&middot;R&middot;T1), R = 8314.462618 J/(kmol&middot;K), T1 in K, MW in g/mol (numerically = kg/kmol).<br>
+    <b>Z-factor:</b> reuses the Dranchuk&ndash;Abou-Kassem (1975) correlation and Standing pseudo-critical-from-gas-gravity method [Tpc(&deg;R) = 168+325&middot;SG&minus;12.5&middot;SG&sup2;, Ppc(psia) = 677+15&middot;SG&minus;37.5&middot;SG&sup2;, SG = MW/28.9647] from the companion Restriction Orifice / Compressor Settle-Out calculators &mdash; ideal (Z1=1), gas-gravity estimate, or direct Pc/Tc entry, evaluated at upstream P1/T1.<br>
+    <b>Scope note:</b> this sizes required Kv/Cv only, for a first-pass trim selection. It does not select an actual valve/trim size from a manufacturer catalog, does not compute F<sub>p</sub> from an iterative reducer/expander beta-ratio solve, does not evaluate noise (IEC 60534-8-3/8-4) or actuator sizing, and k (Cp/Cv) is shown for reference only &mdash; it is not required by the x<sub>T</sub>-based Kv relationship used here. Confirm the selected trim's certified Cv/x<sub>T</sub>/F<sub>L</sub>/F<sub>p</sub> from the vendor's published capacity data before finalizing.<br>
+    References: ISA-75.01.01 / IEC 60534-2-1 (liquid), IEC 60534-2-3 (gas/vapor), Dranchuk, P.M. &amp; Abou-Kassem, J.H. (1975), Standing, M.B. (1977). Not a certified sizing package.<br>
     <div class="signature">
       <strong>Shubham Chatterjee</strong> · Process Engineer<br>
       <a href="https://processengonline.github.io/" target="_blank" rel="noopener noreferrer">processengonline.github.io</a> ·
@@ -317,63 +372,174 @@
 </div>
 
 <script>
-const CV_KV_FACTOR = 1.156;
+const R_UNIVERSAL = 8314.462618; // J/(kmol K)
+const ATM = 1.01325; // bar
+const CV_PER_KV = 1.156;
 
-// --- Liquid: ISA 75.01 / IEC 60534-2-1 ---
-const LIQUID_FL_PRESETS = { globe: 0.90, butterfly: 0.62, ball: 0.68 };
-
-function liquidFF(Pv, Pc){ return 0.96 - 0.28*Math.sqrt(Pv/Pc); }
-
-function cvLiquidDetailed(Q, SG, P1, P2, FL, Pv, Pc){
-  if(!(Q>0)) throw new Error("Flow rate must be > 0");
-  if(!(SG>0)) throw new Error("Specific gravity must be > 0");
-  if(!(P1>0)) throw new Error("Upstream pressure P1 must be > 0");
-  if(!(P2>0)) throw new Error("Downstream pressure P2 must be > 0");
-  if(P2>=P1) throw new Error("Downstream pressure must be less than upstream pressure");
-  if(!(FL>0 && FL<=1)) throw new Error("FL should be between 0 and 1");
-  if(!(Pv>=0)) throw new Error("Vapor pressure must be ≥ 0");
-  if(!(Pc>Pv)) throw new Error("Critical pressure must exceed vapor pressure");
-
-  const dPactual = P1-P2;
-  const FF = liquidFF(Pv, Pc);
-  const dPchoked = FL*FL*(P1-FF*Pv);
-  const choked = dPactual >= dPchoked;
-  const dPeff = choked ? dPchoked : dPactual;
-  if(!(dPeff>0)) throw new Error("Effective ΔP is non-positive — check Pv/Pc/FL inputs");
-  const cv = Q*Math.sqrt(SG/dPeff);
-  return { cv, dPactual, dPchoked, choked, FF };
+function fmt(num, sig=4){
+  if(num===0) return '0';
+  if(!isFinite(num)) return '—';
+  const abs = Math.abs(num);
+  if(abs < 0.001 || abs >= 100000) return num.toExponential(3);
+  return num.toPrecision(sig);
 }
 
-// --- Gas: ISA 75.01 / IEC 60534-2-1 ---
-const GAS_XT_PRESETS = { globe: 0.75, butterfly: 0.35, ball: 0.60 };
-
-function gasExpansionY(x, Fk, xT){
-  const xEff = Math.min(x, Fk*xT);
-  const Y = 1 - xEff/(3*Fk*xT);
-  const choked = x >= Fk*xT;
-  return { Y, xEff, choked };
+function renderStats(rows){
+  const container = document.getElementById('stat-rows');
+  container.innerHTML = '';
+  rows.forEach(item=>{
+    if(item.length===1){
+      const label = document.createElement('div');
+      label.className = 'stat-group-label';
+      label.textContent = item[0];
+      container.appendChild(label);
+      return;
+    }
+    const [label, val] = item;
+    const row = document.createElement('div');
+    row.className = 'stat-row';
+    row.innerHTML = `<span>${label}</span><span>${val}</span>`;
+    container.appendChild(row);
+  });
 }
 
-function cvGasDetailed(Q, N9, Fp, x, P1, rho1, SG, Fk, xT){
-  if(!(Q>0)) throw new Error("Flow rate must be > 0");
-  if(!(N9>0)) throw new Error("N9 must be > 0");
-  if(!(Fp>0)) throw new Error("Fp must be > 0");
-  if(!(x>0 && x<=1)) throw new Error("x (ΔP/P1) should be between 0 and 1");
-  if(!(P1>0)) throw new Error("P1 must be > 0");
-  if(!(rho1>0)) throw new Error("ρ1 must be > 0");
-  if(!(SG>0)) throw new Error("Specific gravity must be > 0");
-  if(!(Fk>0)) throw new Error("Fk must be > 0");
-  if(!(xT>0 && xT<=1)) throw new Error("xT should be between 0 and 1");
-
-  const { Y, xEff, choked } = gasExpansionY(x, Fk, xT);
-  const denom = N9 * Fp * Y * Math.sqrt((xEff * P1 * rho1) / SG);
-  if(!(denom>0)) throw new Error("Invalid denominator — check inputs");
-  const cv = Q/denom;
-  return { cv, Y, xEff, choked };
+// ---------- Dranchuk-Abou-Kassem real-gas Z (reused from Restriction Orifice / Compressor Settle-Out calculators) ----------
+function dakZ(Ppr, Tpr){
+  const A1=0.3265,A2=-1.0700,A3=-0.5339,A4=0.01569,A5=-0.05165,
+        A6=0.5475,A7=-0.7361,A8=0.1844,A9=0.1056,A10=0.6134,A11=0.7210;
+  if(!(Ppr>0) || !(Tpr>0)) return { Z:1, rhor:0 };
+  const c1 = A1 + A2/Tpr + A3/Math.pow(Tpr,3) + A4/Math.pow(Tpr,4) + A5/Math.pow(Tpr,5);
+  const c2 = A6 + A7/Tpr + A8/Math.pow(Tpr,2);
+  const c3 = A9*(A7/Tpr + A8/Math.pow(Tpr,2));
+  let rhor = 0.27*Ppr/Tpr;
+  for(let i=0;i<200;i++){
+    const rhor2 = rhor*rhor;
+    const Zc = 1 + c1*rhor + c2*rhor2 - c3*Math.pow(rhor,5) + A10*(1+A11*rhor2)*(rhor2/Math.pow(Tpr,3))*Math.exp(-A11*rhor2);
+    const rhorNew = 0.27*Ppr/(Zc*Tpr);
+    if(Math.abs(rhorNew-rhor) < 1e-9){ rhor = rhorNew; break; }
+    rhor += 0.5*(rhorNew-rhor);
+  }
+  const rhor2 = rhor*rhor;
+  const Z = 1 + c1*rhor + c2*rhor2 - c3*Math.pow(rhor,5) + A10*(1+A11*rhor2)*(rhor2/Math.pow(Tpr,3))*Math.exp(-A11*rhor2);
+  return { Z, rhor };
 }
 
-function kvFromCv(cv){ return cv / CV_KV_FACTOR; }
+function pseudoCriticalFromSG(SG){
+  const TpcR = 168 + 325*SG - 12.5*SG*SG;
+  const PpcPsia = 677 + 15.0*SG - 37.5*SG*SG;
+  return { TcK: TpcR/1.8, PcBar: PpcPsia*0.0689476 };
+}
 
+function computeZAt(basis, PbarA, TK, PcBar, TcK){
+  if(basis==='ideal') return { Z: 1.0, outOfRange:false };
+  const Ppr = PbarA/PcBar, Tpr = TK/TcK;
+  const outOfRange = Ppr>30 || Tpr<1.0 || Tpr>3.0 || Ppr<0.2;
+  return { Z: dakZ(Ppr,Tpr).Z, outOfRange };
+}
+
+// ---------- Liquid tab: derived directly from the Kv definition ----------
+function computeLiquid(){
+  const Q = parseFloat(document.getElementById('l-Q').value);
+  const rho = parseFloat(document.getElementById('l-rho').value);
+  const P1barg = parseFloat(document.getElementById('l-P1').value);
+  const P2barg = parseFloat(document.getElementById('l-P2').value);
+  const Pv = parseFloat(document.getElementById('l-Pv').value);
+  const Pc = parseFloat(document.getElementById('l-Pc').value);
+  const FL = parseFloat(document.getElementById('l-FL').value);
+  const Fp = parseFloat(document.getElementById('l-Fp').value);
+  const style = document.getElementById('l-style').value.trim() || '—';
+
+  if(!(Q>0)) throw new Error('Volumetric flow rate must be > 0');
+  if(!(rho>0)) throw new Error('Fluid density must be > 0');
+  if(!(P1barg > -ATM)) throw new Error('Upstream pressure must be above absolute zero pressure');
+  if(!(P2barg > -ATM)) throw new Error('Downstream pressure must be above absolute zero pressure');
+  if(!(P1barg > P2barg)) throw new Error('Upstream pressure must exceed downstream pressure');
+  if(!(Pv>=0)) throw new Error('Vapor pressure must be ≥ 0');
+  if(!(Pc>0)) throw new Error('Critical pressure must be > 0');
+  if(!(FL>0 && FL<=1)) throw new Error('FL must be between 0 and 1');
+  if(!(Fp>0 && Fp<=1)) throw new Error('Fp must be between 0 and 1');
+
+  const P1abs = P1barg + ATM;
+  const P2abs = P2barg + ATM;
+  const dP_actual = P1abs - P2abs;
+  const SG = rho/1000;
+
+  const FF = 0.96 - 0.28*Math.sqrt(Pv/Pc);
+  const chokedDP = FL*FL*(P1abs - FF*Pv);
+  if(!(chokedDP>0)) throw new Error('Choked ΔP computed ≤ 0 — check Pv/Pc/FL inputs');
+  const choked = dP_actual > chokedDP;
+  const dP_eff = Math.min(dP_actual, chokedDP);
+
+  const Kv = Q*Math.sqrt(SG/dP_eff)/Fp;
+  const Cv = CV_PER_KV*Kv;
+
+  return { Kv, Cv, choked, dP_actual, dP_eff, chokedDP, FF, SG, Q, rho, P1abs, P2abs, P1barg, P2barg, Pv, Pc, FL, Fp, style };
+}
+
+// ---------- Gas tab: derived from the SAME Kv definition via mass conservation ----------
+function computeGas(){
+  const w = parseFloat(document.getElementById('g-w').value);
+  const P1barg = parseFloat(document.getElementById('g-P1').value);
+  const P2barg = parseFloat(document.getElementById('g-P2').value);
+  const T1C = parseFloat(document.getElementById('g-T1').value);
+  const MW = parseFloat(document.getElementById('g-MW').value);
+  const k = parseFloat(document.getElementById('g-k').value);
+  const xT = parseFloat(document.getElementById('g-xT').value);
+  const Fp = parseFloat(document.getElementById('g-Fp').value);
+  const zBasis = document.getElementById('g-zbasis').value;
+  const style = document.getElementById('g-style').value.trim() || '—';
+
+  if(!(w>0)) throw new Error('Mass flow rate must be > 0');
+  if(!(P1barg > -ATM)) throw new Error('Upstream pressure must be above absolute zero pressure');
+  if(!(P2barg > -ATM)) throw new Error('Downstream pressure must be above absolute zero pressure');
+  if(!(P1barg > P2barg)) throw new Error('Upstream pressure must exceed downstream pressure');
+  if(!(MW>2)) throw new Error('Molecular weight must be > 2 g/mol');
+  if(!(k>1)) throw new Error('k (Cp/Cv) must be > 1');
+  if(!(xT>0 && xT<1)) throw new Error('xT must be between 0 and 1');
+  if(!(Fp>0 && Fp<=1)) throw new Error('Fp must be between 0 and 1');
+
+  const T1K = T1C + 273.15;
+  if(!(T1K>0)) throw new Error('Upstream temperature must be > absolute zero');
+
+  const P1abs = P1barg + ATM;
+  const P2abs = P2barg + ATM;
+  const dP = P1abs - P2abs;
+  const x = dP/P1abs;
+  const choked = x > xT;
+  const x_used = Math.min(x, xT);
+  const Y = 1 - x_used/(3*xT);
+
+  let PcBar = null, TcK = null, SG = null, outOfRange = false;
+  if(zBasis==='gravity'){
+    SG = MW/28.9647;
+    const pc = pseudoCriticalFromSG(SG);
+    PcBar = pc.PcBar; TcK = pc.TcK;
+  } else if(zBasis==='direct'){
+    PcBar = parseFloat(document.getElementById('g-Pc').value);
+    TcK = parseFloat(document.getElementById('g-Tc').value);
+    if(!(PcBar>0)) throw new Error('Pc must be > 0');
+    if(!(TcK>0)) throw new Error('Tc must be > 0');
+  }
+  let Z1 = 1.0;
+  if(zBasis!=='ideal'){
+    const zr = computeZAt(zBasis, P1abs, T1K, PcBar, TcK);
+    Z1 = zr.Z; outOfRange = zr.outOfRange;
+  }
+
+  const rho1 = (P1abs*1e5*MW) / (Z1*R_UNIVERSAL*T1K); // kg/m3
+  if(!(rho1>0)) throw new Error('Computed inlet density is non-positive — check P1/T1/MW/Z inputs');
+
+  const denom = Fp*Y*Math.sqrt(1000*x_used*P1abs*rho1);
+  if(!(denom>0)) throw new Error('Denominator non-positive — check inputs');
+  const Kv = w/denom;
+  const Cv = CV_PER_KV*Kv;
+
+  return { Kv, Cv, choked, x, x_used, xT, Y, rho1, w, P1abs, P2abs, P1barg, P2barg, T1C, T1K, MW, k, Fp, Z1, zBasis, SG, PcBar, TcK, outOfRange, style };
+}
+
+// ============================================================
+// TAB SWITCHING
+// ============================================================
 const tabLiquid = document.getElementById('tab-liquid');
 const tabGas = document.getElementById('tab-gas');
 const panelLiquid = document.getElementById('panel-liquid');
@@ -389,178 +555,140 @@ function setMode(m){
   tabGas.setAttribute('aria-selected', !isLiquid);
   panelLiquid.classList.toggle('hidden', !isLiquid);
   panelGas.classList.toggle('hidden', isLiquid);
-  document.getElementById('out-mode').textContent = isLiquid ? 'Liquid' : 'Gas';
   compute();
 }
 tabLiquid.addEventListener('click', ()=>setMode('liquid'));
 tabGas.addEventListener('click', ()=>setMode('gas'));
 
-function setLiquidValveType(){
-  const vt = document.getElementById('l-valvetype').value;
-  const flField = document.getElementById('l-FL');
-  if(vt!=='custom'){
-    flField.value = LIQUID_FL_PRESETS[vt];
-  }
+function setGasZVisibility(){
+  const basis = document.getElementById('g-zbasis').value;
+  document.getElementById('g-Pc-field').classList.toggle('hidden', basis!=='direct');
+  document.getElementById('g-Tc-field').classList.toggle('hidden', basis!=='direct');
   compute();
 }
-document.getElementById('l-valvetype').addEventListener('change', setLiquidValveType);
+document.getElementById('g-zbasis').addEventListener('change', setGasZVisibility);
 
-function setGasValveType(){
-  const vt = document.getElementById('g-valvetype').value;
-  const xtField = document.getElementById('g-xT');
-  if(vt!=='custom'){
-    xtField.value = GAS_XT_PRESETS[vt];
-  }
-  compute();
-}
-document.getElementById('g-valvetype').addEventListener('change', setGasValveType);
-
-const ids = ['l-Q','l-SG','l-P1','l-P2','l-FL','l-Pv','l-Pc','l-Cv100',
-             'g-Q','g-N9','g-Fp','g-xT','g-k','g-x','g-P1','g-rho1','g-SG'];
-ids.forEach(id=>document.getElementById(id).addEventListener('input', compute));
-
-function fmt(num, sig=4){
-  if(num===0) return '0';
-  const abs = Math.abs(num);
-  if(abs < 0.001 || abs >= 100000) return num.toExponential(3);
-  return num.toPrecision(sig);
-}
-
-function setGauge(value){
-  const clamped = Math.max(0.1, Math.min(1000, value));
-  const frac = (Math.log10(clamped) + 1) / 4;
-  const angle = -90 + Math.max(0, Math.min(1, frac)) * 180;
-  document.getElementById('gauge-needle').style.transform = `rotate(${angle}deg)`;
-  const arcLen = 220;
-  document.getElementById('gauge-fill').setAttribute('stroke-dashoffset', arcLen - (Math.max(0,Math.min(1,frac)) * arcLen));
-}
-
-function clearErrors(){
-  ['l-err','g-err'].forEach(id=>{
-    const el = document.getElementById(id);
-    el.style.display = 'none';
-    el.textContent = '';
-  });
-}
-
-function renderStats(rows){
-  const container = document.getElementById('stat-rows');
-  container.innerHTML = '';
-  rows.forEach(([label, val])=>{
-    const row = document.createElement('div');
-    row.className = 'stat-row';
-    row.innerHTML = `<span>${label}</span><span>${val}</span>`;
-    container.appendChild(row);
-  });
-}
-
-function showError(id, msg){
+const liquidIds = ['l-Q','l-rho','l-P1','l-P2','l-Pv','l-Pc','l-style','l-FL','l-Fp'];
+const gasIds = ['g-w','g-P1','g-P2','g-T1','g-MW','g-k','g-zbasis','g-Pc','g-Tc','g-style','g-xT','g-Fp'];
+[...liquidIds, ...gasIds].forEach(id=>{
   const el = document.getElementById(id);
-  el.textContent = msg;
-  el.style.display = 'block';
-  document.getElementById('out-primary').textContent = '—';
-  document.getElementById('out-secondary').textContent = '≈ — Kv';
-  document.getElementById('stat-rows').innerHTML = '';
-  document.getElementById('flow-badge').classList.add('hidden');
-  document.getElementById('opening-badge').classList.add('hidden');
-  const badge = document.getElementById('status-badge');
-  badge.textContent = 'CHECK INPUTS';
-  badge.className = 'badge warn';
+  el.addEventListener('input', compute);
+  el.addEventListener('change', compute);
+});
+
+function updateDiagram(choked){
+  const gap = document.getElementById('cv-gap');
+  const jet = document.getElementById('cv-jet');
+  if(choked){
+    gap.setAttribute('stroke', 'var(--red)');
+    jet.setAttribute('stroke', 'var(--red)');
+  } else {
+    gap.setAttribute('stroke', 'var(--amber)');
+    jet.setAttribute('stroke', 'var(--amber)');
+  }
 }
 
 function compute(){
-  clearErrors();
   const badge = document.getElementById('status-badge');
-  const flowBadge = document.getElementById('flow-badge');
-  const openingBadge = document.getElementById('opening-badge');
-  flowBadge.classList.add('hidden');
-  openingBadge.classList.add('hidden');
-  let cv, rows;
+  const chokeBadge = document.getElementById('choke-badge');
+  const zrangeBadge = document.getElementById('zrange-badge');
+  [chokeBadge, zrangeBadge].forEach(b=>b.classList.add('hidden'));
+  ['l-err','g-err'].forEach(id=>{
+    const el = document.getElementById(id);
+    el.style.display = 'none'; el.textContent = '';
+  });
 
   try{
     if(mode==='liquid'){
-      const Q = parseFloat(document.getElementById('l-Q').value);
-      const SG = parseFloat(document.getElementById('l-SG').value);
-      const P1 = parseFloat(document.getElementById('l-P1').value);
-      const P2 = parseFloat(document.getElementById('l-P2').value);
-      const FL = parseFloat(document.getElementById('l-FL').value);
-      const Pv = parseFloat(document.getElementById('l-Pv').value);
-      const Pc = parseFloat(document.getElementById('l-Pc').value);
-      const Cv100raw = document.getElementById('l-Cv100').value;
+      const r = computeLiquid();
+      document.getElementById('out-kv').textContent = fmt(r.Kv);
+      document.getElementById('out-cv').textContent = '≈ ' + fmt(r.Cv) + ' Cv';
+      updateDiagram(r.choked);
 
-      document.getElementById('l-dp-readout').textContent = 'ΔP = P1 − P2 = ' + fmt(P1-P2) + ' psi';
+      badge.textContent = 'READY';
+      badge.className = 'badge ok';
 
-      const r = cvLiquidDetailed(Q, SG, P1, P2, FL, Pv, Pc);
-      cv = r.cv;
-
-      flowBadge.textContent = r.choked ? 'CHOKED / CAVITATING FLOW' : 'NORMAL FLOW';
-      flowBadge.className = 'badge ' + (r.choked ? 'warn' : 'ok');
-      flowBadge.classList.remove('hidden');
-
-      rows = [
-        ['FF (liquid critical ratio)', fmt(r.FF)],
-        ['ΔP actual', fmt(r.dPactual) + ' psi'],
-        ['ΔP choked (FL²(P1−FF·Pv))', fmt(r.dPchoked) + ' psi'],
-      ];
-
-      if(Cv100raw!==''){
-        const Cv100 = parseFloat(Cv100raw);
-        if(Cv100>0){
-          const pctOpen = (cv/Cv100)*100;
-          rows.push(['Rated Cv100', fmt(Cv100)]);
-          rows.push(['Estimated % open', fmt(pctOpen) + '%']);
-          if(pctOpen<20 || pctOpen>80){
-            openingBadge.textContent = pctOpen>80 ? 'VALVE UNDERSIZED (>80% open)' : 'VALVE OVERSIZED (<20% open)';
-            openingBadge.className = 'badge warn';
-            openingBadge.classList.remove('hidden');
-          }
-        }
+      if(r.choked){
+        chokeBadge.textContent = "CHOKED / CAVITATING — Kv WON'T INCREASE FURTHER, EFFECTIVE ΔP CAPPED";
+        chokeBadge.className = 'badge warn';
+        chokeBadge.classList.remove('hidden');
       }
-    } else {
-      const Q = parseFloat(document.getElementById('g-Q').value);
-      const N9 = parseFloat(document.getElementById('g-N9').value);
-      const Fp = parseFloat(document.getElementById('g-Fp').value);
-      const x = parseFloat(document.getElementById('g-x').value);
-      const P1 = parseFloat(document.getElementById('g-P1').value);
-      const rho1 = parseFloat(document.getElementById('g-rho1').value);
-      const SG = parseFloat(document.getElementById('g-SG').value);
-      const xT = parseFloat(document.getElementById('g-xT').value);
-      const k = parseFloat(document.getElementById('g-k').value);
-      const Fk = k/1.4;
 
-      const r = cvGasDetailed(Q, N9, Fp, x, P1, rho1, SG, Fk, xT);
-      cv = r.cv;
-
-      document.getElementById('g-Y-out').value = fmt(r.Y);
-
-      flowBadge.textContent = r.choked ? 'CHOKED (SONIC) FLOW' : 'NORMAL FLOW';
-      flowBadge.className = 'badge ' + (r.choked ? 'warn' : 'ok');
-      flowBadge.classList.remove('hidden');
-
-      rows = [
-        ['Fk (k/1.4)', fmt(Fk)],
-        ['x (ΔP/P1)', fmt(x)],
-        ['x_effective (capped at Fk·xT)', fmt(r.xEff)],
-        ['Y (expansion factor)', fmt(r.Y)],
+      const rows = [
+        ['Valve style', r.style],
+        ['ΔP actual / effective (used)', fmt(r.dP_actual) + ' / ' + fmt(r.dP_eff) + ' bar'],
+        ['Choked ΔP (FL²·(P1−FF·Pv))', fmt(r.chokedDP) + ' bar'],
+        ['Choked flow?', r.choked ? 'YES — capped' : 'No'],
+        ['FF (liquid critical pressure ratio)', fmt(r.FF)],
+        ['Kv required', fmt(r.Kv)],
+        ['Cv required (= 1.156·Kv)', fmt(r.Cv)],
+        ['SG (ρ/1000)', fmt(r.SG)],
+        ['FL used', fmt(r.FL)],
+        ['Fp used', fmt(r.Fp)],
+        ['Upstream / downstream P (abs)', fmt(r.P1abs) + ' / ' + fmt(r.P2abs) + ' bar a'],
+        ['NOTE'],
+        ['—', 'Confirm against the selected trim\'s certified Cv/FL/Fp from the vendor\'s published capacity data before finalizing.'],
       ];
+      renderStats(rows);
+
+    } else {
+      const r = computeGas();
+      document.getElementById('out-kv').textContent = fmt(r.Kv);
+      document.getElementById('out-cv').textContent = '≈ ' + fmt(r.Cv) + ' Cv';
+      updateDiagram(r.choked);
+
+      badge.textContent = 'READY';
+      badge.className = 'badge ok';
+
+      if(r.choked){
+        chokeBadge.textContent = "CHOKED FLOW — Kv WON'T INCREASE FURTHER, x CAPPED AT xT";
+        chokeBadge.className = 'badge warn';
+        chokeBadge.classList.remove('hidden');
+      }
+      if(r.outOfRange){
+        zrangeBadge.textContent = 'DAK Z-FACTOR RANGE EXCEEDED — VERIFY Z1';
+        zrangeBadge.className = 'badge warn';
+        zrangeBadge.classList.remove('hidden');
+      }
+
+      const rows = [
+        ['Valve style', r.style],
+        ['x (ΔP/P1) / x used (capped)', fmt(r.x) + ' / ' + fmt(r.x_used)],
+        ['Choked flow?', r.choked ? 'YES — capped at xT' : 'No'],
+        ['xT (terminal ratio)', fmt(r.xT)],
+        ['Y (expansion factor)', fmt(r.Y)],
+        ['Kv required', fmt(r.Kv)],
+        ['Cv required (= 1.156·Kv)', fmt(r.Cv)],
+        ['ρ1 (inlet density)', fmt(r.rho1) + ' kg/m³'],
+        ['Z1 (compressibility, basis: ' + (r.zBasis==='ideal'?'ideal':(r.zBasis==='gravity'?'gas gravity':'direct Pc/Tc')) + ')', fmt(r.Z1)],
+        ['k (Cp/Cv, informational)', fmt(r.k)],
+        ['Fp used', fmt(r.Fp)],
+        ['Upstream / downstream P (abs)', fmt(r.P1abs) + ' / ' + fmt(r.P2abs) + ' bar a'],
+        ['Upstream temperature T1', fmt(r.T1C) + ' °C (' + fmt(r.T1K) + ' K)'],
+      ];
+      if(r.zBasis!=='ideal'){
+        rows.push(['Z-FACTOR BASIS']);
+        if(r.SG!==null) rows.push(['Gas gravity SG', fmt(r.SG)]);
+        rows.push(['Pc / Tc', fmt(r.PcBar) + ' bar a / ' + fmt(r.TcK) + ' K']);
+      }
+      rows.push(['NOTE']);
+      rows.push(['—', 'Confirm against the selected trim\'s certified Cv/xT/Fp from the vendor\'s published capacity data before finalizing.']);
+      renderStats(rows);
     }
   } catch(e){
-    showError(mode==='liquid' ? 'l-err' : 'g-err', e.message);
-    return;
+    const errId = mode==='liquid' ? 'l-err' : 'g-err';
+    const el = document.getElementById(errId);
+    el.textContent = e.message;
+    el.style.display = 'block';
+    document.getElementById('out-kv').textContent = '—';
+    document.getElementById('out-cv').textContent = '≈ — Cv';
+    document.getElementById('stat-rows').innerHTML = '';
+    badge.textContent = 'CHECK INPUTS';
+    badge.className = 'badge warn';
   }
-
-  const kv = kvFromCv(cv);
-  document.getElementById('out-primary').textContent = fmt(cv);
-  document.getElementById('out-secondary').textContent = '≈ ' + fmt(kv) + ' Kv';
-  renderStats(rows);
-  setGauge(cv);
-
-  badge.textContent = 'READY';
-  badge.className = 'badge ok';
 }
 
-setLiquidValveType();
-setGasValveType();
+setGasZVisibility();
 setMode('liquid');
 </script>
 </body>

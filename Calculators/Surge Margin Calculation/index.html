@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Compressor Surge Margin Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy: #0B1F33;
+    --navy-2: #122A44;
+    --blueprint: #1B4F72;
+    --line: #3E7CB1;
+    --line-dim: #2A5A80;
+    --paper: #EAE6D9;
+    --paper-dim: #B9C4CC;
+    --amber: #E8A33D;
+    --green: #6FA787;
+    --red: #C96A5C;
+    --grid: rgba(62,124,177,0.16);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      linear-gradient(var(--grid) 1px, transparent 1px) 0 0/28px 28px,
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px) 0 0/28px 28px,
+      var(--navy);
+    color:var(--paper);
+    font-family:'Space Grotesk', sans-serif;
+    min-height:100vh;
+  }
+  .wrap{max-width:1080px;margin:0 auto;padding:48px 24px 80px;}
+
+  header{margin-bottom:32px;border-bottom:1px solid var(--line-dim);padding-bottom:24px;}
+  .eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--line);margin:0 0 10px;
+  }
+  h1{
+    font-size:clamp(28px,4vw,42px);
+    margin:0 0 12px;font-weight:700;letter-spacing:-0.01em;
+  }
+  .sub{color:var(--paper-dim);font-size:15px;max-width:700px;line-height:1.55;margin:0 0 16px;}
+
+  .epcnote{
+    font-family:'IBM Plex Mono',monospace;font-size:11.5px;line-height:1.6;color:var(--paper-dim);
+    background:rgba(201,106,92,.08);border:1px solid rgba(201,106,92,.4);border-radius:6px;
+    padding:14px 16px;margin-top:16px;
+  }
+  .epcnote b{color:var(--red);}
+
+  .grid{display:grid;grid-template-columns:1.1fr 1fr;gap:36px;align-items:start;}
+  @media (max-width:820px){.grid{grid-template-columns:1fr;}}
+
+  .panel{
+    background:var(--navy-2);border:1px solid var(--line-dim);border-radius:8px;padding:26px;
+    margin-bottom:22px;
+  }
+  .panel:last-child{margin-bottom:0;}
+  .panel h2{
+    font-family:'IBM Plex Mono',monospace;font-size:12px;text-transform:uppercase;
+    letter-spacing:.14em;color:var(--line);margin:0 0 20px;
+  }
+  .panel h3{
+    font-family:'IBM Plex Mono',monospace;font-size:11px;text-transform:uppercase;
+    letter-spacing:.12em;color:var(--paper-dim);margin:22px 0 14px;
+    border-top:1px solid var(--line-dim);padding-top:16px;
+  }
+  .panel h3:first-of-type{margin-top:0;border-top:none;padding-top:0;}
+
+  .field{margin-bottom:16px;}
+  .field:last-child{margin-bottom:0;}
+  label{display:flex;justify-content:space-between;align-items:baseline;font-size:13.5px;color:var(--paper);margin-bottom:6px;}
+  label .unit{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--paper-dim);}
+  input[type=number], input[type=text], select{
+    width:100%;background:var(--navy);border:1px solid var(--line-dim);border-radius:5px;
+    color:var(--paper);font-family:'IBM Plex Mono',monospace;font-size:14px;
+    padding:9px 11px;transition:border-color .15s;
+  }
+  select{cursor:pointer;}
+  input[type=number]:focus, select:focus{outline:none;border-color:var(--line);box-shadow:0 0 0 3px rgba(62,124,177,0.22);}
+  input[type=number]:disabled, input[type=text]:disabled{opacity:0.65;cursor:not-allowed;color:var(--amber);border-color:var(--amber);}
+  .hint{font-size:11.5px;color:var(--paper-dim);margin-top:5px;line-height:1.4;}
+  .err{font-size:11.5px;color:var(--red);margin-top:5px;display:none;}
+
+  .checkfield{display:flex;align-items:center;gap:9px;margin-bottom:16px;}
+  .checkfield input[type=checkbox]{width:16px;height:16px;accent-color:var(--line);cursor:pointer;flex-shrink:0;}
+  .checkfield label{margin:0;font-size:13.5px;cursor:pointer;}
+
+  .readout{
+    background:var(--navy-2);border:1px solid var(--line-dim);border-radius:8px;
+    padding:26px;display:flex;flex-direction:column;gap:18px;position:sticky;top:24px;
+  }
+  .readout h2{
+    font-family:'IBM Plex Mono',monospace;font-size:12px;text-transform:uppercase;
+    letter-spacing:.14em;color:var(--line);margin:0;
+  }
+  .big-figure{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;}
+  .big-num{font-size:44px;font-weight:700;line-height:1;letter-spacing:-0.02em;font-variant-numeric:tabular-nums;transition:color .15s;}
+  .big-num.stat-ok{color:var(--green);}
+  .big-num.stat-warn{color:var(--amber);}
+  .big-num.stat-crit{color:var(--red);}
+  .big-num-sm{font-size:22px;font-weight:700;line-height:1;letter-spacing:-0.02em;font-variant-numeric:tabular-nums;color:var(--paper-dim);}
+  .big-unit{font-family:'IBM Plex Mono',monospace;font-size:16px;color:var(--paper-dim);}
+  .subfigure{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--paper-dim);}
+  .figure-label{font-family:'IBM Plex Mono',monospace;font-size:10.5px;text-transform:uppercase;letter-spacing:.1em;color:var(--line);margin:2px 0 0;}
+
+  .diagram{display:flex;align-items:center;justify-content:center;padding:4px 0 2px;}
+  .diagram svg{overflow:visible;max-width:100%;height:auto;}
+  .flow-dash{stroke-dasharray:5 6;animation:flowmove 1.1s linear infinite;}
+  @keyframes flowmove{to{stroke-dashoffset:-22;}}
+  @media (prefers-reduced-motion: reduce){.flow-dash{animation:none;}}
+
+  .stat-row{display:flex;justify-content:space-between;gap:12px;font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--paper-dim);border-top:1px solid var(--line-dim);padding-top:12px;}
+  .stat-row span:first-child{flex-shrink:0;}
+  .stat-row span:last-child{color:var(--paper);text-align:right;}
+  #stat-rows{display:flex;flex-direction:column;gap:12px;}
+  .stat-group-label{
+    font-family:'IBM Plex Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.08em;
+    color:var(--line);margin-top:6px;
+  }
+
+  .badge{
+    font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.06em;
+    padding:4px 10px;border-radius:20px;display:inline-block;width:fit-content;
+  }
+  .badge.ok{background:rgba(111,167,135,.15);color:var(--green);border:1px solid rgba(111,167,135,.4);}
+  .badge.warn{background:rgba(232,163,61,.15);color:var(--amber);border:1px solid rgba(232,163,61,.4);}
+  .badge.info{background:rgba(62,124,177,.18);color:var(--line);border:1px solid rgba(62,124,177,.4);}
+  .badge.crit{background:rgba(201,106,92,.18);color:var(--red);border:1px solid rgba(201,106,92,.45);}
+  .badge-row{display:flex;gap:8px;flex-wrap:wrap;}
+
+  footer{margin-top:40px;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--paper-dim);line-height:1.6;border-top:1px solid var(--line-dim);padding-top:20px;}
+  .hidden{display:none !important;}
+
+  .signature{
+    margin-top:28px;padding-top:20px;border-top:1px solid var(--line-dim);
+    font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--paper-dim);line-height:1.7;
+  }
+  .signature strong{color:var(--paper);font-weight:600;}
+  .signature a{color:var(--line);text-decoration:none;border-bottom:1px solid var(--line-dim);padding-bottom:1px;transition:color .15s,border-color .15s;}
+  .signature a:hover{color:var(--amber);border-color:var(--amber);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">Compressor Station Package — Anti-Surge Screening · Centrifugal Compressors</p>
+    <h1>Compressor Surge Margin Calculator</h1>
+    <p class="sub">Companion to the <b>Compressor Settle-Out Pressure &amp; Temperature Calculator</b> in this same compressor-station package. Converts current operating mass flow to actual inlet volumetric flow (the aerodynamic flow basis real anti-surge controllers use), speed-corrects a vendor-supplied surge flow point via the standard affinity law, and screens the resulting margin against a required anti-surge control-line setting — including an approximate required-recycle-flow estimate for turndown cases.</p>
+    <div class="epcnote">
+      <b>Not a substitute for the vendor's certified performance map.</b> A centrifugal compressor's surge line is set entirely by its impeller aerodynamics — inducer/diffuser geometry, speed, and gas properties along that specific machine's flow path — and can only be established from the vendor's shop/site performance test or a CFD-validated performance map. This tool does <b>NOT</b> predict, derive, or estimate a surge point from first principles: you must enter the vendor-supplied surge flow (Q<sub>surge,ref</sub>) read directly off the certified map at a stated reference speed — exactly as the F<sub>L</sub>/x<sub>T</sub> valve-recovery coefficients in the control valve sizing tool, or the K-factor in the separator sizing tool, are treated as vendor/test-derived inputs elsewhere in this suite. What this tool <b>does</b> do: (1) converts current mass flow, suction pressure/temperature and gas MW to actual inlet volumetric flow using the same real-gas Z-factor method used across this suite; (2) scales the single vendor surge point to the current operating speed via the standard flow-affinity law (flow ∝ speed) — a first-pass screening approximation, not a substitute for the full multi-speed surge control line a real anti-surge controller uses; (3) compares the operating point against a required control margin you set (confirm this against the project's anti-surge control philosophy / vendor recommendation) and, optionally, estimates the extra recycle/spillback flow needed to hold the compressor above that line during a turndown. For an actual EPC deliverable you still need the vendor's certified multi-speed surge/control line, dynamic anti-surge simulation (RCM, valve stroke/response time), and sign-off by the compressor vendor and a licensed engineer.
+    </div>
+  </header>
+
+  <div class="grid">
+
+    <!-- INPUTS -->
+    <div>
+
+      <section class="panel">
+        <h2>Gas Properties &amp; Z-Factor Method</h2>
+
+        <h3>Gas Composition</h3>
+        <div class="field">
+          <label for="z-MW">Molecular weight <span class="unit">g/mol</span></label>
+          <input type="number" id="z-MW" value="18.5" step="any" min="2">
+          <div class="hint">Use the process gas MW at the compressor suction (from simulation/gas analysis).</div>
+        </div>
+
+        <h3>Z-Factor Basis</h3>
+        <div class="field">
+          <label for="z-basis">Compressibility treatment</label>
+          <select id="z-basis">
+            <option value="ideal">Ideal gas (Z = 1.0) — quick screening only</option>
+            <option value="gravity" selected>Real gas — Standing pseudo-criticals from gas gravity (sweet gas)</option>
+            <option value="direct">Real gas — enter Pc/Tc directly (from simulator)</option>
+          </select>
+          <div class="hint">Real-gas Z is solved with the Dranchuk–Abou-Kassem (DAK) correlation, valid for 0.2 ≤ Ppr &lt; 30 and 1.0 &lt; Tpr ≤ 3.0.</div>
+        </div>
+        <div class="field hidden" id="z-Pc-field">
+          <label for="z-Pc">Pseudo-critical pressure Pc <span class="unit">bar abs</span></label>
+          <input type="number" id="z-Pc" value="46.5" step="any" min="1">
+        </div>
+        <div class="field hidden" id="z-Tc-field">
+          <label for="z-Tc">Pseudo-critical temperature Tc <span class="unit">K</span></label>
+          <input type="number" id="z-Tc" value="205" step="any" min="1">
+        </div>
+
+        <div class="checkfield hidden" id="z-override-row">
+          <input type="checkbox" id="z-override">
+          <label for="z-override">Override suction Z-factor with a known (simulator) value</label>
+        </div>
+        <div class="field hidden" id="z-Z1-field">
+          <label for="z-Z1">Suction Z-factor (Z1)</label>
+          <input type="number" id="z-Z1" value="0.90" step="any" min="0.1" max="1.5">
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Suction Conditions &amp; Current Operating Flow</h2>
+        <div class="field">
+          <label for="op-mdot">Current operating mass flow ṁ <span class="unit">kg/h</span></label>
+          <input type="number" id="op-mdot" value="55000" step="any" min="0">
+        </div>
+        <div class="field">
+          <label for="op-P1">Suction pressure P1 <span class="unit">barg</span></label>
+          <input type="number" id="op-P1" value="45" step="any" min="-1.013">
+        </div>
+        <div class="field">
+          <label for="op-T1">Suction temperature T1 <span class="unit">°C</span></label>
+          <input type="number" id="op-T1" value="35" step="any" min="-200">
+          <div class="hint">Surge is fundamentally a flow-coefficient (aerodynamic) phenomenon, so anti-surge control uses actual inlet volumetric flow, not mass flow — this suction density conversion is what makes that comparison possible.</div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Compressor Speed</h2>
+        <div class="field">
+          <label for="sp-unit">Speed units</label>
+          <select id="sp-unit">
+            <option value="rpm" selected>rpm</option>
+            <option value="pct">% of rated speed</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="sp-N">Current operating speed N <span class="unit" id="sp-N-unit">rpm</span></label>
+          <input type="number" id="sp-N" value="9800" step="any" min="0">
+        </div>
+        <div class="field">
+          <label for="sp-Nref">Reference speed N_ref <span class="unit" id="sp-Nref-unit">rpm</span></label>
+          <input type="number" id="sp-Nref" value="9800" step="any" min="0">
+          <div class="hint">The speed at which the vendor's surge flow below was read off the performance map. Enter both speeds in the <b>same units</b> — only the ratio N/N_ref is used, so the units themselves are unit-agnostic to the calculation.</div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Vendor Surge Line Data (Certified Performance Map)</h2>
+        <div class="field">
+          <label for="vs-Qsurge">Surge flow Q_surge,ref <span class="unit">m³/h</span></label>
+          <input type="number" id="vs-Qsurge" value="1150" step="any" min="0">
+          <div class="hint">Actual inlet volumetric flow at the surge point, read directly off the vendor's certified performance map at reference speed N_ref above. Direct vendor input only — not computed by this tool.</div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Anti-Surge Control Margin</h2>
+        <div class="field">
+          <label for="cm-reqmargin">Required control margin <span class="unit">%</span></label>
+          <input type="number" id="cm-reqmargin" value="10" step="any" min="0">
+          <div class="hint">Typical anti-surge control line is set 8–12% (flow basis) to the right of the true surge line, to allow for measurement uncertainty, control-loop dynamics, and process upsets — confirm against the project's anti-surge control philosophy / vendor recommendation.</div>
+          <div class="err" id="main-err"></div>
+        </div>
+
+        <div class="checkfield">
+          <input type="checkbox" id="cm-enable">
+          <label for="cm-enable">Check required recycle flow for a process turndown case</label>
+        </div>
+        <div id="cm-block" class="hidden">
+          <div class="field">
+            <label for="cm-Qmin">Process minimum achievable flow <span class="unit">m³/h</span></label>
+            <input type="number" id="cm-Qmin" value="1000" step="any" min="0">
+            <div class="hint">Lowest actual inlet volumetric flow the downstream process can accept (e.g. minimum turndown before recycle/spillback opens). If this is below the compressor's required minimum flow, the difference is the extra recycle/spillback needed at the compressor to stay off the control line while the process only needs this much.</div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- READOUT -->
+    <section class="readout">
+      <h2>Surge Margin</h2>
+
+      <div class="diagram">
+        <svg width="260" height="150" viewBox="0 0 260 150" id="map-svg">
+          <!-- axes -->
+          <line x1="44" y1="18" x2="44" y2="124" stroke="var(--line-dim)" stroke-width="1.2"/>
+          <line x1="44" y1="124" x2="238" y2="124" stroke="var(--line-dim)" stroke-width="1.2"/>
+          <text x="238" y="137" text-anchor="end" font-family="IBM Plex Mono" font-size="9" fill="var(--paper-dim)" letter-spacing="0.06em">FLOW (Q) →</text>
+          <text x="14" y="90" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="var(--paper-dim)" letter-spacing="0.06em" transform="rotate(-90 14 90)">HEAD / PR →</text>
+
+          <!-- surge (unstable) zone -->
+          <path d="M44,124 L60,120 C66,95 78,55 96,28 L44,28 Z" fill="var(--red)" opacity="0.14"/>
+          <!-- control margin zone -->
+          <path d="M60,120 C66,95 78,55 96,28 L122,28 C104,55 92,95 86,120 Z" fill="var(--amber)" opacity="0.16"/>
+
+          <!-- surge line -->
+          <path d="M60,120 C66,95 78,55 96,28" fill="none" stroke="var(--red)" stroke-width="2"/>
+          <!-- control line -->
+          <path d="M86,120 C92,95 104,55 122,28" fill="none" stroke="var(--amber)" stroke-width="1.6" stroke-dasharray="4 4"/>
+
+          <!-- current-speed operating characteristic (illustrative) -->
+          <line x1="58" y1="46" x2="232" y2="116" stroke="var(--line)" stroke-width="1.3" stroke-dasharray="3 4" opacity="0.55"/>
+
+          <text x="70" y="20" font-family="IBM Plex Mono" font-size="8.5" fill="var(--red)" letter-spacing="0.04em">SURGE LINE</text>
+          <text x="126" y="24" font-family="IBM Plex Mono" font-size="8.5" fill="var(--amber)" letter-spacing="0.04em">CONTROL LINE</text>
+          <text x="47" y="118" font-family="IBM Plex Mono" font-size="7.5" fill="var(--red)" opacity="0.85">SURGE</text>
+
+          <!-- operating point guide + marker -->
+          <line id="op-guide" x1="150" y1="80" x2="150" y2="124" stroke="var(--paper-dim)" stroke-width="1" stroke-dasharray="2 3"/>
+          <circle id="op-dot" cx="150" cy="80" r="5" fill="var(--green)" stroke="var(--navy)" stroke-width="1.5"/>
+          <text id="op-label" x="150" y="70" text-anchor="middle" font-family="IBM Plex Mono" font-size="8.5" fill="var(--green)" letter-spacing="0.04em">OP</text>
+        </svg>
+      </div>
+
+      <div>
+        <div class="big-figure">
+          <span class="big-num stat-ok" id="out-margin">—</span>
+          <span class="big-unit">% margin</span>
+        </div>
+        <span class="subfigure" id="out-flows">Q_actual ≈ — m³/h · Q_surge(N) ≈ — m³/h</span>
+      </div>
+
+      <div>
+        <div class="big-figure">
+          <span class="big-num-sm" id="out-dQ">—</span>
+          <span class="big-unit">m³/h ΔQ above surge</span>
+        </div>
+      </div>
+
+      <div class="badge-row">
+        <span class="badge ok" id="status-badge">READY</span>
+        <span class="badge info hidden" id="speed-badge"></span>
+        <span class="badge warn hidden" id="recycle-badge"></span>
+      </div>
+
+      <div id="stat-rows"></div>
+    </section>
+
+  </div>
+
+  <footer>
+    <b>Suction gas density (real gas):</b> ρ1 = P1,abs·1e5·MW / (Z1·R·T1), with P1 in bar abs, T1 in K, R = 8314.462618 J/(kmol·K), MW in kg/kmol. Z1 from the Dranchuk–Abou-Kassem (DAK) correlation (or Z=1 ideal, or a direct simulator override).<br>
+    <b>Actual inlet volumetric flow:</b> Q_actual (m³/h) = ṁ (kg/h) / ρ1 (kg/m³) — the standard flow-coefficient basis for anti-surge control, since it tracks the aerodynamic operating point independent of gas density changes that mass flow alone does not capture.<br>
+    <b>Vendor surge point (direct input, not computed):</b> Q_surge,ref (m³/h actual inlet volumetric flow at the surge point) and N_ref (the speed at which it was read off the vendor's certified performance map).<br>
+    <b>Speed correction (affinity law):</b> Q_surge(N) = Q_surge,ref · (N / N_ref) — flow scales linearly with speed at a fixed point on the map (flow ∝ N, head ∝ N², power ∝ N³, per the standard centrifugal-machine affinity laws), valid for geometrically similar operating points on the same speed-line family. This is a first-pass screening scaling of a single vendor point, not a substitute for the certified multi-speed surge control line a real anti-surge system uses.<br>
+    <b>Surge margin:</b> Margin (%) = (Q_actual − Q_surge(N)) / Q_surge(N) × 100.<br>
+    <b>Status:</b> PASS when margin ≥ required control margin; WARN "operating point inside required control margin" when margin is positive but below the requirement; CRITICAL "at or beyond surge" when Q_actual ≤ Q_surge(N) (margin ≤ 0).<br>
+    <b>Required recycle flow (approximate):</b> Q_min,required = Q_surge(N) · (1 + required margin/100). If the process's minimum achievable flow Q_process,min is below Q_min,required, Required recycle flow = Q_min,required − Q_process,min — the extra recycle/spillback needed at the compressor to stay above the control line even while the downstream process only needs Q_process,min. A real anti-surge recycle valve sizing needs the full recycle-loop hydraulics and dynamic (RCM) response, not modeled here.<br>
+    <b>Pseudo-critical properties (Standing, sweet/miscellaneous gas systems):</b> Tpc(°R) = 168 + 325·SG − 12.5·SG², Ppc(psia) = 677 + 15·SG − 37.5·SG², SG = MW/28.9647 (relative to air). Enter Pc/Tc directly from a process simulator for sour or non-typical gas mixtures — no Wichert–Aziz correction is applied here.<br>
+    <b>Compressor map sketch:</b> illustrative only — a simplified, non-data-driven schematic to communicate the margin concept (surge line, control line, current operating point). It is not plotted from the actual vendor performance curves.<br>
+    References: API Standard 617 (Axial and Centrifugal Compressors), ASME PTC 10, GPSA Engineering Data Book (Z-factor methods, anti-surge control practice), Standing, M.B. (1977) <i>Volumetric and Phase Behavior of Oil Field Hydrocarbon Systems</i>, Dranchuk, P.M. &amp; Abou-Kassem, J.H. (1975) <i>Calculation of Z Factors for Natural Gases Using Equations of State</i>, JCPT. Not a certified sizing/control-philosophy package — see the note at the top of the page.<br>
+    <div class="signature">
+      <strong>Shubham Chatterjee</strong> · Process Engineer<br>
+      <a href="https://processengonline.github.io/" target="_blank" rel="noopener noreferrer">processengonline.github.io</a> ·
+      <a href="https://github.com/processengonline" target="_blank" rel="noopener noreferrer">GitHub</a>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+const R_UNIVERSAL = 8314.462618; // J/(kmol K)
+const ATM = 1.01325; // bar
+
+function fmt(num, sig=4){
+  if(num===0) return '0';
+  if(!isFinite(num)) return '—';
+  const abs = Math.abs(num);
+  if(abs < 0.001 || abs >= 100000) return num.toExponential(3);
+  return num.toPrecision(sig);
+}
+function fmtSigned(num, sig=4){
+  const s = fmt(num, sig);
+  if(num>0 && s.charAt(0)!=='+') return '+'+s;
+  return s;
+}
+
+function dakZ(Ppr, Tpr){
+  const A1=0.3265,A2=-1.0700,A3=-0.5339,A4=0.01569,A5=-0.05165,
+        A6=0.5475,A7=-0.7361,A8=0.1844,A9=0.1056,A10=0.6134,A11=0.7210;
+  if(!(Ppr>0) || !(Tpr>0)) return { Z:1, rhor:0 };
+  const c1 = A1 + A2/Tpr + A3/Math.pow(Tpr,3) + A4/Math.pow(Tpr,4) + A5/Math.pow(Tpr,5);
+  const c2 = A6 + A7/Tpr + A8/Math.pow(Tpr,2);
+  const c3 = A9*(A7/Tpr + A8/Math.pow(Tpr,2));
+  let rhor = 0.27*Ppr/Tpr;
+  for(let i=0;i<200;i++){
+    const rhor2 = rhor*rhor;
+    const Zc = 1 + c1*rhor + c2*rhor2 - c3*Math.pow(rhor,5) + A10*(1+A11*rhor2)*(rhor2/Math.pow(Tpr,3))*Math.exp(-A11*rhor2);
+    const rhorNew = 0.27*Ppr/(Zc*Tpr);
+    if(Math.abs(rhorNew-rhor) < 1e-9){ rhor = rhorNew; break; }
+    rhor += 0.5*(rhorNew-rhor);
+  }
+  const rhor2 = rhor*rhor;
+  const Z = 1 + c1*rhor + c2*rhor2 - c3*Math.pow(rhor,5) + A10*(1+A11*rhor2)*(rhor2/Math.pow(Tpr,3))*Math.exp(-A11*rhor2);
+  return { Z, rhor };
+}
+
+function pseudoCriticalFromSG(SG){
+  const TpcR = 168 + 325*SG - 12.5*SG*SG;
+  const PpcPsia = 677 + 15.0*SG - 37.5*SG*SG;
+  return { TcK: TpcR/1.8, PcBar: PpcPsia*0.0689476 };
+}
+
+function setBasisVisibility(){
+  const basis = document.getElementById('z-basis').value;
+  document.getElementById('z-Pc-field').classList.toggle('hidden', basis!=='direct');
+  document.getElementById('z-Tc-field').classList.toggle('hidden', basis!=='direct');
+  const showOverride = basis!=='ideal';
+  document.getElementById('z-override-row').classList.toggle('hidden', !showOverride);
+  if(!showOverride) document.getElementById('z-override').checked = false;
+  setOverrideVisibility();
+  compute();
+}
+function setOverrideVisibility(){
+  const basis = document.getElementById('z-basis').value;
+  const on = basis!=='ideal' && document.getElementById('z-override').checked;
+  document.getElementById('z-Z1-field').classList.toggle('hidden', !on);
+}
+document.getElementById('z-basis').addEventListener('change', setBasisVisibility);
+document.getElementById('z-override').addEventListener('change', ()=>{ setOverrideVisibility(); compute(); });
+
+document.getElementById('cm-enable').addEventListener('change', ()=>{
+  document.getElementById('cm-block').classList.toggle('hidden', !document.getElementById('cm-enable').checked);
+  compute();
+});
+
+document.getElementById('sp-unit').addEventListener('change', ()=>{
+  const label = document.getElementById('sp-unit').value==='pct' ? '%' : 'rpm';
+  document.getElementById('sp-N-unit').textContent = label;
+  document.getElementById('sp-Nref-unit').textContent = label;
+  compute();
+});
+
+const ids = ['z-MW','z-basis','z-Pc','z-Tc','z-override','z-Z1',
+  'op-mdot','op-P1','op-T1','sp-N','sp-Nref',
+  'vs-Qsurge','cm-reqmargin','cm-enable','cm-Qmin'];
+ids.forEach(id=>{
+  const el = document.getElementById(id);
+  el.addEventListener('input', compute);
+  el.addEventListener('change', compute);
+});
+
+function renderStats(rows){
+  const container = document.getElementById('stat-rows');
+  container.innerHTML = '';
+  rows.forEach(item=>{
+    if(item.length===1){
+      const label = document.createElement('div');
+      label.className = 'stat-group-label';
+      label.textContent = item[0];
+      container.appendChild(label);
+      return;
+    }
+    const [label, val] = item;
+    const row = document.createElement('div');
+    row.className = 'stat-row';
+    row.innerHTML = `<span>${label}</span><span>${val}</span>`;
+    container.appendChild(row);
+  });
+}
+
+// Diagram reference geometry (illustrative — not data-driven)
+const SURGE_REF_X = 78;    // approx. x of surge line at mid-height
+const CONTROL_REF_X = 104; // approx. x of control line at mid-height (offset = required margin's visual scale)
+const CHAR_X0 = 58, CHAR_Y0 = 46, CHAR_X1 = 232, CHAR_Y1 = 116; // current-speed characteristic endpoints
+const DOT_X_MIN = 50, DOT_X_MAX = 232;
+
+function updateDiagram(marginPercent, reqMargin, statusClass){
+  const refMargin = (reqMargin>0) ? reqMargin : 10;
+  const pxPerPercent = (CONTROL_REF_X - SURGE_REF_X) / refMargin;
+  let dotX = SURGE_REF_X + marginPercent*pxPerPercent;
+  dotX = Math.max(DOT_X_MIN, Math.min(DOT_X_MAX, dotX));
+  let t = (dotX - CHAR_X0) / (CHAR_X1 - CHAR_X0);
+  t = Math.max(0, Math.min(1, t));
+  const dotY = CHAR_Y0 + t*(CHAR_Y1 - CHAR_Y0);
+
+  const dot = document.getElementById('op-dot');
+  const guide = document.getElementById('op-guide');
+  const label = document.getElementById('op-label');
+
+  dot.setAttribute('cx', dotX.toFixed(1));
+  dot.setAttribute('cy', dotY.toFixed(1));
+  guide.setAttribute('x1', dotX.toFixed(1));
+  guide.setAttribute('x2', dotX.toFixed(1));
+  guide.setAttribute('y1', dotY.toFixed(1));
+  label.setAttribute('x', dotX.toFixed(1));
+  label.setAttribute('y', (dotY-10).toFixed(1));
+
+  let color = 'var(--green)';
+  if(statusClass==='warn') color = 'var(--amber)';
+  if(statusClass==='crit') color = 'var(--red)';
+  dot.setAttribute('fill', color);
+  label.setAttribute('fill', color);
+}
+
+function compute(){
+  const errEl = document.getElementById('main-err');
+  errEl.style.display = 'none'; errEl.textContent='';
+  const badge = document.getElementById('status-badge');
+  const speedBadge = document.getElementById('speed-badge');
+  const recycleBadge = document.getElementById('recycle-badge');
+  speedBadge.classList.add('hidden');
+  recycleBadge.classList.add('hidden');
+
+  try{
+    const MW = parseFloat(document.getElementById('z-MW').value);
+    if(!(MW > 2)) throw new Error('Molecular weight must be > 2 g/mol');
+    const basis = document.getElementById('z-basis').value;
+
+    let PcBar = null, TcK = null;
+    if(basis==='gravity'){
+      const SG = MW/28.9647;
+      const pc = pseudoCriticalFromSG(SG);
+      PcBar = pc.PcBar; TcK = pc.TcK;
+    } else if(basis==='direct'){
+      PcBar = parseFloat(document.getElementById('z-Pc').value);
+      TcK = parseFloat(document.getElementById('z-Tc').value);
+      if(!(PcBar>0)) throw new Error('Pc must be > 0');
+      if(!(TcK>0)) throw new Error('Tc must be > 0');
+    }
+    const overrideOn = basis!=='ideal' && document.getElementById('z-override').checked;
+
+    const P1barg = parseFloat(document.getElementById('op-P1').value);
+    const T1C = parseFloat(document.getElementById('op-T1').value);
+    if(!(P1barg > -ATM)) throw new Error('Suction pressure must be above absolute zero pressure');
+    const T1K = T1C + 273.15;
+    if(!(T1K > 0)) throw new Error('Suction temperature must be > absolute zero');
+    const P1abs = P1barg + ATM;
+
+    let Z1, outOfRange = false;
+    if(basis==='ideal'){
+      Z1 = 1.0;
+    } else if(overrideOn){
+      Z1 = parseFloat(document.getElementById('z-Z1').value);
+      if(!(Z1>0)) throw new Error('Suction Z-factor must be > 0');
+    } else {
+      const Ppr = P1abs/PcBar, Tpr = T1K/TcK;
+      if(Ppr>30 || Tpr<1.0 || Tpr>3.0 || Ppr<0.2) outOfRange = true;
+      Z1 = dakZ(Ppr, Tpr).Z;
+    }
+
+    const rho1 = (P1abs*1e5*MW) / (Z1*R_UNIVERSAL*T1K); // kg/m3
+    if(!(rho1>0)) throw new Error('Computed suction density must be > 0 — check inputs');
+
+    const mdot = parseFloat(document.getElementById('op-mdot').value);
+    if(!(mdot>0)) throw new Error('Current operating mass flow must be > 0');
+    const Qactual = mdot/rho1; // m3/h
+
+    const N = parseFloat(document.getElementById('sp-N').value);
+    const Nref = parseFloat(document.getElementById('sp-Nref').value);
+    if(!(N>0)) throw new Error('Current operating speed must be > 0');
+    if(!(Nref>0)) throw new Error('Reference speed must be > 0');
+    const speedRatio = N/Nref;
+
+    const Qsurgeref = parseFloat(document.getElementById('vs-Qsurge').value);
+    if(!(Qsurgeref>0)) throw new Error('Vendor surge flow Q_surge,ref must be > 0');
+    const QsurgeAtN = Qsurgeref*speedRatio;
+
+    const marginPercent = ((Qactual - QsurgeAtN)/QsurgeAtN)*100;
+    const dQ = Qactual - QsurgeAtN;
+
+    let reqMargin = parseFloat(document.getElementById('cm-reqmargin').value);
+    if(!(reqMargin>=0)) throw new Error('Required control margin must be ≥ 0');
+
+    // Status
+    let statusClass, statusText;
+    if(marginPercent<=0){
+      statusClass='crit'; statusText='AT OR BEYOND SURGE — IMMEDIATE ACTION';
+    } else if(marginPercent<reqMargin){
+      statusClass='warn'; statusText='OPERATING POINT INSIDE REQUIRED CONTROL MARGIN';
+    } else {
+      statusClass='ok'; statusText='PASS — MARGIN ADEQUATE';
+    }
+    badge.textContent = statusText;
+    badge.className = 'badge ' + statusClass;
+
+    if(Math.abs(speedRatio-1) > 1e-9){
+      speedBadge.textContent = 'SPEED-CORRECTED · N/N_ref = ' + fmt(speedRatio) + '×';
+      speedBadge.className = 'badge info';
+      speedBadge.classList.remove('hidden');
+    }
+
+    // Recycle (turndown) case
+    const recycleEnabled = document.getElementById('cm-enable').checked;
+    const Qmin_required = QsurgeAtN*(1+reqMargin/100);
+    let Qprocessmin = null, recycleFlow = 0, recycleNeeded = false;
+    if(recycleEnabled){
+      Qprocessmin = parseFloat(document.getElementById('cm-Qmin').value);
+      if(!(Qprocessmin>=0)) throw new Error('Process minimum achievable flow must be ≥ 0');
+      if(Qprocessmin < Qmin_required){
+        recycleFlow = Qmin_required - Qprocessmin;
+        recycleNeeded = true;
+      }
+    }
+    if(recycleNeeded){
+      recycleBadge.textContent = 'RECYCLE REQUIRED ≈ ' + fmt(recycleFlow) + ' m³/h';
+      recycleBadge.className = 'badge warn';
+      recycleBadge.classList.remove('hidden');
+    }
+
+    // Big figures
+    const outMargin = document.getElementById('out-margin');
+    outMargin.textContent = fmtSigned(marginPercent);
+    outMargin.className = 'big-num ' + (statusClass==='ok' ? 'stat-ok' : statusClass==='warn' ? 'stat-warn' : 'stat-crit');
+    document.getElementById('out-flows').textContent =
+      'Q_actual ≈ ' + fmt(Qactual) + ' m³/h · Q_surge(N) ≈ ' + fmt(QsurgeAtN) + ' m³/h';
+    document.getElementById('out-dQ').textContent = fmtSigned(dQ);
+
+    updateDiagram(marginPercent, reqMargin, statusClass);
+
+    const rows = [
+      ['Suction gas density ρ1', fmt(rho1) + ' kg/m³'],
+      ['Suction Z-factor (Z1)', fmt(Z1) + (basis==='ideal' ? ' (ideal)' : '')],
+      ['Actual inlet volumetric flow Q_actual', fmt(Qactual) + ' m³/h'],
+    ];
+    if(Math.abs(speedRatio-1) > 1e-9){
+      rows.push(['Speed ratio N / N_ref', fmt(speedRatio) + '×']);
+    }
+    rows.push(['VENDOR SURGE DATA']);
+    rows.push(['Q_surge,ref (at N_ref)', fmt(Qsurgeref) + ' m³/h']);
+    rows.push(['Q_surge at current speed N', fmt(QsurgeAtN) + ' m³/h']);
+    rows.push(['MARGIN']);
+    rows.push(['Surge margin', fmtSigned(marginPercent) + ' %']);
+    rows.push(['Required control margin', fmt(reqMargin) + ' %']);
+    rows.push(['Margin vs. requirement', fmtSigned(marginPercent-reqMargin) + ' pts']);
+    rows.push(['Flow margin ΔQ (Q_actual − Q_surge(N))', fmtSigned(dQ) + ' m³/h']);
+    if(recycleEnabled){
+      rows.push(['RECYCLE (TURNDOWN CASE)']);
+      rows.push(['Min. required flow at compressor', fmt(Qmin_required) + ' m³/h']);
+      rows.push(['Process minimum achievable flow', fmt(Qprocessmin) + ' m³/h']);
+      rows.push(['Required recycle/spillback flow (approx.)', recycleNeeded ? fmt(recycleFlow) + ' m³/h' : 'None — process min. already ≥ required minimum']);
+    }
+    if(outOfRange){
+      rows.push(['DAK Ppr/Tpr range exceeded on Z1 — verify manually', '']);
+    }
+    renderStats(rows);
+
+  } catch(e){
+    errEl.textContent = e.message;
+    errEl.style.display = 'block';
+    const outMargin = document.getElementById('out-margin');
+    outMargin.textContent = '—';
+    outMargin.className = 'big-num';
+    document.getElementById('out-flows').textContent = 'Q_actual ≈ — m³/h · Q_surge(N) ≈ — m³/h';
+    document.getElementById('out-dQ').textContent = '—';
+    document.getElementById('stat-rows').innerHTML = '';
+    badge.textContent = 'CHECK INPUTS';
+    badge.className = 'badge warn';
+  }
+}
+
+setBasisVisibility();
+compute();
+</script>
+</body>
+</html>

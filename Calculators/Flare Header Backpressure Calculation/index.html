@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flare Header Backpressure Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy: #0B1F33;
+    --navy-2: #122A44;
+    --blueprint: #1B4F72;
+    --line: #3E7CB1;
+    --line-dim: #2A5A80;
+    --paper: #EAE6D9;
+    --paper-dim: #B9C4CC;
+    --amber: #E8A33D;
+    --green: #6FA787;
+    --red: #C96A5C;
+    --grid: rgba(62,124,177,0.16);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      linear-gradient(var(--grid) 1px, transparent 1px) 0 0/28px 28px,
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px) 0 0/28px 28px,
+      var(--navy);
+    color:var(--paper);
+    font-family:'Space Grotesk', sans-serif;
+    min-height:100vh;
+  }
+  .wrap{max-width:1080px;margin:0 auto;padding:48px 24px 80px;}
+
+  header{margin-bottom:32px;border-bottom:1px solid var(--line-dim);padding-bottom:24px;}
+  .eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--line);margin:0 0 10px;
+  }
+  h1{
+    font-size:clamp(28px,4vw,42px);
+    margin:0 0 12px;font-weight:700;letter-spacing:-0.01em;
+  }
+  .sub{color:var(--paper-dim);font-size:15px;max-width:700px;line-height:1.55;margin:0 0 16px;}
+
+  .epcnote{
+    font-family:'IBM Plex Mono',monospace;font-size:11.5px;line-height:1.6;color:var(--paper-dim);
+    background:rgba(201,106,92,.08);border:1px solid rgba(201,106,92,.4);border-radius:6px;
+    padding:14px 16px;margin-top:16px;
+  }
+  .epcnote b{color:var(--red);}
+
+  .grid{display:grid;grid-template-columns:1.1fr 1fr;gap:36px;align-items:start;}
+  @media (max-width:820px){.grid{grid-template-columns:1fr;}}
+
+  .panel{
+    background:var(--navy-2);border:1px solid var(--line-dim);border-radius:8px;padding:26px;
+    margin-bottom:22px;
+  }
+  .panel:last-child{margin-bottom:0;}
+  .panel h2{
+    font-family:'IBM Plex Mono',monospace;font-size:12px;text-transform:uppercase;
+    letter-spacing:.14em;color:var(--line);margin:0 0 20px;
+  }
+  .panel h3{
+    font-family:'IBM Plex Mono',monospace;font-size:11px;text-transform:uppercase;
+    letter-spacing:.12em;color:var(--paper-dim);margin:22px 0 14px;
+    border-top:1px solid var(--line-dim);padding-top:16px;
+  }
+  .panel h3:first-of-type{margin-top:0;border-top:none;padding-top:0;}
+
+  .field{margin-bottom:16px;}
+  .field:last-child{margin-bottom:0;}
+  label{display:flex;justify-content:space-between;align-items:baseline;font-size:13.5px;color:var(--paper);margin-bottom:6px;}
+  label .unit{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--paper-dim);}
+  input[type=number], select{
+    width:100%;background:var(--navy);border:1px solid var(--line-dim);border-radius:5px;
+    color:var(--paper);font-family:'IBM Plex Mono',monospace;font-size:14px;
+    padding:9px 11px;transition:border-color .15s;
+  }
+  select{cursor:pointer;}
+  input[type=number]:focus, select:focus{outline:none;border-color:var(--line);box-shadow:0 0 0 3px rgba(62,124,177,0.22);}
+  input[type=number]:disabled{opacity:0.65;cursor:not-allowed;color:var(--amber);border-color:var(--amber);}
+  .hint{font-size:11.5px;color:var(--paper-dim);margin-top:5px;line-height:1.4;}
+  .err{font-size:11.5px;color:var(--red);margin-top:5px;display:none;}
+
+  .readout{
+    background:var(--navy-2);border:1px solid var(--line-dim);border-radius:8px;
+    padding:26px;display:flex;flex-direction:column;gap:18px;position:sticky;top:24px;
+  }
+  .readout h2{
+    font-family:'IBM Plex Mono',monospace;font-size:12px;text-transform:uppercase;
+    letter-spacing:.14em;color:var(--line);margin:0;
+  }
+  .big-figure{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;}
+  .big-num{font-size:44px;font-weight:700;line-height:1;letter-spacing:-0.02em;font-variant-numeric:tabular-nums;}
+  .big-unit{font-family:'IBM Plex Mono',monospace;font-size:16px;color:var(--paper-dim);}
+  .subfigure{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--paper-dim);}
+
+  .diagram{display:flex;align-items:center;justify-content:center;padding:4px 0 2px;}
+  .diagram svg{overflow:visible;max-width:100%;height:auto;}
+  .flow-dash{stroke-dasharray:5 6;animation:flowmove 1.1s linear infinite;}
+  @keyframes flowmove{to{stroke-dashoffset:-22;}}
+  @media (prefers-reduced-motion: reduce){.flow-dash{animation:none;}}
+
+  .stat-row{display:flex;justify-content:space-between;gap:12px;font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--paper-dim);border-top:1px solid var(--line-dim);padding-top:12px;}
+  .stat-row span:first-child{flex-shrink:0;}
+  .stat-row span:last-child{color:var(--paper);text-align:right;}
+  #stat-rows{display:flex;flex-direction:column;gap:12px;}
+  .stat-group-label{
+    font-family:'IBM Plex Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.08em;
+    color:var(--line);margin-top:6px;
+  }
+
+  .badge{
+    font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.06em;
+    padding:4px 10px;border-radius:20px;display:inline-block;width:fit-content;
+  }
+  .badge.ok{background:rgba(111,167,135,.15);color:var(--green);border:1px solid rgba(111,167,135,.4);}
+  .badge.warn{background:rgba(232,163,61,.15);color:var(--amber);border:1px solid rgba(232,163,61,.4);}
+  .badge.info{background:rgba(62,124,177,.18);color:var(--line);border:1px solid rgba(62,124,177,.4);}
+  .badge.bad{background:rgba(201,106,92,.15);color:var(--red);border:1px solid rgba(201,106,92,.45);}
+  .badge-row{display:flex;gap:8px;flex-wrap:wrap;}
+
+  footer{margin-top:40px;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--paper-dim);line-height:1.6;border-top:1px solid var(--line-dim);padding-top:20px;}
+  .hidden{display:none !important;}
+
+  .signature{
+    margin-top:28px;padding-top:20px;border-top:1px solid var(--line-dim);
+    font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--paper-dim);line-height:1.7;
+  }
+  .signature strong{color:var(--paper);font-weight:600;}
+  .signature a{color:var(--line);text-decoration:none;border-bottom:1px solid var(--line-dim);padding-bottom:1px;transition:color .15s,border-color .15s;}
+  .signature a:hover{color:var(--amber);border-color:var(--amber);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">Flare &amp; Relief Systems — API 521 · Built-Up Backpressure (Tailpipe Hydraulics)</p>
+    <h1>Flare Header Backpressure Calculator</h1>
+    <p class="sub">Computes the <b>built-up backpressure</b> generated by one PSV/BDV's own tailpipe — from its outlet flange to the point it ties into the main flare header — using isothermal compressible pipe flow with the acceleration (kinetic-energy) term included (Crane TP-410 / GPSA form). Adds this to a user-supplied <b>superimposed backpressure</b> (the pressure already present at the tie-in from everything else flowing in the header during the governing scenario) to get total backpressure, then checks it against the valve's allowable backpressure limit per API 520/521.</p>
+    <div class="epcnote">
+      <b>Superimposed backpressure is a direct input here, not calculated.</b> It is the result of a separate, larger flare-header hydraulic network study covering every device relieving simultaneously into the header under the governing case — this tool only resolves the hydraulics of <i>this one device's dedicated tailpipe</i>. The pipe-flow method is the standard short-line isothermal compressible form with the ln(P1/P2) acceleration term retained — <b>Weymouth/Panhandle-type correlations do NOT apply</b>; those are long-distance gas-transmission fits, not valid for short process tailpipes. Temperature is assumed constant along the tailpipe (isothermal simplification — standard for short, well-insulated or bare runs; re-evaluate for unusually long or actively cooled tailpipes). The gas compressibility Z reuses the same Dranchuk–Abou-Kassem/Standing basis as the companion BDV tool, evaluated once at the known tie-in pressure and relieving temperature. Friction factor uses the Swamee–Jain explicit fit to Colebrook–White — no fitting-K table is built in; add elbows/tees as an equivalent length directly (commonly estimated at 20–40 pipe diameters each, confirm against project piping data or a vendor K-table). Not a substitute for a certified flare network hydraulic study or sign-off by a licensed engineer.
+    </div>
+  </header>
+
+  <div class="grid">
+
+    <!-- INPUTS -->
+    <div>
+
+      <section class="panel">
+        <h2>Relieving Case &amp; Gas Properties</h2>
+        <div class="field">
+          <label for="f-mdot">Relieving mass flow ṁ <span class="unit">kg/h</span></label>
+          <input type="number" id="f-mdot" value="5000" step="any" min="0.001">
+          <div class="hint">The governing relieving mass flow for this specific device in this scenario.</div>
+        </div>
+        <div class="field">
+          <label for="f-mw">Gas molecular weight <span class="unit">g/mol</span></label>
+          <input type="number" id="f-mw" value="24" step="any" min="2">
+        </div>
+        <div class="field">
+          <label for="f-k">Specific heat ratio k (Cp/Cv)</label>
+          <input type="number" id="f-k" value="1.20" step="any" min="1.001" max="1.8">
+        </div>
+        <div class="field">
+          <label for="f-t1">Relieving temperature T1 <span class="unit">°C</span></label>
+          <input type="number" id="f-t1" value="100" step="any" min="-200">
+          <div class="hint">Assumed constant (isothermal) along the tailpipe — the standard simplification for short process piping.</div>
+        </div>
+        <div class="field">
+          <label for="f-mu">Gas dynamic viscosity μ <span class="unit">cP</span></label>
+          <input type="number" id="f-mu" value="0.012" step="any" min="0.0001">
+          <div class="hint">Typical range ~0.01–0.02 cP for light hydrocarbon vapors at flare conditions.</div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Z-Factor Basis</h2>
+        <div class="field">
+          <label for="z-basis">Compressibility treatment</label>
+          <select id="z-basis">
+            <option value="ideal">Ideal gas (Z = 1.0) — quick screening only</option>
+            <option value="gravity" selected>Real gas — Standing pseudo-criticals from gas gravity (sweet gas)</option>
+            <option value="direct">Real gas — enter Pc/Tc directly (from simulator)</option>
+          </select>
+          <div class="hint">Evaluated once at the known tie-in (superimposed) pressure and relieving temperature — Dranchuk–Abou-Kassem (DAK), valid for 0.2 ≤ Ppr &lt; 30 and 1.0 &lt; Tpr ≤ 3.0.</div>
+        </div>
+        <div class="field hidden" id="z-Pc-field">
+          <label for="z-Pc">Pseudo-critical pressure Pc <span class="unit">bar abs</span></label>
+          <input type="number" id="z-Pc" value="46.5" step="any" min="1">
+        </div>
+        <div class="field hidden" id="z-Tc-field">
+          <label for="z-Tc">Pseudo-critical temperature Tc <span class="unit">K</span></label>
+          <input type="number" id="z-Tc" value="205" step="any" min="1">
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Tailpipe Geometry &amp; Pipe Data</h2>
+        <div class="field">
+          <label for="f-d">Tailpipe internal diameter D <span class="unit">mm</span></label>
+          <input type="number" id="f-d" value="150" step="any" min="1">
+        </div>
+        <div class="field">
+          <label for="f-l">Straight pipe length L <span class="unit">m</span></label>
+          <input type="number" id="f-l" value="15" step="any" min="0">
+          <div class="hint">Outlet flange of the PSV/BDV to the header tie-in point.</div>
+        </div>
+        <div class="field">
+          <label for="f-lfit">Additional equivalent length for fittings <span class="unit">m</span></label>
+          <input type="number" id="f-lfit" value="0" step="any" min="0">
+          <div class="hint">No fitting-K table is built in — add elbows/tees directly. Commonly estimated at 20–40 pipe diameters each; confirm against project piping data.</div>
+        </div>
+        <div class="field">
+          <label for="f-eps">Pipe absolute roughness ε <span class="unit">mm</span></label>
+          <input type="number" id="f-eps" value="0.045" step="any" min="0">
+          <div class="hint">Default 0.045 mm — commercial steel.</div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Backpressure &amp; Valve Check</h2>
+        <div class="field">
+          <label for="f-p2">Superimposed backpressure at tie-in <span class="unit">barg</span></label>
+          <input type="number" id="f-p2" value="0.3" step="any" min="-1.013">
+          <div class="hint">Pressure already present at the tie-in point from everything else flowing in the header during the governing simultaneous-relief scenario — from a separate flare-header hydraulic study. Direct input, not calculated here.</div>
+          <div class="err" id="main-err"></div>
+        </div>
+        <div class="field">
+          <label for="f-pset">PSV/BDV set pressure <span class="unit">barg</span></label>
+          <input type="number" id="f-pset" value="10" step="any" min="0.01">
+        </div>
+        <div class="field">
+          <label for="f-psvtype">Valve type (allowable backpressure basis)</label>
+          <select id="f-psvtype">
+            <option value="conventional" selected>Conventional (10% of set)</option>
+            <option value="balanced">Balanced Bellows (35% of set)</option>
+            <option value="pilot">Pilot Operated (50% of set)</option>
+          </select>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- READOUT -->
+    <section class="readout">
+      <h2>Backpressure Result</h2>
+
+      <div class="diagram">
+        <svg width="280" height="180" viewBox="0 0 280 180" id="flare-svg">
+          <!-- PSV/BDV body -->
+          <rect x="18" y="16" width="66" height="32" rx="5" fill="var(--navy)" stroke="var(--line-dim)" stroke-width="1.4"/>
+          <text x="51" y="37" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="var(--paper)">PSV/BDV</text>
+
+          <!-- outlet stub -->
+          <line x1="51" y1="48" x2="51" y2="62" stroke="var(--line)" stroke-width="2"/>
+
+          <!-- tailpipe (dashed flow) -->
+          <line x1="51" y1="62" x2="51" y2="120" stroke="var(--line)" stroke-width="2" class="flow-dash"/>
+          <text x="60" y="90" font-family="IBM Plex Mono" font-size="8.5" fill="var(--paper-dim)">tailpipe</text>
+          <text x="60" y="101" font-family="IBM Plex Mono" font-size="8" fill="var(--paper-dim)">L, D, f</text>
+          <text x="60" y="112" font-family="IBM Plex Mono" font-size="8" fill="var(--line)">P1 (built-up Δ)</text>
+
+          <!-- other simultaneous relief entering header from the left -->
+          <line x1="0" y1="120" x2="16" y2="120" stroke="var(--line-dim)" stroke-width="2" stroke-dasharray="3 4"/>
+          <polygon points="16,116 24,120 16,124" fill="var(--line-dim)"/>
+          <text x="2" y="106" font-family="IBM Plex Mono" font-size="7.5" fill="var(--paper-dim)">OTHER SIMULT.</text>
+          <text x="2" y="115" font-family="IBM Plex Mono" font-size="7.5" fill="var(--paper-dim)">RELIEF</text>
+
+          <!-- tie-in point -->
+          <circle cx="51" cy="120" r="4.5" fill="var(--amber)" stroke="var(--navy-2)" stroke-width="1"/>
+          <text x="51" y="140" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="var(--amber)">TIE-IN · P2</text>
+
+          <!-- main flare header (thick) -->
+          <line x1="16" y1="120" x2="248" y2="120" stroke="var(--line-dim)" stroke-width="5"/>
+          <line x1="51" y1="120" x2="248" y2="120" stroke="var(--line)" stroke-width="1.6" class="flow-dash"/>
+          <text x="150" y="155" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="var(--paper-dim)" letter-spacing="0.03em">MAIN FLARE HEADER (superimposed)</text>
+
+          <!-- flare stack -->
+          <line x1="248" y1="120" x2="248" y2="30" stroke="var(--line-dim)" stroke-width="3"/>
+          <path d="M248,30 q-7,-11 0,-20 q7,9 0,20 Z" fill="var(--red)" opacity="0.85"/>
+          <text x="248" y="14" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="var(--line)" letter-spacing="0.04em">FLARE</text>
+        </svg>
+      </div>
+
+      <div class="big-figure">
+        <span class="big-num" id="out-total">—</span>
+        <span class="big-unit">barg</span>
+      </div>
+      <span class="subfigure" id="out-total-sub">total backpressure · — % of set pressure</span>
+
+      <div class="badge-row">
+        <span class="badge ok" id="status-badge">READY</span>
+        <span class="badge bad hidden" id="choke-badge">LINE CHOKED OR NEAR-SONIC</span>
+        <span class="badge info hidden" id="mach-badge"></span>
+        <span class="badge warn hidden" id="range-badge"></span>
+      </div>
+
+      <div id="stat-rows"></div>
+    </section>
+
+  </div>
+
+  <footer>
+    <b>Total backpressure:</b> Superimposed (direct input, from a separate flare header hydraulic study) + Built-up (calculated here, from THIS device's own tailpipe only) = P1 (valve outlet pressure).<br>
+    <b>Built-up backpressure — isothermal compressible pipe flow with acceleration term</b> (Crane TP-410 / GPSA Engineering Data Book, short process piping — Weymouth/Panhandle do NOT apply): P1² − P2² = ṁ²·Z·R<sub>spec</sub>·T / A² · [ f·L/D + 2·ln(P1/P2) ], all pressures absolute (Pa), R<sub>spec</sub> = R/MW, R = 8314.462618 J/(kmol·K), A = pipe cross-sectional area.<br>
+    <b>Solved for P1</b> (P2 known) by fixed-point iteration with 0.5 under-relaxation from the initial guess P1 ≈ √(P2² + ṁ²ZR<sub>spec</sub>T/A²·fL/D) (ln term ignored), re-including the ln(P1/P2) correction each pass, to |ΔP1| &lt; 1e-6 bar or 100 iterations (capped so it always terminates).<br>
+    <b>Reynolds number:</b> Re = 4ṁ/(π·D·μ). <b>Darcy friction factor</b> (Swamee–Jain explicit fit to Colebrook–White, no iteration needed): f = 0.25 / [log10(ε/(3.7D) + 5.74/Re<sup>0.9</sup>)]².<br>
+    <b>Choking check:</b> Mach number evaluated at the tie-in end of the tailpipe (lowest absolute pressure, hence highest velocity, since ṁ and A are constant along the pipe): v = ṁ/(ρ·A), ρ = P·MW/(Z·R·T), Mach = v/√(k·Z·R<sub>spec</sub>·T). Mach ≥ 0.9, or a non-converging solve, is flagged rather than reporting a falsely-precise number.<br>
+    <b>Allowable backpressure</b> (reused verbatim from the companion PSV Sizing tool): conventional 10%, balanced bellows 35%, pilot operated 50% of set pressure.<br>
+    <b>Z-factor:</b> Dranchuk–Abou-Kassem (DAK) correlation with Standing pseudo-criticals from gas gravity, direct Pc/Tc entry, or ideal gas — same basis as the companion BDV Sizing tool, evaluated once at the tie-in pressure and relieving temperature.<br>
+    <b>Scope note:</b> single device, single dedicated tailpipe, single governing relieving case, constant gas properties along the (short) tailpipe. Superimposed backpressure, header sizing, and simultaneous multi-device network hydraulics are outside this tool's scope — obtain those from the project's flare header hydraulic study.<br>
+    References: API Standard 521 (Pressure-Relieving and Depressuring Systems), Crane Technical Paper 410 (Flow of Fluids), GPSA Engineering Data Book, Swamee, P.K. &amp; Jain, A.K. (1976) <i>Explicit Equations for Pipe-Flow Problems</i>, ASCE, Standing, M.B. (1977) <i>Volumetric and Phase Behavior of Oil Field Hydrocarbon Systems</i>, Dranchuk, P.M. &amp; Abou-Kassem, J.H. (1975) <i>Calculation of Z Factors for Natural Gases Using Equations of State</i>, JCPT. Not a certified sizing package — see the note at the top of the page.<br>
+    <div class="signature">
+      <strong>Shubham Chatterjee</strong> · Process Engineer<br>
+      <a href="https://processengonline.github.io/" target="_blank" rel="noopener noreferrer">processengonline.github.io</a> ·
+      <a href="https://github.com/processengonline" target="_blank" rel="noopener noreferrer">GitHub</a>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+const R_UNIVERSAL = 8314.462618; // J/(kmol K)
+const ATM = 1.01325; // bar
+const BACKPRESSURE_GUIDE_LIMITS = { conventional: 0.10, balanced: 0.35, pilot: 0.50 };
+
+function fmt(num, sig=4){
+  if(num===0) return '0';
+  if(!isFinite(num)) return '—';
+  const abs = Math.abs(num);
+  if(abs < 0.001 || abs >= 100000) return num.toExponential(3);
+  return num.toPrecision(sig);
+}
+
+// ---- DAK real-gas Z (reused basis from the BDV tool) ----
+function dakZ(Ppr, Tpr){
+  const A1=0.3265,A2=-1.0700,A3=-0.5339,A4=0.01569,A5=-0.05165,
+        A6=0.5475,A7=-0.7361,A8=0.1844,A9=0.1056,A10=0.6134,A11=0.7210;
+  if(!(Ppr>0) || !(Tpr>0)) return { Z:1, rhor:0 };
+  const c1 = A1 + A2/Tpr + A3/Math.pow(Tpr,3) + A4/Math.pow(Tpr,4) + A5/Math.pow(Tpr,5);
+  const c2 = A6 + A7/Tpr + A8/Math.pow(Tpr,2);
+  const c3 = A9*(A7/Tpr + A8/Math.pow(Tpr,2));
+  let rhor = 0.27*Ppr/Tpr;
+  for(let i=0;i<200;i++){
+    const rhor2 = rhor*rhor;
+    const Zc = 1 + c1*rhor + c2*rhor2 - c3*Math.pow(rhor,5) + A10*(1+A11*rhor2)*(rhor2/Math.pow(Tpr,3))*Math.exp(-A11*rhor2);
+    const rhorNew = 0.27*Ppr/(Zc*Tpr);
+    if(Math.abs(rhorNew-rhor) < 1e-9){ rhor = rhorNew; break; }
+    rhor += 0.5*(rhorNew-rhor);
+  }
+  const rhor2 = rhor*rhor;
+  const Z = 1 + c1*rhor + c2*rhor2 - c3*Math.pow(rhor,5) + A10*(1+A11*rhor2)*(rhor2/Math.pow(Tpr,3))*Math.exp(-A11*rhor2);
+  return { Z, rhor };
+}
+
+function pseudoCriticalFromSG(SG){
+  const TpcR = 168 + 325*SG - 12.5*SG*SG;
+  const PpcPsia = 677 + 15.0*SG - 37.5*SG*SG;
+  return { TcK: TpcR/1.8, PcBar: PpcPsia*0.0689476 };
+}
+
+// ---- Pipe hydraulics ----
+
+function reynoldsNumber(mdotKgS, D_m, muPaS){
+  return 4*mdotKgS/(Math.PI*D_m*muPaS);
+}
+
+// Darcy friction factor, Swamee-Jain explicit fit to Colebrook-White.
+function darcyFrictionFactor(epsM, D_m, Re){
+  if(!(Re>0)) return NaN;
+  if(Re < 2300){
+    return 64/Re; // laminar (unusual for flare tailpipes, handled gracefully)
+  }
+  const term = epsM/(3.7*D_m) + 5.74/Math.pow(Re, 0.9);
+  return 0.25/Math.pow(Math.log10(term), 2);
+}
+
+// Solve P1 (Pa abs) given known P2 (Pa abs) from:
+//   P1^2 - P2^2 = base * ( fLoD + 2*ln(P1/P2) ), base = mdot^2 * Z * Rspec * T / A^2
+function solveP1(P2, base, fLoD){
+  let P1 = Math.sqrt(P2*P2 + base*fLoD); // initial guess, ln term ignored
+  const relax = 0.5;
+  const tolPa = 0.1; // 1e-6 bar
+  let iterations = 0, converged = false;
+  for(let i=0;i<100;i++){
+    iterations = i+1;
+    const lnTerm = Math.log(P1/P2);
+    const rhs = base*(fLoD + 2*lnTerm);
+    const P1rawSq = P2*P2 + rhs;
+    if(!(P1rawSq>0) || !isFinite(P1rawSq)){ converged=false; break; }
+    const P1raw = Math.sqrt(P1rawSq);
+    const P1new = P1 + relax*(P1raw - P1);
+    const delta = Math.abs(P1new - P1);
+    P1 = P1new;
+    if(!isFinite(P1)){ converged=false; break; }
+    if(delta < tolPa){ converged = true; break; }
+  }
+  return { P1, iterations, converged };
+}
+
+// ---- UI wiring ----
+
+function setBasisVisibility(){
+  const basis = document.getElementById('z-basis').value;
+  document.getElementById('z-Pc-field').classList.toggle('hidden', basis!=='direct');
+  document.getElementById('z-Tc-field').classList.toggle('hidden', basis!=='direct');
+  compute();
+}
+document.getElementById('z-basis').addEventListener('change', setBasisVisibility);
+
+const ids = ['f-mdot','f-mw','f-k','f-t1','f-mu','z-basis','z-Pc','z-Tc',
+  'f-d','f-l','f-lfit','f-eps','f-p2','f-pset','f-psvtype'];
+ids.forEach(id=>{
+  const el = document.getElementById(id);
+  el.addEventListener('input', compute);
+  el.addEventListener('change', compute);
+});
+
+function renderStats(rows){
+  const container = document.getElementById('stat-rows');
+  container.innerHTML = '';
+  rows.forEach(item=>{
+    if(item.length===1){
+      const label = document.createElement('div');
+      label.className = 'stat-group-label';
+      label.textContent = item[0];
+      container.appendChild(label);
+      return;
+    }
+    const [label, val] = item;
+    const row = document.createElement('div');
+    row.className = 'stat-row';
+    row.innerHTML = `<span>${label}</span><span>${val}</span>`;
+    container.appendChild(row);
+  });
+}
+
+function compute(){
+  const errEl = document.getElementById('main-err');
+  errEl.style.display = 'none'; errEl.textContent = '';
+  const badge = document.getElementById('status-badge');
+  const chokeBadge = document.getElementById('choke-badge');
+  const machBadge = document.getElementById('mach-badge');
+  const rangeBadge = document.getElementById('range-badge');
+  chokeBadge.classList.add('hidden');
+  machBadge.classList.add('hidden');
+  rangeBadge.classList.add('hidden');
+
+  try{
+    const mdotKgH = parseFloat(document.getElementById('f-mdot').value);
+    const MW = parseFloat(document.getElementById('f-mw').value);
+    const k = parseFloat(document.getElementById('f-k').value);
+    const T1C = parseFloat(document.getElementById('f-t1').value);
+    const muCp = parseFloat(document.getElementById('f-mu').value);
+    const D_mm = parseFloat(document.getElementById('f-d').value);
+    const L = parseFloat(document.getElementById('f-l').value);
+    const Lfit = parseFloat(document.getElementById('f-lfit').value);
+    const eps_mm = parseFloat(document.getElementById('f-eps').value);
+    const P2barg = parseFloat(document.getElementById('f-p2').value);
+    const Pset = parseFloat(document.getElementById('f-pset').value);
+    const psvType = document.getElementById('f-psvtype').value;
+
+    if(!(mdotKgH>0)) throw new Error('Relieving mass flow must be > 0');
+    if(!(MW>2)) throw new Error('Molecular weight must be > 2 g/mol');
+    if(!(k>1.001)) throw new Error('k (Cp/Cv) must be > 1.001');
+    const T1K = T1C + 273.15;
+    if(!(T1K>0)) throw new Error('Relieving temperature must be > absolute zero');
+    if(!(muCp>0)) throw new Error('Viscosity must be > 0');
+    if(!(D_mm>0)) throw new Error('Tailpipe diameter must be > 0');
+    if(!(L>=0)) throw new Error('Straight length must be ≥ 0');
+    if(!(Lfit>=0)) throw new Error('Additional equivalent length must be ≥ 0');
+    if(!(eps_mm>=0)) throw new Error('Roughness must be ≥ 0');
+    if(!(P2barg > -ATM)) throw new Error('Superimposed backpressure must be above absolute zero pressure');
+    if(!(Pset>0)) throw new Error('Set pressure must be > 0');
+
+    const mdot = mdotKgH/3600; // kg/s
+    const D = D_mm/1000; // m
+    const A = Math.PI/4*D*D; // m^2
+    const Ltotal = L + Lfit; // m
+    const eps = eps_mm/1000; // m
+    const mu = muCp*1e-3; // Pa.s
+    const P2abs_bar = P2barg + ATM;
+    const P2abs = P2abs_bar*1e5; // Pa
+
+    // Z-factor basis (evaluated at known tie-in pressure & relieving temperature)
+    const basis = document.getElementById('z-basis').value;
+    let PcBar=null, TcK=null, SG=null, Z=1.0, outOfRange=false;
+    if(basis==='ideal'){
+      Z = 1.0;
+    } else {
+      if(basis==='gravity'){
+        SG = MW/28.9647;
+        const pc = pseudoCriticalFromSG(SG);
+        PcBar = pc.PcBar; TcK = pc.TcK;
+      } else {
+        PcBar = parseFloat(document.getElementById('z-Pc').value);
+        TcK = parseFloat(document.getElementById('z-Tc').value);
+        if(!(PcBar>0)) throw new Error('Pc must be > 0');
+        if(!(TcK>0)) throw new Error('Tc must be > 0');
+      }
+      const Ppr = P2abs_bar/PcBar, Tpr = T1K/TcK;
+      if(Ppr>30 || Tpr<1.0 || Tpr>3.0 || Ppr<0.2) outOfRange = true;
+      Z = dakZ(Ppr, Tpr).Z;
+    }
+
+    const Rspec = R_UNIVERSAL/MW; // J/(kg K)
+
+    // Reynolds & friction factor (independent of P1)
+    const Re = reynoldsNumber(mdot, D, mu);
+    const fD = darcyFrictionFactor(eps, D, Re);
+    const LoD = Ltotal/D;
+
+    // Solve for P1 (Pa abs)
+    const base = mdot*mdot*Z*Rspec*T1K/(A*A); // Pa^2 per unit (fLoD or 2ln term)
+    const { P1, iterations, converged } = solveP1(P2abs, base, fD*LoD);
+
+    // Mach number at the tie-in (low-pressure / high-velocity) end
+    const rho2 = P2abs*MW/(Z*R_UNIVERSAL*T1K); // kg/m^3
+    const v2 = mdot/(rho2*A); // m/s
+    const a2 = Math.sqrt(k*Z*Rspec*T1K); // m/s
+    const Mach2 = v2/a2;
+
+    const builtUpBar = (P1 - P2abs)/1e5;
+    const totalBackpressureBarg = P1/1e5 - ATM; // = P1 in barg
+    const pctOfSet = (totalBackpressureBarg/Pset)*100;
+    const limitFrac = BACKPRESSURE_GUIDE_LIMITS[psvType];
+    const limitBarg = limitFrac*Pset;
+
+    const isChoked = !converged || !isFinite(P1) || Mach2 >= 0.9 || builtUpBar > Pset*5;
+
+    // ---- render hero figure ----
+    if(isChoked){
+      document.getElementById('out-total').textContent = '—';
+      document.getElementById('out-total-sub').textContent = 'line choked or near-sonic — result not reliable at this size';
+    } else {
+      document.getElementById('out-total').textContent = fmt(totalBackpressureBarg);
+      document.getElementById('out-total-sub').textContent = 'total backpressure · ' + fmt(pctOfSet) + '% of set pressure (limit ' + (limitFrac*100).toFixed(0) + '%)';
+    }
+
+    // ---- badges ----
+    if(isChoked){
+      badge.textContent = 'CANNOT RELIABLY PASS THIS FLOW';
+      badge.className = 'badge bad';
+      chokeBadge.textContent = 'LINE CHOKED OR NEAR-SONIC — increase tailpipe diameter';
+      chokeBadge.classList.remove('hidden');
+    } else {
+      const pass = totalBackpressureBarg <= limitBarg + 1e-9;
+      badge.textContent = pass ? 'PASS' : 'WARN — EXCEEDS ALLOWABLE BACKPRESSURE';
+      badge.className = 'badge ' + (pass ? 'ok' : 'warn');
+    }
+
+    machBadge.textContent = 'MACH ' + fmt(Mach2,3) + ' AT TIE-IN';
+    machBadge.className = 'badge ' + (Mach2>=0.9 ? 'bad' : (Mach2>=0.6 ? 'warn' : 'info'));
+    machBadge.classList.remove('hidden');
+
+    if(outOfRange){
+      rangeBadge.textContent = 'DAK RANGE EXCEEDED — VERIFY Z';
+      rangeBadge.classList.remove('hidden');
+    }
+
+    // ---- stat rows ----
+    const rows = [];
+    rows.push(['Z-FACTOR']);
+    rows.push(['Basis', basis==='ideal' ? 'Ideal gas (Z=1)' : (basis==='gravity' ? 'Gravity-estimated Pc/Tc' : 'Direct Pc/Tc entry')]);
+    rows.push(['Z used', fmt(Z)]);
+    if(basis!=='ideal'){
+      rows.push(['Pc / Tc used', fmt(PcBar) + ' bar a / ' + fmt(TcK) + ' K']);
+      if(SG!==null) rows.push(['Gas gravity (SG vs air)', fmt(SG)]);
+    }
+    rows.push(['PIPE FLOW']);
+    rows.push(['Reynolds number Re', fmt(Re)]);
+    rows.push(['Darcy friction factor f', fmt(fD)]);
+    rows.push(['Total L/D (straight + fittings)', fmt(LoD)]);
+    rows.push(['Cross-sectional area A', fmt(A*1e6) + ' mm²']);
+    rows.push(['BACKPRESSURE']);
+    rows.push(['Superimposed backpressure', fmt(P2barg) + ' barg (' + fmt(P2abs_bar) + ' bar a)']);
+    rows.push(['Built-up backpressure', isChoked ? '— (not reliable)' : fmt(builtUpBar) + ' bar (' + fmt(builtUpBar/Pset*100) + '% of set)']);
+    rows.push(['Total backpressure', isChoked ? '—' : fmt(totalBackpressureBarg) + ' barg (' + fmt(pctOfSet) + '% of set)']);
+    rows.push(['Allowable limit (' + psvType + ')', (limitFrac*100).toFixed(0) + '% of set = ' + fmt(limitBarg) + ' barg']);
+    rows.push(['SOLVE / CHECK']);
+    rows.push(['Velocity at tie-in', fmt(v2) + ' m/s']);
+    rows.push(['Speed of sound at tie-in', fmt(a2) + ' m/s']);
+    rows.push(['Mach number at tie-in', fmt(Mach2,3)]);
+    rows.push(['Iterations to converge', String(iterations) + (converged ? '' : ' (did not converge)')]);
+    renderStats(rows);
+
+  } catch(e){
+    errEl.textContent = e.message;
+    errEl.style.display = 'block';
+    document.getElementById('out-total').textContent = '—';
+    document.getElementById('out-total-sub').textContent = 'total backpressure · — % of set pressure';
+    document.getElementById('stat-rows').innerHTML = '';
+    badge.textContent = 'CHECK INPUTS';
+    badge.className = 'badge warn';
+  }
+}
+
+setBasisVisibility();
+compute();
+</script>
+</body>
+</html>

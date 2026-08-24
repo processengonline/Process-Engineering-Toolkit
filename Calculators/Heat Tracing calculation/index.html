@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Heat Tracing / Winterization Load Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy: #0B1F33;
+    --navy-2: #122A44;
+    --blueprint: #1B4F72;
+    --line: #3E7CB1;
+    --line-dim: #2A5A80;
+    --paper: #EAE6D9;
+    --paper-dim: #B9C4CC;
+    --amber: #E8A33D;
+    --green: #6FA787;
+    --red: #C96A5C;
+    --grid: rgba(62,124,177,0.16);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      linear-gradient(var(--grid) 1px, transparent 1px) 0 0/28px 28px,
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px) 0 0/28px 28px,
+      var(--navy);
+    color:var(--paper);
+    font-family:'Space Grotesk', sans-serif;
+    min-height:100vh;
+  }
+  .wrap{max-width:1080px;margin:0 auto;padding:48px 24px 80px;}
+
+  header{margin-bottom:32px;border-bottom:1px solid var(--line-dim);padding-bottom:24px;}
+  .eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--line);margin:0 0 10px;
+  }
+  h1{
+    font-size:clamp(28px,4vw,42px);
+    margin:0 0 12px;font-weight:700;letter-spacing:-0.01em;
+  }
+  .sub{color:var(--paper-dim);font-size:15px;max-width:680px;line-height:1.55;margin:0 0 16px;}
+
+  .epcnote{
+    font-family:'IBM Plex Mono',monospace;font-size:11.5px;line-height:1.6;color:var(--paper-dim);
+    background:rgba(201,106,92,.08);border:1px solid rgba(201,106,92,.4);border-radius:6px;
+    padding:14px 16px;margin-top:16px;
+  }
+  .epcnote b{color:var(--red);}
+
+  .tabs{display:flex;gap:2px;margin:24px 0 28px;border:1px solid var(--line-dim);width:fit-content;border-radius:6px;overflow:hidden;}
+  .tab{
+    font-family:'IBM Plex Mono',monospace;font-size:13px;letter-spacing:.05em;
+    padding:11px 22px;background:var(--navy-2);color:var(--paper-dim);
+    border:none;cursor:pointer;transition:background .15s, color .15s;
+  }
+  .tab.active{background:var(--line);color:var(--navy);font-weight:600;}
+  .tab:not(.active):hover{background:#17324f;color:var(--paper);}
+  .tab:focus-visible{outline:2px solid var(--amber);outline-offset:-2px;}
+
+  .grid{display:grid;grid-template-columns:1.1fr 1fr;gap:36px;align-items:start;}
+  @media (max-width:820px){.grid{grid-template-columns:1fr;}}
+
+  .left-col{display:flex;flex-direction:column;gap:24px;}
+
+  .panel{
+    background:var(--navy-2);border:1px solid var(--line-dim);border-radius:8px;padding:26px;
+  }
+  .panel h2{
+    font-family:'IBM Plex Mono',monospace;font-size:12px;text-transform:uppercase;
+    letter-spacing:.14em;color:var(--line);margin:0 0 20px;
+  }
+  .panel h3{
+    font-family:'IBM Plex Mono',monospace;font-size:11px;text-transform:uppercase;
+    letter-spacing:.12em;color:var(--paper-dim);margin:22px 0 14px;
+    border-top:1px solid var(--line-dim);padding-top:16px;
+  }
+  .panel h3:first-of-type{margin-top:0;border-top:none;padding-top:0;}
+
+  .field{margin-bottom:16px;}
+  .field:last-child{margin-bottom:0;}
+  label{display:flex;justify-content:space-between;align-items:baseline;font-size:13.5px;color:var(--paper);margin-bottom:6px;}
+  label .unit{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--paper-dim);}
+  input[type=number], select{
+    width:100%;background:var(--navy);border:1px solid var(--line-dim);border-radius:5px;
+    color:var(--paper);font-family:'IBM Plex Mono',monospace;font-size:14px;
+    padding:9px 11px;transition:border-color .15s;
+  }
+  select{cursor:pointer;}
+  input[type=number]:focus, select:focus{outline:none;border-color:var(--line);box-shadow:0 0 0 3px rgba(62,124,177,0.22);}
+  input[type=number]:disabled{opacity:0.65;cursor:not-allowed;color:var(--amber);border-color:var(--amber);}
+  .hint{font-size:11.5px;color:var(--paper-dim);margin-top:5px;line-height:1.4;}
+  .err{font-size:11.5px;color:var(--red);margin-top:5px;display:none;}
+
+  .readout{
+    background:var(--navy-2);border:1px solid var(--line-dim);border-radius:8px;
+    padding:26px;display:flex;flex-direction:column;gap:20px;position:sticky;top:24px;
+  }
+  .readout h2{
+    font-family:'IBM Plex Mono',monospace;font-size:12px;text-transform:uppercase;
+    letter-spacing:.14em;color:var(--line);margin:0;
+  }
+  .big-figure{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;}
+  .big-num{font-size:48px;font-weight:700;line-height:1;letter-spacing:-0.02em;font-variant-numeric:tabular-nums;}
+  .big-unit{font-family:'IBM Plex Mono',monospace;font-size:16px;color:var(--paper-dim);}
+  .subfigure{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--paper-dim);line-height:1.5;}
+
+  .diagram{display:flex;align-items:center;justify-content:center;padding:6px 0 2px;}
+  .diagram svg{overflow:visible;}
+  .heat-arrow{stroke-dasharray:4 5;animation:flowmove 1s linear infinite;}
+  @keyframes flowmove{to{stroke-dashoffset:-18;}}
+  @media (prefers-reduced-motion: reduce){.heat-arrow{animation:none;}}
+
+  .stat-row{display:flex;justify-content:space-between;gap:12px;font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--paper-dim);border-top:1px solid var(--line-dim);padding-top:12px;}
+  .stat-row span:first-child{flex-shrink:0;}
+  .stat-row span:last-child{color:var(--paper);text-align:right;}
+  #stat-rows{display:flex;flex-direction:column;gap:12px;}
+  .stat-group-label{
+    font-family:'IBM Plex Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.08em;
+    color:var(--line);margin-top:6px;
+  }
+
+  .badge{
+    font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.06em;
+    padding:4px 10px;border-radius:20px;display:inline-block;width:fit-content;
+  }
+  .badge.ok{background:rgba(111,167,135,.15);color:var(--green);border:1px solid rgba(111,167,135,.4);}
+  .badge.warn{background:rgba(232,163,61,.15);color:var(--amber);border:1px solid rgba(232,163,61,.4);}
+  .badge.info{background:rgba(62,124,177,.18);color:var(--line);border:1px solid rgba(62,124,177,.4);}
+  .badge-row{display:flex;gap:8px;flex-wrap:wrap;}
+
+  .multivalve{
+    margin-top:4px;padding:12px 14px;border-radius:6px;
+    background:rgba(232,163,61,.08);border:1px solid rgba(232,163,61,.35);
+    font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--paper-dim);line-height:1.5;
+  }
+  .multivalve b{color:var(--amber);}
+  .multivalve.ok-note{background:rgba(111,167,135,.08);border-color:rgba(111,167,135,.35);}
+  .multivalve.ok-note b{color:var(--green);}
+
+  footer{margin-top:40px;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--paper-dim);line-height:1.6;border-top:1px solid var(--line-dim);padding-top:20px;}
+  .hidden{display:none !important;}
+
+  .signature{
+    margin-top:28px;padding-top:20px;border-top:1px solid var(--line-dim);
+    font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--paper-dim);line-height:1.7;
+  }
+  .signature strong{color:var(--paper);font-weight:600;}
+  .signature a{color:var(--line);text-decoration:none;border-bottom:1px solid var(--line-dim);padding-bottom:1px;transition:color .15s,border-color .15s;}
+  .signature a:hover{color:var(--amber);border-color:var(--amber);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">Heat Tracing — Rev. 1 · Screening / Winterization Basis</p>
+    <h1>Heat Tracing / Winterization Load Calculator</h1>
+    <p class="sub">Sizes electrical or steam heat tracing for an insulated pipe to maintain a target contents temperature against a design minimum ambient condition, using classic 1-D steady-state radial conduction through the insulation plus an outside film coefficient.</p>
+    <div class="epcnote">
+      <b>Screening-level tool, not a certified heat-tracing design.</b> Pipe wall metal conduction resistance is neglected (small compared to insulation resistance) — a standard simplifying assumption for this class of calculation. This gives the theoretical <b>steady-state</b> heat loss for a uniformly insulated, uniformly exposed straight run at the design ambient condition only. It does <b>not</b> capture: transient heat-up/start-up loads, additional heat sinks at valves, flanges, supports, pipe shoes and instrument take-offs (these need separate allowances), insulation performance degraded by moisture ingress or damage, or a specific cable/tube's actual manufacturer power-output-vs-temperature curve. Confirm final circuit/tube layout, heat-sink allowances and cable selection against the project's heat-tracing design basis (e.g. IEEE 515 for electrical tracing) and the vendor's certified output data.
+    </div>
+  </header>
+
+  <div class="tabs" role="tablist" aria-label="Tracing method">
+    <button class="tab active" id="tab-elec" role="tab" aria-selected="true">ELECTRICAL TRACING</button>
+    <button class="tab" id="tab-steam" role="tab" aria-selected="false">STEAM TRACING</button>
+  </div>
+
+  <div class="grid">
+
+    <div class="left-col">
+
+      <!-- SHARED PANEL -->
+      <section class="panel" id="panel-shared">
+        <h2>Pipe, Insulation &amp; Design Basis</h2>
+
+        <h3>Pipe &amp; Insulation Geometry</h3>
+        <div class="field">
+          <label for="s-Dpipe">Pipe outside diameter <span class="unit">mm</span></label>
+          <input type="number" id="s-Dpipe" value="114.3" step="any" min="0">
+          <div class="hint">Inner radius of the insulation annulus — use the actual pipe OD (or OD over any existing jacketing) at the tracing location.</div>
+        </div>
+        <div class="field">
+          <label for="s-tins">Insulation thickness <span class="unit">mm</span></label>
+          <input type="number" id="s-tins" value="50" step="any" min="0">
+        </div>
+        <div class="field">
+          <label for="s-kins">Insulation thermal conductivity k <span class="unit">W/(m·K)</span></label>
+          <input type="number" id="s-kins" value="0.04" step="any" min="0.0001">
+          <div class="hint">Typical mineral wool/fiberglass insulation ≈ 0.035–0.045 W/(m·K) at typical mean temperature; calcium silicate ≈ 0.055–0.065; cellular glass ≈ 0.04–0.05 — use the actual manufacturer's k at the relevant mean temperature for final design, conductivity rises with temperature.</div>
+        </div>
+        <div class="field">
+          <label for="s-hout">Outside (wind) film coefficient <span class="unit">W/(m²·K)</span></label>
+          <input type="number" id="s-hout" value="15" step="any" min="0.01">
+          <div class="hint">Typical still-air ≈ 5–10 W/m²K, light wind ≈ 15–25, high wind/exposed ≈ 25–40 W/m²K — use the project's design wind speed basis; for insulated pipe with a metal jacket the film coefficient has a modest effect compared to insulation resistance, but include it for completeness.</div>
+        </div>
+
+        <h3>Temperature &amp; Design Basis</h3>
+        <div class="field">
+          <label for="s-Tmaintain">Required maintain temperature <span class="unit">°C</span></label>
+          <input type="number" id="s-Tmaintain" value="5" step="any">
+          <div class="hint">Freeze protection: typically a few degrees above 0 °C. Process maintenance: the required minimum process temperature.</div>
+        </div>
+        <div class="field">
+          <label for="s-Tambient">Design minimum ambient temperature <span class="unit">°C</span></label>
+          <input type="number" id="s-Tambient" value="-10" step="any">
+          <div class="hint">Project-specific design value from the site winterization basis — this varies hugely by climate/site and must be taken from the actual project design basis, not assumed.</div>
+        </div>
+        <div class="field">
+          <label for="s-factor">Design / safety factor</label>
+          <input type="number" id="s-factor" value="1.3" step="any" min="1">
+          <div class="hint">Typical design margin 1.2–1.5 to cover startup/heat-up transients, insulation aging/moisture ingress, and installation losses — confirm against project heat-tracing design basis (e.g. IEEE 515 practice for electrical tracing).</div>
+        </div>
+        <div class="field">
+          <label for="s-L">Pipe run length L <span class="unit">m (optional)</span></label>
+          <input type="number" id="s-L" value="100" step="any" min="0">
+          <div class="hint">Enter 0 to see only per-metre results. Uniform straight-run assumption — does not include extra length/loss at valves, flanges, supports, etc.</div>
+        </div>
+        <div class="err" id="s-err"></div>
+      </section>
+
+      <!-- ELECTRICAL PANEL -->
+      <section class="panel" id="panel-elec">
+        <h2>Electrical Trace Cable</h2>
+        <div class="field">
+          <label for="e-rating">Cable rated output at maintain temp <span class="unit">W/m</span></label>
+          <input type="number" id="e-rating" value="20" step="any" min="0.01">
+          <div class="hint">Self-regulating or constant-wattage cable output at the pipe's maintain temperature — take from the manufacturer's power-output-vs-temperature curve for the specific cable selected; output derates as temperature rises, this is NOT a fixed number across all conditions.</div>
+        </div>
+      </section>
+
+      <!-- STEAM PANEL -->
+      <section class="panel hidden" id="panel-steam">
+        <h2>Steam Tracer</h2>
+        <div class="field">
+          <label for="st-hfg"><span>Steam latent heat h<sub>fg</sub> at supply pressure</span> <span class="unit">kJ/kg</span></label>
+          <input type="number" id="st-hfg" value="2148" step="any" min="0.01">
+          <div class="hint">Take from steam tables at the actual tracing steam supply pressure — e.g. roughly 2100–2200 kJ/kg for typical 3–7 barg LP tracing steam, confirm against actual steam tables for the design pressure.</div>
+        </div>
+        <div class="field">
+          <label for="st-tubecap">Target per-tube steam flow capacity <span class="unit">kg/h (optional)</span></label>
+          <input type="number" id="st-tubecap" value="" step="any" min="0" placeholder="leave blank to skip">
+          <div class="hint">Optional — steam tracer tubes (typically 3/8"–1/2") are usually sized by number of parallel tubes needed for coverage/uniformity more than by a strict heat-duty-per-tube limit. Enter a target flow per tube only if you want a rough tube-count estimate.</div>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- READOUT -->
+    <section class="readout">
+      <h2>Required Tracing Load</h2>
+
+      <div class="diagram">
+        <svg width="200" height="200" viewBox="0 0 200 200" id="htc-svg">
+          <!-- insulation outer boundary (filled, pipe drawn on top cuts the "hole") -->
+          <circle cx="100" cy="100" r="70" fill="rgba(62,124,177,0.12)" stroke="var(--line-dim)" stroke-width="1.5" stroke-dasharray="3 5" id="ins-outer"/>
+          <!-- pipe -->
+          <circle cx="100" cy="100" r="34" fill="var(--navy)" stroke="var(--line)" stroke-width="2.5" id="pipe-circle"/>
+          <text x="100" y="105" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="9" fill="var(--paper-dim)" letter-spacing="1">PIPE</text>
+          <text x="100" y="42" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="8" fill="var(--paper-dim)" letter-spacing="1">INSULATION</text>
+
+          <!-- electrical trace: cable strip along pipe outer surface -->
+          <g id="elec-trace-group">
+            <path d="M 121 63 A 34 34 0 0 1 132 88" fill="none" stroke="var(--amber)" stroke-width="3.5" stroke-linecap="round"/>
+            <circle cx="121" cy="63" r="4.5" fill="var(--amber)"/>
+            <text x="150" y="60" font-family="IBM Plex Mono, monospace" font-size="9" fill="var(--amber)">TRACE CABLE</text>
+          </g>
+
+          <!-- steam trace: tracer tube alongside pipe, under insulation -->
+          <g id="steam-trace-group" class="hidden">
+            <circle cx="126" cy="76" r="7" fill="var(--navy)" stroke="var(--line)" stroke-width="2.5"/>
+            <circle cx="126" cy="76" r="2" fill="var(--line)"/>
+            <text x="150" y="60" font-family="IBM Plex Mono, monospace" font-size="9" fill="var(--line)">STEAM TUBE</text>
+          </g>
+
+          <!-- heat loss arrow through insulation to cold ambient -->
+          <line x1="68" y1="70" x2="30" y2="28" stroke="var(--red)" stroke-width="2.5" class="heat-arrow" stroke-linecap="round"/>
+          <polygon points="30,28 38,30 30,36" fill="var(--red)"/>
+          <text x="6" y="14" font-family="IBM Plex Mono, monospace" font-size="9.5" fill="var(--red)" letter-spacing=".5">COLD AMBIENT</text>
+          <text x="6" y="26" font-family="IBM Plex Mono, monospace" font-size="9.5" fill="var(--red)" id="diagram-ambient-val">— °C</text>
+        </svg>
+      </div>
+
+      <div class="big-figure">
+        <span class="big-num" id="out-big">—</span>
+        <span class="big-unit" id="out-big-unit">W/m</span>
+      </div>
+      <span class="subfigure" id="out-sub">—</span>
+
+      <div class="badge-row">
+        <span class="badge ok" id="status-badge">READY</span>
+        <span class="badge info" id="assumption-badge">PIPE WALL R NEGLECTED</span>
+        <span class="badge info hidden" id="factor-badge"></span>
+      </div>
+
+      <div class="multivalve hidden" id="note-box"></div>
+
+      <div id="stat-rows"></div>
+    </section>
+
+  </div>
+
+  <footer>
+    <b>Geometry:</b> insulation outer diameter D<sub>ins</sub> (mm) = D<sub>pipe</sub> + 2·t<sub>ins</sub>.<br>
+    <b>Thermal resistance, per unit pipe length (m·K/W):</b> pipe wall conduction resistance is neglected (negligible vs. insulation for this screening calc). R<sub>insulation</sub> = ln(D<sub>ins</sub>/D<sub>pipe</sub>) / (2π·k<sub>ins</sub>). R<sub>outside film</sub> = 1 / (h<sub>out</sub>·π·D<sub>ins</sub>[m]). R<sub>total</sub> = R<sub>insulation</sub> + R<sub>outside film</sub>.<br>
+    <b>Heat loss:</b> Q<sub>loss</sub> (W/m) = (T<sub>maintain</sub> − T<sub>ambient,design</sub>) / R<sub>total</sub>, evaluated at the project's design minimum ambient temperature (steady-state, linear in ΔT for fixed resistance).<br>
+    <b>Design output:</b> Required design heat output per metre = Q<sub>loss</sub> × design/safety factor (typ. 1.2–1.5).<br>
+    <b>Electrical tracing:</b> parallel cables required per metre = ceil(required design output ÷ cable rated output at maintain temperature). Applied uniformly per unit length along a straight run — valves, flanges, supports and other heat sinks are NOT captured and need separate allowances. Total power (kW) = required output per metre × pipe run length L, if L is entered.<br>
+    <b>Steam tracing:</b> required steam mass flow (kg/h per metre) = (required design output [W/m] × 3.6) ÷ h<sub>fg</sub> [kJ/kg]. Total steam flow (kg/h) = flow per metre × L, if L is entered. Optional tracer-tube count = ceil(flow per metre ÷ target per-tube capacity), a rough coverage estimate only.<br>
+    Not a certified heat-tracing design package — see the note at the top of the page. Confirm cable/tube selection, heat-sink allowances and circuit breakout against the project's heat-tracing design basis and manufacturer data.<br>
+    <div class="signature">
+      <strong>Shubham Chatterjee</strong> · Process Engineer<br>
+      <a href="https://processengonline.github.io/" target="_blank" rel="noopener noreferrer">processengonline.github.io</a> ·
+      <a href="https://github.com/processengonline" target="_blank" rel="noopener noreferrer">GitHub</a>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+// ---- core thermal functions ----
+function insulationOuterDiameterMm(Dpipe_mm, tins_mm){
+  return Dpipe_mm + 2*tins_mm;
+}
+
+function insulationResistance(Dpipe_mm, Dins_mm, kins){
+  // R_insulation = ln(D_ins/D_pipe) / (2*pi*k_ins)   [m·K/W]
+  return Math.log(Dins_mm/Dpipe_mm) / (2*Math.PI*kins);
+}
+
+function outsideFilmResistance(Dins_mm, hout){
+  // R_outside_film = 1 / (h_out * pi * D_ins[m])   [m·K/W]
+  const Dins_m = Dins_mm/1000;
+  return 1 / (hout * Math.PI * Dins_m);
+}
+
+function heatLossPerMeter(Tmaintain, Tambient, Rtotal){
+  // W/m, clipped to 0 when no heating is required
+  const dT = Tmaintain - Tambient;
+  if(dT <= 0) return 0;
+  return dT / Rtotal;
+}
+
+// ---- tab handling ----
+const tabElec = document.getElementById('tab-elec');
+const tabSteam = document.getElementById('tab-steam');
+const panelElec = document.getElementById('panel-elec');
+const panelSteam = document.getElementById('panel-steam');
+const elecTraceGroup = document.getElementById('elec-trace-group');
+const steamTraceGroup = document.getElementById('steam-trace-group');
+let mode = 'elec';
+
+function setMode(m){
+  mode = m;
+  const isElec = m==='elec';
+  tabElec.classList.toggle('active', isElec);
+  tabSteam.classList.toggle('active', !isElec);
+  tabElec.setAttribute('aria-selected', isElec);
+  tabSteam.setAttribute('aria-selected', !isElec);
+  panelElec.classList.toggle('hidden', !isElec);
+  panelSteam.classList.toggle('hidden', isElec);
+  elecTraceGroup.classList.toggle('hidden', !isElec);
+  steamTraceGroup.classList.toggle('hidden', isElec);
+  compute();
+}
+tabElec.addEventListener('click', ()=>setMode('elec'));
+tabSteam.addEventListener('click', ()=>setMode('steam'));
+
+const ids = ['s-Dpipe','s-tins','s-kins','s-hout','s-Tmaintain','s-Tambient','s-factor','s-L',
+             'e-rating','st-hfg','st-tubecap'];
+ids.forEach(id=>{
+  const el = document.getElementById(id);
+  el.addEventListener('input', compute);
+  el.addEventListener('change', compute);
+});
+
+function fmt(num, sig=4){
+  if(num===0) return '0';
+  if(!isFinite(num)) return '—';
+  const abs = Math.abs(num);
+  if(abs < 0.001 || abs >= 100000) return num.toExponential(3);
+  return num.toPrecision(sig);
+}
+
+function clearErrors(){
+  const el = document.getElementById('s-err');
+  el.style.display = 'none';
+  el.textContent = '';
+}
+
+function renderStats(rows){
+  const container = document.getElementById('stat-rows');
+  container.innerHTML = '';
+  rows.forEach(item=>{
+    if(item.length===1){
+      const label = document.createElement('div');
+      label.className = 'stat-group-label';
+      label.textContent = item[0];
+      container.appendChild(label);
+      return;
+    }
+    const [label, val] = item;
+    const row = document.createElement('div');
+    row.className = 'stat-row';
+    row.innerHTML = `<span>${label}</span><span>${val}</span>`;
+    container.appendChild(row);
+  });
+}
+
+function compute(){
+  clearErrors();
+  const badge = document.getElementById('status-badge');
+  const factorBadge = document.getElementById('factor-badge');
+  const noteBox = document.getElementById('note-box');
+  factorBadge.classList.add('hidden');
+  noteBox.classList.add('hidden');
+
+  let Dpipe, tins, kins, hout, Tmaintain, Tambient, factor, L;
+  try{
+    Dpipe = parseFloat(document.getElementById('s-Dpipe').value);
+    tins = parseFloat(document.getElementById('s-tins').value);
+    kins = parseFloat(document.getElementById('s-kins').value);
+    hout = parseFloat(document.getElementById('s-hout').value);
+    Tmaintain = parseFloat(document.getElementById('s-Tmaintain').value);
+    Tambient = parseFloat(document.getElementById('s-Tambient').value);
+    factor = parseFloat(document.getElementById('s-factor').value);
+    L = parseFloat(document.getElementById('s-L').value);
+
+    if(!(Dpipe>0)) throw new Error("Pipe outside diameter must be > 0");
+    if(!(tins>=0)) throw new Error("Insulation thickness must be ≥ 0");
+    if(!(kins>0)) throw new Error("Insulation thermal conductivity must be > 0");
+    if(!(hout>0)) throw new Error("Outside film coefficient must be > 0");
+    if(!(factor>=1)) throw new Error("Design/safety factor must be ≥ 1");
+    if(!(L>=0)) throw new Error("Pipe run length must be ≥ 0 (0 = per-metre results only)");
+  } catch(e){
+    const el = document.getElementById('s-err');
+    el.textContent = e.message;
+    el.style.display = 'block';
+    document.getElementById('out-big').textContent = '—';
+    document.getElementById('out-sub').textContent = '—';
+    document.getElementById('stat-rows').innerHTML = '';
+    badge.textContent = 'CHECK INPUTS';
+    badge.className = 'badge warn';
+    return;
+  }
+
+  const Dins = insulationOuterDiameterMm(Dpipe, tins);
+  const Rins = insulationResistance(Dpipe, Dins, kins);
+  const Rfilm = outsideFilmResistance(Dins, hout);
+  const Rtotal = Rins + Rfilm;
+  const dT = Tmaintain - Tambient;
+  const noHeatNeeded = dT <= 0;
+  const Qloss = heatLossPerMeter(Tmaintain, Tambient, Rtotal);
+  const Qdesign = Qloss * factor;
+
+  document.getElementById('diagram-ambient-val').textContent = fmt(Tambient,3) + ' °C';
+
+  factorBadge.textContent = 'DESIGN FACTOR ×' + fmt(factor,3) + ' APPLIED';
+  factorBadge.className = 'badge info';
+  factorBadge.classList.remove('hidden');
+
+  if(noHeatNeeded){
+    badge.textContent = 'NO HEATING REQUIRED';
+    badge.className = 'badge ok';
+    noteBox.className = 'multivalve ok-note';
+    noteBox.innerHTML = `Design minimum ambient (${fmt(Tambient,3)} °C) is at or above the required maintain temperature (${fmt(Tmaintain,3)} °C) — under this design condition there is no steady-state heat loss to make up, so <b>no supplemental heat tracing is required</b> for freeze protection / temperature maintenance. (Re-check with the project's actual design minimum ambient before relying on this.)`;
+    noteBox.classList.remove('hidden');
+  } else {
+    badge.textContent = 'READY';
+    badge.className = 'badge ok';
+  }
+
+  const rows = [
+    ['Insulation outer diameter D_ins', fmt(Dins) + ' mm'],
+    ['ΔT (maintain − design ambient)', fmt(dT) + ' °C'],
+    ['THERMAL RESISTANCE (per metre)'],
+    ['R_insulation', fmt(Rins) + ' m·K/W'],
+    ['R_outside film', fmt(Rfilm) + ' m·K/W'],
+    ['R_total (pipe wall neglected)', fmt(Rtotal) + ' m·K/W'],
+    ['HEAT LOSS'],
+    ['Q_loss (raw, steady-state)', fmt(Qloss) + ' W/m'],
+    ['Design factor applied', fmt(factor) + '×'],
+    ['Required design heat output', fmt(Qdesign) + ' W/m'],
+  ];
+
+  if(mode==='elec'){
+    const rating = parseFloat(document.getElementById('e-rating').value);
+    let elecErr = null;
+    if(!(rating>0)) elecErr = "Cable rated output must be > 0";
+
+    document.getElementById('out-big-unit').textContent = 'W/m';
+
+    if(elecErr){
+      document.getElementById('out-big').textContent = '—';
+      document.getElementById('out-sub').textContent = elecErr;
+      badge.textContent = 'CHECK INPUTS';
+      badge.className = 'badge warn';
+      renderStats(rows);
+      return;
+    }
+
+    const numCables = noHeatNeeded ? 0 : Math.ceil(Qdesign/rating);
+    const installedCapacity = numCables*rating;
+    const totalKW = (L>0 && !noHeatNeeded) ? (Qdesign*L)/1000 : 0;
+
+    document.getElementById('out-big').textContent = fmt(Qdesign);
+    document.getElementById('out-sub').textContent = noHeatNeeded
+      ? '0 cables required · 0 kW total'
+      : `⇒ ${numCables} cable(s) × ${fmt(rating)} W/m` + (L>0 ? ` · total ${fmt(totalKW)} kW over ${fmt(L)} m` : ' · enter L for total power');
+
+    rows.push(['ELECTRICAL TRACING']);
+    rows.push(['Cable rated output (at maintain temp)', fmt(rating) + ' W/m']);
+    rows.push(['Parallel cables required per metre', numCables + ' cable(s)']);
+    rows.push(['Installed capacity provided', fmt(installedCapacity) + ' W/m' + (numCables>0 ? ' (≥ required)' : '')]);
+    rows.push(['Pipe run length L', L>0 ? fmt(L) + ' m' : '— (enter L for totals)']);
+    rows.push(['Total required power (design)', L>0 ? fmt(totalKW) + ' kW' : '—']);
+  } else {
+    const hfg = parseFloat(document.getElementById('st-hfg').value);
+    const tubeCapRaw = document.getElementById('st-tubecap').value;
+    const tubeCap = parseFloat(tubeCapRaw);
+    let steamErr = null;
+    if(!(hfg>0)) steamErr = "Steam latent heat h_fg must be > 0";
+
+    document.getElementById('out-big-unit').textContent = 'kg/(h·m)';
+
+    if(steamErr){
+      document.getElementById('out-big').textContent = '—';
+      document.getElementById('out-sub').textContent = steamErr;
+      badge.textContent = 'CHECK INPUTS';
+      badge.className = 'badge warn';
+      renderStats(rows);
+      return;
+    }
+
+    const steamPerM = noHeatNeeded ? 0 : (Qdesign*3.6)/hfg;
+    const totalSteam = (L>0 && !noHeatNeeded) ? steamPerM*L : 0;
+    const hasTubeCap = tubeCapRaw!=='' && tubeCap>0;
+    const numTubes = hasTubeCap && !noHeatNeeded ? Math.ceil(steamPerM/tubeCap) : 0;
+
+    document.getElementById('out-big').textContent = fmt(steamPerM);
+    document.getElementById('out-sub').textContent = noHeatNeeded
+      ? '0 kg/h total'
+      : (L>0 ? `⇒ total ${fmt(totalSteam)} kg/h over ${fmt(L)} m` : 'enter L for total steam flow');
+
+    rows.push(['STEAM TRACING']);
+    rows.push(['Steam latent heat h_fg', fmt(hfg) + ' kJ/kg']);
+    rows.push(['Required steam flow', fmt(steamPerM) + ' kg/h per m']);
+    rows.push(['Pipe run length L', L>0 ? fmt(L) + ' m' : '— (enter L for totals)']);
+    rows.push(['Total steam flow required', L>0 ? fmt(totalSteam) + ' kg/h' : '—']);
+    rows.push(['Tracer tubes required (est.)', hasTubeCap ? numTubes + ' tube(s) at ' + fmt(tubeCap) + ' kg/h each' : '— (enter per-tube capacity to estimate)']);
+  }
+
+  renderStats(rows);
+}
+
+setMode('elec');
+</script>
+</body>
+</html>
